@@ -41,6 +41,7 @@ namespace ppvr {
 			 */
 			uint64_t toUint64() const;
 			
+			std::string toStringHex() const;
 			std::string toStringDec() const;
 			
 			// --- General purpose mathematical methods ---

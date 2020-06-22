@@ -62,7 +62,7 @@ BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) 
 }
 
 BigInt::BigInt(const BIG_INT_WORD_TYPE& value): BigInt(value, 0) {}
-	
+
 BigInt::BigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity) {
 	BIG_INT_WORD_COUNT_TYPE newCapacity = std::max((BIG_INT_WORD_COUNT_TYPE)1, minCapacity);
 
@@ -108,7 +108,37 @@ uint64_t BigInt::toUint64() const {
 	return res;
 }
 
+std::string BigInt::toStringHex() const {
+	static const char* digits = "0123456789ABCDEF";
+	
+	if(this->wordSize == 0) {
+		return "EMPTY";
+	}
+	
+	if(this->wordSize == 1 && this->value[0] == 0) {
+		return "0";
+	}
+	
+	size_t bitPerHexDidigit = 4;
+	size_t hexDigitsPerWord = BIG_INT_BITS_PER_WORD / bitPerHexDidigit ;
+	std::string ret = "";
+	for (BIG_INT_WORD_COUNT_TYPE wordIndex = 0; wordIndex < this->wordSize; wordIndex++) {
+		BIG_INT_WORD_TYPE word = this->value[wordIndex];
+		for (size_t hexDigitIndex=0; hexDigitIndex < hexDigitsPerWord; hexDigitIndex++) {
+			BIG_INT_WORD_TYPE digit = word & 0x0F;
+			word = word >> bitPerHexDidigit;
+			if(digit > 0 || word > 0 || wordIndex < this->wordSize - 1) { // prevent leading zeros
+				ret = digits[digit] + ret;
+			}
+		}
+	}
+	
+	return ret;
+}
+
 std::string BigInt::toStringDec() const {
+	static const char* digits = "0123456789";
+	
 	if(this->wordSize == 0) {
 		return "EMPTY";
 	}
@@ -127,7 +157,7 @@ std::string BigInt::toStringDec() const {
 		//tmp.div(BigInt::TEN, &reminder);
 		//decDigit = reminder.value[0];
 		decDigit = this->divInt( 10, tmp.value, &tmp.wordSize );
-		ret = std::to_string(decDigit) + ret;
+		ret = digits[decDigit] + ret;
 	}
 	
 	return ret;
@@ -1302,6 +1332,7 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	BIG_INT_WORD_TYPE r = 0;
 	
 	BIG_INT_WORD_COUNT_TYPE newWordSize = *targetWordSize;
+	bool nonZeroWordRes = false;
 	
 	// we're looking for the last word in dividend (most significant word that is not null)
 	//for(i=targetWordSize-1 ; i>0 && dividend[i]==0 ; --i);
@@ -1309,8 +1340,13 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	
 	for( ; i>=0 ; --i) {
 		this->divTwoWords(r, dividend[i], divisor, &targetArray[i], &r);
-		if(targetArray[i] == 0) {
-			newWordSize = i;
+		// find index+1 of most significant word which is not 0
+		if(!nonZeroWordRes && i > 0) {
+			if(targetArray[i] == 0) {
+				newWordSize = i;
+			} else {
+				nonZeroWordRes = true;
+			}
 		}
 	}
 	
