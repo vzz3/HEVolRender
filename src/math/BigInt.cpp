@@ -659,7 +659,7 @@ BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE world, const BIG_INT_WO
 
 void BigInt::add(const BigInt &other) {
 	BIG_INT_WORD_TYPE carry = 0;
-	BIG_INT_WORD_TYPE a,b,c;
+	BIG_INT_WORD_TYPE a,b;//,c;
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordSize, other.wordSize);
 	//BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount+1];
 	if(this->wordCapacity < maxWordCount) {
@@ -1411,6 +1411,11 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 		u2 = this->value[j+n];
 	}
 	
+	// set new word size of the result
+	BIG_INT_WORD_COUNT_TYPE resultWordSize = maxWordCount;
+	for (; resultWordSize>0 && q.value[resultWordSize-1] == 0; resultWordSize--);
+	q.wordSize = resultWordSize;
+	
 	if( remainder ) {
 		this->div_unnormalize(remainder, n, d);
 	}
@@ -1556,7 +1561,7 @@ BIG_INT_WORD_TYPE BigInt::div_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE 
 			temp2[0] = u0;
 			
 			//if( temp1 > temp2 ) {
-			if(temp1[1] > temp2[1] || (temp1[1] == temp2[1] && temp1[0] < temp2[0])) {
+			if(temp1[1] > temp2[1] || (temp1[1] == temp2[1] && temp1[0] > temp2[0])) {
 				decrease = true;
 			}
 		}
