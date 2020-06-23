@@ -187,7 +187,7 @@ void BigInt::setZero() {
 }
 
 void BigInt::setOne() {
-	this->value[0] = 0;
+	this->value[0] = 1;
 	this->wordSize = 1;
 }
 
@@ -765,22 +765,19 @@ BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WOR
  (this = this - ss2 - c)
  
  c must be zero or one (might be a bigger value than 1)
- function returns carry (1) (if it was)
+ function returns carry (borrow) (1) (if it was)
  */
-void BigInt::sub(const BigInt& other) {
-	if(other > *this) {
-		std::string msg = "ERROR substract BigInt a - b with a < b!";
-		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
-	}
+BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other) {
+	//if(other > *this) {
+	//	std::string msg = "ERROR substract BigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
+	//	std::cerr << msg << std::endl;
+	//	throw std::runtime_error(msg);
+	//}
 	
-	BIG_INT_WORD_TYPE carry = 0;
+	BIG_INT_WORD_TYPE carry = 0; // carry = "borrow"
 	BIG_INT_WORD_TYPE a,b,c;
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordSize, other.wordSize);
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex = 0;
-	//if(this->wordCapacity < maxWordCount) {
-	//	this->reserveWords(maxWordCount+1); // If we need to resize the storage array than also preserve the space for a possible carry bit
-	//}
 	
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<this->wordSize; i++) {
 		if(other.wordSize > i) {
@@ -796,14 +793,11 @@ void BigInt::sub(const BigInt& other) {
 	}
 	
 	// carry > 0 : can not happen if this <= other at the beginning of the method
-	//if (carry > 0) {
-	//	std::string msg = "ERROR substract BigInt a - b with a < b!";
-	//	std::cerr << msg << std::endl;
-	//	throw std::runtime_error(msg);
-	//}
-	assert(carry == 0);
+	//assert(carry == 0);
 	
 	this->wordSize = usedWordIndex+1;
+	
+	return carry;
 }
 
 BigInt BigInt::operator- (const BigInt& other) const {
@@ -840,6 +834,12 @@ BigInt BigInt::operator- (const BigInt& other) const {
 	return BigInt(resValue, usedWordIndex+1);
 	*/
 	
+	
+	if(other > *this) {
+		std::string msg = "ERROR substract BigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
+		std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
 	BigInt result(*this); // copy this to new BigInt
 	result.sub(other);
 	return result;
@@ -985,12 +985,12 @@ void BigInt::mulInt(BIG_INT_WORD_TYPE ss2) {
 	
 	for(BIG_INT_WORD_COUNT_TYPE x1=x1start ; x1<x1size ; ++x1) {
 		this->mulTwoWords(u.value[x1], ss2, &r2, &r1 );
-		this->addTwoInts(r2, r1, x1, &this->value[x1], this->wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
+		this->addTwoInts(r2, r1, x1, this->value, this->wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
 	}
 	
 	// check if the most significant word is > 0 and increase the wordSize if it is.
 	// TODO remove this if addTwoInts() can take care of the this->wordSize
-	if(this->value[this->wordSize] != 0) {
+	if(this->value[this->wordSize-1] != 0) {
 		this->wordSize = this->wordCapacity;
 	}
 }
@@ -1070,6 +1070,7 @@ BigInt BigInt::operator* (const BigInt& other) const {
  *
  */
 void BigInt::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE *result, BIG_INT_WORD_TYPE * rest) const {
+	// c = divisor
 	// (a < c ) for the result to be one word
 	assert( c != 0 && a < c );
 	
@@ -1123,7 +1124,7 @@ void BigInt::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, B
 /**
  *
  * the same algorithm like the division algorithm for all words which is based on
- * "The art of computer programming 2" (4.3.1 page 272)
+ * "The art of computer programming 2" (4.3.1 page 257)
  * Donald E. Knuth
  * but now with the radix=2^32
  */
@@ -1165,7 +1166,7 @@ void BigInt::divTwoWords2(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD
 	q = this->setHighFromLowBits(q, temp_qHigh);
 	
 	//u_.u_.high = u_.u_.low;
-	u = this->getLowAsHighBits(u);
+	u = this->setHighFromLowBits(u, u);
 	//u_.u_.low  = u3;
 	u = this->setLowFromLowBits(u, u3);
 	//u3         = b_.u_.low;
@@ -1218,7 +1219,7 @@ BIG_INT_WORD_TYPE BigInt::divTwoWordsUnnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WO
 	return u;
 }
 
-unsigned int BigInt::divTwoWordsCalculate(BIG_INT_WORD_TYPE u, unsigned int u3, BIG_INT_WORD_TYPE v) const
+unsigned int BigInt::divTwoWordsCalculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const
 {
 	bool next_test;
 	//uint_ qp_, rp_, temp_;
@@ -1245,7 +1246,7 @@ unsigned int BigInt::divTwoWordsCalculate(BIG_INT_WORD_TYPE u, unsigned int u3, 
 			temp = this->setLowFromLowBits(temp, u3);
 			
 			//if( qp_.u * uint(v_.u_.low) > temp_.u )
-			if( qp * this->getLowAsLowBits(v) > u) {
+			if( qp * this->getLowAsLowBits(v) > temp) {
 				decrease = true;
 			}
 		}
@@ -1365,7 +1366,7 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	
 	//UInt<value_size+1> uu, vv;
 	BigInt uu(0, maxWordCount+1);
-	BigInt vv(*this, maxWordCount+1);
+	//BigInt vv(*this, maxWordCount+1);
 	
 	//UInt<value_size> q;
 	BigInt q(0, maxWordCount);
@@ -1382,18 +1383,19 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	}
 	
 	//Div3_MakeBiggerV(v, vv);
+	BigInt vv(divisor, maxWordCount+1);
 	//std::copy(&divisor.value[0], (&divisor.value[0] + divisor.wordSize), vv);
 	//vv[divisor.wordSize] = 0;
 	
-	std::fill_n(&q, maxWordCount, 0);
+	std::fill_n(q.value, maxWordCount, 0);
 	
 	while( true ) {
-		u1 = this->value[j+n-1];
-		u0 = this->value[j+n-2];
-		v1 = divisor.value[n-1];
-		v0 = divisor.value[n-2];
+		u1 = this->value[j+n-1]; // divident high
+		u0 = this->value[j+n-2]; // divident low
+		v1 = divisor.value[n-1]; // divisor  high
+		v0 = divisor.value[n-2]; // divident low
 		
-		BIG_INT_WORD_TYPE qp =this->div_calculate(u2,u1,u0, v1,v0);
+		BIG_INT_WORD_TYPE qp = this->div_calculate(u2,u1,u0, v1,v0);
 		
 		this->div_makeNewU(uu, j, n, u2);
 		this->div_multiplySubtract(uu, vv, qp);
@@ -1472,28 +1474,30 @@ void Div3_MakeBiggerV(const UInt<value_size> & v, UInt<value_size+1> & vv)
 }
 */
 
-/*!
- we're moving all bits from 'divisor' into the left side of the n-1 word
- (the highest bit at divisor.value[n-1] will be equal one,
- the bits from 'dividend' we're moving the same times as 'divisor')
- 
- return values:
- -  d - how many times we've moved
- -  return - the next-left value from 'this' (that after table[value_size-1])
+/**
+ * D1. [Normaliez]
+ *
+ * we're moving all bits from 'divisor' into the left side of the n-1 word
+ * (the highest bit at divisor.value[n-1] will be equal one,
+ * the bits from 'dividend' we're moving the same times as 'divisor')
+ *
+ * return values:
+ * -  d - how many times we've moved
+ * -  return - the next-left value from 'this' (that after value[value_size-1])
  */
 BIG_INT_WORD_TYPE BigInt::div_normalize(BigInt& divisor, uint n, uint & d) {
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 	
-	uint bit  = (uint)this->findLeadingBitInWord(divisor.value[n-1]);
+	uint bit  = (uint)this->findLeadingBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
 	uint move = (BIG_INT_BITS_PER_WORD - bit - 1);
-	BIG_INT_WORD_TYPE res  = this->value[this->wordSize -1];
 	d         = move;
+	BIG_INT_WORD_TYPE res  = this->value[this->wordSize -1];
 	
 	if( move > 0 ) {
 		divisor.rcl(move, 0);
 		this->rcl(move, 0);
-		res = res >> (bit + 1);
+		res = res >> (bit + 1); // this is the same as the bits that was shiftet out by "this->rcl(move, 0)" - the teoretical new most significant word of this
 	}
 	else {
 		res = 0;
@@ -1577,7 +1581,11 @@ BIG_INT_WORD_TYPE BigInt::div_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE 
 	return qp[0];
 }
 
-
+/**
+ * D4. [Multiply and subtract]
+ *		includes also: D5. [Test Remainder] and D6. [add back]
+ *
+ */
 void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const {
 	// D4 (in the book)
 	
@@ -1585,23 +1593,25 @@ void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD
 	BigInt vv_temp(vv);
 	vv_temp.mulInt(qp);
 	
-	uu.sub(vv_temp);
-	// TODO check if "uu.sub(vv_temp)" is enough or the following if is in this or some other forme required
-	/*
+	//  D5. [Test Remainder]
 	if( uu.sub(vv_temp) ) {
-		// there was a carry
+		// there was a carry (borrow)
+		// D6. [add back]
 		
 		//
-		// !!! this part of code was not tested
+		// TODO make shure to test this code because the execution of this part is very unlikely (only of the order 2/b)
 		//
+		BIG_INT_WORD_COUNT_TYPE uuWordSizeWithoutCarry = uu.wordSize;
 		
 		--qp;
 		uu.add(vv);
 		
-		// can be a carry from this additions but it should be ignored
-		// because it cancels with the borrow from uu.Sub(vv_temp)
+		// There can be a carry from this additions but it should be ignored
+		// because it cancels with the borrow from uu.Sub(vv_temp).
+		// My add() method does not return a carry bit because it automaticaly adds another most significant word.
+		// Therefore, I truncate this word again (if it was added.);
+		uu.wordSize = uuWordSizeWithoutCarry;
 	}
-	 */
 	
 	
 	//TTMATH_LOG("UInt::Div3_MultiplySubtract")
@@ -1612,7 +1622,7 @@ void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD
  the third division algorithm
  
  this algorithm is described in the following book:
- "The art of computer programming 2" (4.3.1 page 272)
+ "The art of computer programming 2" (4.3.1 page 257)
  Donald E. Knuth
  !! give the description here (from the book)
  */

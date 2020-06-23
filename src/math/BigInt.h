@@ -337,7 +337,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
 			
-			void sub(const BigInt& other);
+			BIG_INT_WORD_TYPE sub(const BigInt& other);
 			/* ---------- multiplication ---------- */
 			
 			/**
@@ -361,7 +361,7 @@ namespace ppvr {
 			//BigInt mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const
 			
 			/* ---------- division ---------- */
-			
+		public:
 			/**
 			 * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
 			 * result = a:b / c and rest - remainder
@@ -374,7 +374,8 @@ namespace ppvr {
 			 *
 			 */
 			void divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE *result, BIG_INT_WORD_TYPE *rest) const;
-			
+		
+		private:
 			/**
 			 *
 			 * the same algorithm like the division algorithm for all words which is based on
@@ -385,7 +386,7 @@ namespace ppvr {
 			void divTwoWords2(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE * r, BIG_INT_WORD_TYPE * rest) const;
 			BIG_INT_WORD_TYPE divTwoWordsNormalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) const;
 			BIG_INT_WORD_TYPE divTwoWordsUnnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) const;
-			unsigned int divTwoWordsCalculate(BIG_INT_WORD_TYPE u, unsigned int u3, BIG_INT_WORD_TYPE v) const;
+			unsigned int divTwoWordsCalculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const;
 			void multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) const;
 			
 			/**

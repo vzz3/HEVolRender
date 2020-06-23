@@ -142,7 +142,7 @@ TEST_CASE( "big integer to std:string hex", "[bigint]" ) {
 	REQUIRE( BigInt::fromString("340282366920938463463374607431768211457", 10).toStringHex() == std::string("100000000000000000000000000000001") ); // 2^128 + 1
 	REQUIRE( BigInt::fromString("340282366920938463463374607431768211471", 10).toStringHex() == std::string("10000000000000000000000000000000F") ); // 2^128 + 15
 	
-	// --------
+	
 	REQUIRE( BigInt::fromUint64(0x121fa00ad77d7422ull).toStringHex() 					== std::string( "121FA00AD77D7422") );
 	REQUIRE( BigInt::fromString( "121fa00ad77d7422", 16).toStringHex() 					== std::string( "121FA00AD77D7422") );
 	REQUIRE( BigInt::fromString( "121fa00ad77d74222", 16).toStringHex() 				== std::string( "121FA00AD77D74222") );
@@ -180,6 +180,13 @@ TEST_CASE( "big integer to std:string hex", "[bigint]" ) {
 	REQUIRE( BigInt::fromString(    "94102778012703968913903738141677775", 10).toStringHex() == std::string( "121FA00AD77D7422236D88FE5618CF") );
 	REQUIRE( BigInt::fromString(  "1505644448203263502622459810266844400", 10).toStringHex() == std::string( "121FA00AD77D7422236D88FE5618CF0") );
 	REQUIRE( BigInt::fromString( "24090311171252216041959356964269510400", 10).toStringHex() == std::string( "121FA00AD77D7422236D88FE5618CF00") );
+	
+	// --------
+	REQUIRE( BigInt::fromString("1e02bc1e8aa1d63b5b9ccf516f9d67d27b3c80b500001cbe991a08", 16).toStringHex()            == std::string("1E02BC1E8AA1D63B5B9CCF516F9D67D27B3C80B500001CBE991A08") );
+	REQUIRE( BigInt::fromString("12345678900000000000000000000000000000000000000000000123456789000", 10).toStringHex() == std::string("1E02BC1E8AA1D63B5B9CCF516F9D67D27B3C80B500001CBE991A08") );
+	
+	REQUIRE( BigInt::fromString("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000", 16).toStringHex()                == std::string("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000") ); // 39 Bytes => 312 bit
+	REQUIRE( BigInt::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringHex() == std::string("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000") );
 }
 
 TEST_CASE( "big integer to std:string dec", "[bigint]" ) {
@@ -275,6 +282,12 @@ TEST_CASE( "big integer to std:string dec", "[bigint]" ) {
 	REQUIRE( BigInt::fromString(  "1505644448203263502622459810266844400", 10).toStringDec() == std::string(  "1505644448203263502622459810266844400") );
 	REQUIRE( BigInt::fromString( "24090311171252216041959356964269510400", 10).toStringDec() == std::string( "24090311171252216041959356964269510400") );
 	
+	// --------
+	REQUIRE( BigInt::fromString("1e02bc1e8aa1d63b5b9ccf516f9d67d27b3c80b500001cbe991a08", 16).toStringDec()            == std::string("12345678900000000000000000000000000000000000000000000123456789000") );
+	REQUIRE( BigInt::fromString("12345678900000000000000000000000000000000000000000000123456789000", 10).toStringDec() == std::string("12345678900000000000000000000000000000000000000000000123456789000") );
+	
+	REQUIRE( BigInt::fromString("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000", 16).toStringDec()                == std::string("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040") ); // 39 Bytes => 312 bit
+	REQUIRE( BigInt::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringDec() == std::string("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040") );
 }
 
 TEST_CASE( "big integer from std:string", "[bigint]" ) {
@@ -468,14 +481,14 @@ TEST_CASE( "big integer comparisons", "[bigint]" ) {
 	REQUIRE(  BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) 					<  (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(1)) );
 	REQUIRE(  BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) 					<= (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(1)) );
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(1)) 		>   BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) );
-	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(1)) 		>   BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) );
+	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(1)) 		>=  BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) );
 	
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt::TEN) 	!= (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) );
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt::TEN) 	== (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(10)) );
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt::TEN)		<  (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) );
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt::TEN)		<= (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) );
 	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) 		>  (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(10)) );
-	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) 		>  (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(10)) );
+	REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) 		>= (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(10)) );
 	
 	//REQUIRE( (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) 		!=  (BigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + BigInt(11)) );
 }
@@ -536,6 +549,13 @@ TEST_CASE( "big integer addition", "[bigint]" ) {
 	REQUIRE( BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) + BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) + BigInt(0)	== BigInt::fromString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE", 16) );
 	REQUIRE( BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) + BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) + BigInt(1)	== BigInt::fromString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) );
 	REQUIRE( BigInt(1) + BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) + BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16)	== BigInt::fromString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16) );
+	
+	
+	REQUIRE( BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) + BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) == BigInt::fromString("ffffffffffffffff0000000000000011111111111111100", 16) );
+	REQUIRE( BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) + BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) == BigInt::fromString("FFFFFFFFFFFFFFFF0000000000000011111111111111100", 16) );
+	
+	REQUIRE( BigInt::fromString("123456789000000000000000000000000000001234567890", 10) + BigInt::fromString("987654321000000000000000000000000000009876543210", 10) == BigInt::fromString("1111111110000000000000000000000000000011111111100", 10) );
+	REQUIRE( BigInt::fromString("987654321000000000000000000000000000009876543210", 10) + BigInt::fromString("123456789000000000000000000000000000001234567890", 10) == BigInt::fromString("1111111110000000000000000000000000000011111111100", 10) );
 }
 
 TEST_CASE( "big integer subtraction", "[bigint]" ) {
@@ -574,6 +594,9 @@ TEST_CASE( "big integer subtraction", "[bigint]" ) {
 	REQUIRE( BigInt::fromString("010000000000000001", 16) - BigInt::fromString("010000000000000000", 16) 	==                            BigInt(0x01)      ); // (2^64 + 1) - 2^64 = 1
 	REQUIRE( BigInt::fromString("010000000000000001", 16) - BigInt::fromUint64(               0x01ull)	 	== BigInt::fromString("010000000000000000", 16) ); // (2^64 + 1) - 1 = 2^64
 	REQUIRE( BigInt::fromString("010000000000000001", 16) - BigInt::fromUint64(               0x02ull)		== BigInt::fromUint64( 0xFFFFFFFFFFFFFFFFull)   ); // (2^64 + 1) - 2 = 2^64 - 1
+	
+	REQUIRE( BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) - BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) == BigInt::fromString("fdb97530eca86421000000000000000eca8641fdb975320", 16) );
+	REQUIRE( BigInt::fromString("987654321000000000000000000000000000009876543210", 10) - BigInt::fromString("123456789000000000000000000000000000001234567890", 10) == BigInt::fromString("864197532000000000000000000000000000008641975320", 10) );
 }
 
 TEST_CASE( "big integer multiplication", "[bigint]" ) {
@@ -606,6 +629,8 @@ TEST_CASE( "big integer multiplication", "[bigint]" ) {
 	REQUIRE( (BigInt::fromUint64(    0xEFEFull) * BigInt::fromUint64(   0xEFull)).toUint64() ==   0xE00021ull );
 	REQUIRE( (BigInt::fromUint64(    0xEFEFull) * BigInt::fromUint64( 0xEFEFull)).toUint64() == 0xE0E02121ull );
 	
+	REQUIRE( (BigInt::fromUint64(0xff9Cull) * BigInt::fromUint64(  0x7Bull)).toUint64() == 0x7ACFF4ull ); // 65436 * 123 = 8048628
+	
 	// 8 Bytes (64bit)
 	REQUIRE( (BigInt::fromUint64(    0xFFFFFFFFull) * BigInt::fromUint64( 0xFFFFFFFFull)).toUint64() == 0xFFFFFFFE00000001ull );
 	REQUIRE( (BigInt::fromUint64(    0xFFFFFFFFull) * BigInt::fromUint64(       0x02ull)).toUint64() ==        0x1FFFFFFFEull );
@@ -618,4 +643,77 @@ TEST_CASE( "big integer multiplication", "[bigint]" ) {
 	REQUIRE( BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull) == BigInt::fromString("24090311171252216041959356964269510400", 10) ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
 	REQUIRE( BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull) == BigInt::fromString("121fa00ad77d7422236d88fe5618cf00", 16) ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
 	REQUIRE( (BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull)).toStringDec() == std::string("24090311171252216041959356964269510400") ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
+	
+	// -------
+	REQUIRE( BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) *  BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) == BigInt::fromString("121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16) );
+	REQUIRE( BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) *  BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) == BigInt::fromString("121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16) );
+	
+	REQUIRE( BigInt::fromString("123456789000000000000000000000000000001234567890", 10) *  BigInt::fromString("987654321000000000000000000000000000009876543210", 10) == BigInt::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
+	REQUIRE( BigInt::fromString("987654321000000000000000000000000000009876543210", 10) *  BigInt::fromString("123456789000000000000000000000000000001234567890", 10) == BigInt::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
+}
+
+TEST_CASE( "big integer division", "[bigint]" ) {
+	// 1 Byte (8bit)
+	REQUIRE( (BigInt(  0) / BigInt(  1)).toUint64() ==   0 );
+	REQUIRE( (BigInt(  1) / BigInt(  1)).toUint64() ==   1 );
+	REQUIRE( (BigInt(  1) / BigInt(  2)).toUint64() ==   0 );
+	REQUIRE( (BigInt(  2) / BigInt(  1)).toUint64() ==   2 );
+	REQUIRE( (BigInt(  2) / BigInt(  2)).toUint64() ==   1 );
+	REQUIRE( (BigInt(  4) / BigInt(  2)).toUint64() ==   2 );
+	REQUIRE( (BigInt( 10) / BigInt(  1)).toUint64() ==  10 );
+	REQUIRE( (BigInt( 10) / BigInt(  2)).toUint64() ==   5 );
+	REQUIRE( (BigInt( 10) / BigInt(  3)).toUint64() ==   3 );
+	REQUIRE( (BigInt( 10) / BigInt(  5)).toUint64() ==   2 );
+	REQUIRE( (BigInt( 11) / BigInt(  2)).toUint64() ==   5 );
+	REQUIRE( (BigInt( 12) / BigInt(  2)).toUint64() ==   6 );
+	REQUIRE( (BigInt(252) / BigInt(  2)).toUint64() == 126 );
+	REQUIRE( (BigInt(253) / BigInt(  2)).toUint64() == 126 );
+	REQUIRE( (BigInt(254) / BigInt(  2)).toUint64() == 127 );
+	REQUIRE( (BigInt(255) / BigInt(  2)).toUint64() == 127 );
+	REQUIRE( (BigInt(255) / BigInt(255)).toUint64() ==   1 );
+	REQUIRE( (BigInt(254) / BigInt(127)).toUint64() ==   2 );
+	REQUIRE( (BigInt(255) / BigInt(127)).toUint64() ==   2 );
+	
+	
+	// 2 Bytes (16 bit)
+	REQUIRE( (BigInt::fromUint64(0x0100ull) / BigInt(                2)).toUint64() ==   128);
+	REQUIRE( (BigInt::fromUint64(0x0200ull) / BigInt(                4)).toUint64() ==   128);
+	REQUIRE( (BigInt::fromUint64(0x0100ull) / BigInt::fromUint64(0x100)).toUint64() ==     1);
+	REQUIRE( (BigInt::fromUint64(0x0200ull) / BigInt::fromUint64(0x100)).toUint64() ==     2);
+	REQUIRE( (BigInt::fromUint64(0x0200ull) / BigInt::fromUint64(0x200)).toUint64() ==     1);
+	REQUIRE( (BigInt::fromUint64(0x0300ull) / BigInt::fromUint64(0x200)).toUint64() ==     1);
+	REQUIRE( (BigInt::fromUint64(0x0400ull) / BigInt::fromUint64(0x200)).toUint64() ==     2);
+	REQUIRE( (BigInt::fromUint64(0xFF9Cull) / BigInt::fromUint64(0x100)).toUint64() ==  0xff);
+	REQUIRE( (BigInt::fromUint64(0xFF9Cull) / BigInt::fromUint64(  532)).toUint64() ==   123);
+	REQUIRE( (BigInt::fromUint64(0xDA96ull) / BigInt::fromUint64(  571)).toUint64() ==    98);
+	
+	REQUIRE( (BigInt::fromUint64(0xFF00ull) / BigInt::fromUint64(0x0FFull)).toUint64() == 0x0100ull );
+	REQUIRE( (BigInt::fromUint64(0x10EFull) / BigInt::fromUint64(0x0FFull)).toUint64() == 0x0011ull );
+	
+	// 4 Bytes (32bit)
+	REQUIRE( (BigInt::fromUint64(    0xFFFE0001ull) / BigInt::fromUint64( 0xFFFFull)).toUint64() == 0xFFFFull ); // first test of D5. [Test Remainder] and D6. [add back] (at 8bit words)
+	
+	REQUIRE( (BigInt::fromUint64(    0x010000ull) / BigInt::fromUint64( 0x0100ull)).toUint64() ==   0x0100ull );
+	REQUIRE( (BigInt::fromUint64(    0x0F0000ull) / BigInt::fromUint64( 0x0F00ull)).toUint64() ==   0x0100ull );
+	
+	REQUIRE( (BigInt::fromUint64(    0xFFFFFFFFull) / BigInt::fromUint64(  0x003ull)).toUint64() == 0x55555555ull );
+	REQUIRE( (BigInt::fromUint64(      0xE00021ull) / BigInt::fromUint64(   0xEFull)).toUint64() ==     0xEFEFull );
+	REQUIRE( (BigInt::fromUint64(    0xE0E02121ull) / BigInt::fromUint64( 0xEFEFull)).toUint64() ==     0xEFEFull );
+	
+	// 8 Bytes (64bit)
+	REQUIRE( (BigInt::fromUint64(    0xFFFFFFFFull) * BigInt::fromUint64( 0xFFFFFFFFull)).toUint64() == 0xFFFFFFFE00000001ull );
+	REQUIRE( (BigInt::fromUint64(    0xFFFFFFFFull) * BigInt::fromUint64(       0x02ull)).toUint64() ==        0x1FFFFFFFEull );
+	REQUIRE( (BigInt::fromUint64(    0xFEDCBA98ull) * BigInt::fromUint64( 0x12345678ull)).toUint64() == 0x121FA00A35068740ull );
+	REQUIRE( (BigInt::fromUint64(    0xFEDCBA98ull) * BigInt::fromUint64( 0x12345678ull)).toUint64() == 0xFEDCBA98ull * 0x12345678ull);
+	
+	// 16 Bytes (128bit)
+	REQUIRE( BigInt::fromUint64(    0xFFFFFFFFFFFFFFFFull) * BigInt::fromUint64( 0xFFFFFFFFFFFFFFFFull) == BigInt::fromString("FFFFFFFFFFFFFFFE0000000000000001", 16) );
+	REQUIRE( BigInt::fromUint64(    0xFFFFFFFFFFFFFFFFull) * BigInt::fromUint64(               0x02ull) == BigInt::fromString(               "1FFFFFFFFFFFFFFFE", 16) );
+	REQUIRE( BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull) == BigInt::fromString("24090311171252216041959356964269510400", 10) ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
+	REQUIRE( BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull) == BigInt::fromString("121fa00ad77d7422236d88fe5618cf00", 16) ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
+	REQUIRE( (BigInt::fromUint64(    0xFEDCBA9876543210ull) * BigInt::fromUint64( 0x123456789ABCDEF0ull)).toStringDec() == std::string("24090311171252216041959356964269510400") ); // 18364758544493064720 * 1311768467463790320 = 24090311171252216041959356964269510400
+	
+	// -------
+	REQUIRE( BigInt::fromString("123456789abcdef000000000000000123456789abcdef0", 16) *  BigInt::fromString("fedcba9876543210000000000000000fedcba9876543210", 16) == BigInt::fromString("121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16) );
+	REQUIRE( BigInt::fromString("123456789000000000000000000000000000001234567890", 10) *  BigInt::fromString("987654321000000000000000000000000000009876543210", 10) == BigInt::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
 }
