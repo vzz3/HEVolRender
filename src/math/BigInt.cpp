@@ -482,9 +482,11 @@ void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, 
 		// else: last_c is default set to 0
 		
 		// clearing
-		for(uint i = 0 ; i<this->wordSize ; ++i) {
-			this->value[i] = mask;
-		}
+		//for(uint i = 0 ; i<this->wordSize ; ++i) {
+		//	this->value[i] = mask;
+		//}
+		this->value[0] = mask;
+		this->wordSize = 1;
 		
 		restBits = 0;
 	} else if( allWords > 0 ) {
@@ -499,9 +501,10 @@ void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, 
 		}
 		
 		// setting the rest to 'c'
-		for( ; first<this->wordSize ; ++first ) {
-			this->value[first] = mask;
-		}
+		//for( ; first<this->wordSize ; ++first ) {
+		//	this->value[first] = mask;
+		//}
+		this->wordSize = first;
 	}
 }
 
@@ -520,7 +523,7 @@ void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, 
 BIG_INT_WORD_TYPE BigInt::rcr_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
 	assert ( bits>0 && bits<BIG_INT_BITS_PER_WORD );
 	
-	uint move = BIG_INT_WORD_MAX_VALUE - bits;
+	uint move = BIG_INT_BITS_PER_WORD - bits;
 	int i; // signed
 	BIG_INT_WORD_TYPE newC;
 	
@@ -535,6 +538,10 @@ BIG_INT_WORD_TYPE BigInt::rcr_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
 	}
 	
 	c = (c & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0;
+	
+	if(this->wordSize > 1 && this->value[this->wordSize-1] == 0) {
+		this->wordSize--;
+	}
 	
 	return c;
 }
@@ -1411,10 +1418,14 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 		u2 = this->value[j+n];
 	}
 	
+	BIG_INT_WORD_COUNT_TYPE newWordSize;
+	// trim reminder word size
+	for (newWordSize = n; newWordSize>1 && this->value[newWordSize-1] == 0; newWordSize--);
+	this->wordSize = newWordSize;
+	
 	// set new word size of the result
-	BIG_INT_WORD_COUNT_TYPE resultWordSize = maxWordCount;
-	for (; resultWordSize>0 && q.value[resultWordSize-1] == 0; resultWordSize--);
-	q.wordSize = resultWordSize;
+	for (newWordSize = maxWordCount; newWordSize>1 && q.value[newWordSize-1] == 0; newWordSize--);
+	q.wordSize = newWordSize;
 	
 	if( remainder ) {
 		this->div_unnormalize(remainder, n, d);
@@ -1517,7 +1528,7 @@ void BigInt::div_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_
 	//for(BIG_INT_WORD_COUNT_TYPE i=n ; i<this->wordSize ; ++i) {
 	//	this->value[i] = 0;
 	//}
-	this->wordSize = n;
+	//this->wordSize = n;
 	
 	this->rcr(d,0);
 	

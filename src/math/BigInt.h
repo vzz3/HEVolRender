@@ -19,6 +19,11 @@ namespace ppvr {
 	namespace math {
 		class BigInt {
 		public:
+			friend std::ostream& operator << ( std::ostream& os, const BigInt& value ){
+				os << value.toStringDec();
+				return os;
+			}
+			
 			static BigInt ZERO;
 			static BigInt ONE;
 			static BigInt TWO;
