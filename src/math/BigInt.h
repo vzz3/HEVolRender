@@ -3,17 +3,9 @@
 #include <memory>
 #include <sys/types.h>
 
+#include "BigInt_wordDev.h"
+
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
-
-#define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
-#define BIG_INT_WORD_TYPE uint8_t
-#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xF) //15u	// 2^(sizeof(BIG_INT_WORD_TYPE)*8/2) - 1
-
-#define BIG_INT_WORD_HIGH_BIT_MASK BIG_INT_WORD_TYPE(~BIG_INT_WORD_LOW_BIT_MASK)
-#define BIG_INT_WORD_MAX_VALUE ((BIG_INT_WORD_TYPE)(-1))
-#define BIG_INT_BITS_PER_WORD (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT)
-#define BIG_INT_WORD_HIGHEST_BIT ((BIG_INT_WORD_TYPE)(1ull << (BIG_INT_BITS_PER_WORD - 1)))
-
 
 namespace ppvr {
 	namespace math {
@@ -50,11 +42,19 @@ namespace ppvr {
 			std::string toStringDec() const;
 			
 			// --- General purpose mathematical methods ---
+			BigInt operator<< (const uint bits) const;
+			BigInt operator>> (const uint bits) const;
 			BigInt operator+ (const BigInt& other) const;
 			BigInt operator- (const BigInt& other) const;
 			BigInt operator* (const BigInt& other) const;
 			BigInt operator/ (const BigInt& other) const;
 			BigInt operator% (const BigInt& other) const;
+			
+			/**
+			 * power this = this ^ pow
+			 * binary algorithm (r-to-l)
+			 */
+			BigInt pow(BigInt pow);
 			
 			// --- Comparison operators ---
 			bool operator< (const BigInt& other) const;
@@ -63,6 +63,8 @@ namespace ppvr {
 			bool operator>= (const BigInt& other) const;
 			bool operator== (const BigInt& other) const;
 			bool operator!= (const BigInt& other) const;
+			
+			
 			
 			// Copy assignment operator
 			BigInt& operator= (const BigInt& other);
@@ -85,6 +87,8 @@ namespace ppvr {
 			void setZero();
 			
 			void setOne();
+			
+			bool isZero();
 			
 			/**
 			 * this method returns the number of the highest set bit in word
@@ -169,7 +173,7 @@ namespace ppvr {
 			 *
 			 * This method does not increase the the word count => it drops informations that are on left end!
 			 */
-			void rcl_moveWords( uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, BIG_INT_WORD_TYPE c);
+			void rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
 			
 			/**
 			 * this method moves all bits into the left hand side
@@ -185,7 +189,7 @@ namespace ppvr {
 			 *
 			 * This method does not increase the the word count => it drops informations that are on left end!
 			 */
-			BIG_INT_WORD_TYPE rcl_moveBits(uint bits, BIG_INT_WORD_TYPE c);
+			BIG_INT_WORD_TYPE rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 			
 			/**
 			 * moving all bits into the left side 'bits' times
@@ -197,9 +201,9 @@ namespace ppvr {
 			 * the value c will be set into the lowest bits
 			 * and the method returns state of the last moved bit
 			 *
-			 * This method does not increase the the word count => it drops informations that are on left end!
+			 * if resize is false (default) this method does not increase the the word size => it drops informations that are on left end!
 			 */
-			BIG_INT_WORD_TYPE rcl(uint bits, BIG_INT_WORD_TYPE c=0);
+			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0, const bool resize=false);
 			
 			/* ---------- shift right ---------- */
 			
@@ -208,7 +212,7 @@ namespace ppvr {
 			 *
 			 * this method moves only words
 			 */
-			void rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, BIG_INT_WORD_TYPE c);
+			void rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
 			
 			/**
 			 * this method moves all bits into the right hand side
@@ -222,7 +226,7 @@ namespace ppvr {
 			 * let this is 000000010
 			 * after rcr_moveBits(2, 1) there'll be 110000000 and rcr_moveBits returns 1
 			 */
-			BIG_INT_WORD_TYPE rcr_moveBits(uint bits, BIG_INT_WORD_TYPE c);
+			BIG_INT_WORD_TYPE rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 			
 			/**
 			 * moving all bits into the right side 'bits' times
@@ -234,8 +238,8 @@ namespace ppvr {
 			 * the value c will be set into the highest bits
 			 * and the method returns state of the last moved bit
 			 */
-			BIG_INT_WORD_TYPE rcr(uint bits, BIG_INT_WORD_TYPE c=0);
-			
+			BIG_INT_WORD_TYPE rcr(const uint bits, const BIG_INT_WORD_TYPE c=0);
+		
 			/* ---------- addition ---------- */
 			
 			/**
@@ -366,7 +370,7 @@ namespace ppvr {
 			//BigInt mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const
 			
 			/* ---------- division ---------- */
-		public:
+			
 			/**
 			 * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
 			 * result = a:b / c and rest - remainder
@@ -379,8 +383,7 @@ namespace ppvr {
 			 *
 			 */
 			void divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE *result, BIG_INT_WORD_TYPE *rest) const;
-		
-		private:
+			
 			/**
 			 *
 			 * the same algorithm like the division algorithm for all words which is based on

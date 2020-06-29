@@ -1,0 +1,25 @@
+#pragma once
+
+#define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
+//#include "BigInt_wordDev8bit.h"
+
+// 8bit
+#define BIG_INT_WORD_TYPE uint8_t
+#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xF) //15u	// 2^(sizeof(BIG_INT_WORD_TYPE)*8/2) - 1
+
+// 16bit
+//#define BIG_INT_WORD_TYPE uint16_t
+//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFF)
+
+// 32bit
+//#define BIG_INT_WORD_TYPE uint32_t
+//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFF)
+
+// 64bit
+//#define BIG_INT_WORD_TYPE uint64_t
+//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFFFFFF)
+
+#define BIG_INT_WORD_HIGH_BIT_MASK BIG_INT_WORD_TYPE(~BIG_INT_WORD_LOW_BIT_MASK)
+#define BIG_INT_WORD_MAX_VALUE ((BIG_INT_WORD_TYPE)(-1ll))
+#define BIG_INT_BITS_PER_WORD (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT)
+#define BIG_INT_WORD_HIGHEST_BIT ((BIG_INT_WORD_TYPE)(1ull << (BIG_INT_BITS_PER_WORD - 1)))

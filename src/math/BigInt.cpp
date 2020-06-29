@@ -181,14 +181,18 @@ void BigInt::reserveWords( BIG_INT_WORD_COUNT_TYPE newCapacity ) {
 	this->wordCapacity = newCapacity;
 }
 
-void BigInt::setZero() {
+inline void BigInt::setZero() {
 	this->value[0] = 0;
 	this->wordSize = 1;
 }
 
-void BigInt::setOne() {
+inline void BigInt::setOne() {
 	this->value[0] = 1;
 	this->wordSize = 1;
+}
+
+inline bool BigInt::isZero() {
+	return (this->wordSize == 1 && this->value[0] == 0);
 }
 
 /**
@@ -217,7 +221,7 @@ int BigInt::findLeadingBitInWord(BIG_INT_WORD_TYPE word) const {
  * src:		HHHHLLLL
  * res:		hhhhLLLL
  */
-BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set low bits to 0 and keep the high bits
 		this->getHighAsHighBits(target)
@@ -236,7 +240,7 @@ BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WO
  * src:		HHHHLLLL
  * res:		hhhhHHHH
  */
-BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set low bits to 0 and keep the high bits
 		//(target & BIG_INT_WORD_HIGH_BIT_MASK)
@@ -257,7 +261,7 @@ BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_W
  * src:		HHHHLLLL
  * res:		HHHHllll
  */
-BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set high bits to 0 and keep the low bits
 		this->getLowAsLowBits(target)
@@ -276,7 +280,7 @@ BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_
  * src:		HHHHLLLL
  * res:		LLLLllll
  */
-BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set high bits to 0 and keep the low bits
 		//(target & BIG_INT_WORD_LOW_BIT_MASK)
@@ -296,7 +300,7 @@ BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_W
  * src:	HHHHLLLL
  * res:	HHHH0000
  */
-BIG_INT_WORD_TYPE BigInt::getHighAsHighBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getHighAsHighBits(BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_HIGH_BIT_MASK);
 	return res;
 }
@@ -307,7 +311,7 @@ BIG_INT_WORD_TYPE BigInt::getHighAsHighBits(BIG_INT_WORD_TYPE src) const {
  * src:	HHHHLLLL
  * res:	0000HHHH
  */
-BIG_INT_WORD_TYPE BigInt::getHighAsLowBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getHighAsLowBits(BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src >> (BIG_INT_BITS_PER_WORD/2));
 	return res;
 }
@@ -318,7 +322,7 @@ BIG_INT_WORD_TYPE BigInt::getHighAsLowBits(BIG_INT_WORD_TYPE src) const {
  * src:	HHHHLLLL
  * res:	0000LLLL
  */
-BIG_INT_WORD_TYPE BigInt::getLowAsLowBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getLowAsLowBits(BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_LOW_BIT_MASK);
 	return res;
 }
@@ -329,7 +333,7 @@ BIG_INT_WORD_TYPE BigInt::getLowAsLowBits(BIG_INT_WORD_TYPE src) const {
  * src:	HHHHLLLL
  * res:	LLLL0000
  */
-BIG_INT_WORD_TYPE BigInt::getLowAsHighBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getLowAsHighBits(BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src << (BIG_INT_BITS_PER_WORD/2));
 	return res;
 }
@@ -343,7 +347,7 @@ BIG_INT_WORD_TYPE BigInt::getLowAsHighBits(BIG_INT_WORD_TYPE src) const {
  *
  * This method does not increase the the word count => it drops informations that are on left end!
  */
-void BigInt::rcl_moveWords( uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, BIG_INT_WORD_TYPE c) {
+void BigInt::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
 	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
@@ -395,7 +399,7 @@ void BigInt::rcl_moveWords( uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits,
  *
  * This method does not increase the the word count => it drops informations that are on left end!
  */
-BIG_INT_WORD_TYPE BigInt::rcl_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
+BIG_INT_WORD_TYPE BigInt::rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	assert( bits>0 && bits<BIG_INT_BITS_PER_WORD );
 	
 	uint move = BIG_INT_BITS_PER_WORD - bits;
@@ -426,9 +430,29 @@ BIG_INT_WORD_TYPE BigInt::rcl_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
  *
  * This method does not increase the the word count => it drops informations that are on left end!
  */
-BIG_INT_WORD_TYPE BigInt::rcl(uint bits, BIG_INT_WORD_TYPE c) {
+BIG_INT_WORD_TYPE BigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const bool resize) {
 	BIG_INT_WORD_TYPE lastC    = 0;
 	uint restBits = bits;
+	if(resize) {
+		// calculate required word size
+		BIG_INT_WORD_TYPE curLasWordIndex = this->wordSize - 1;
+		uint newTotalBits = (curLasWordIndex) * BIG_INT_BITS_PER_WORD // currently total bits used
+			+ this->findLeadingBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingBitInWord() returns -1 the "this->wordSize" is already wrong!)
+			+ bits;
+		uint newWordCount = newTotalBits / BIG_INT_BITS_PER_WORD;
+		if(newTotalBits % BIG_INT_BITS_PER_WORD > 0) {
+			newWordCount++;
+		}
+		
+		// reserver space for new words
+		this->reserveWords(newWordCount);
+		
+		// init new words with zero
+		std::fill_n(&this->value[this->wordSize], (newWordCount - this->wordSize), 0);
+		
+		// set new word size
+		this->wordSize = newWordCount;
+	}
 	
 	if( bits == 0 )
 		return 0;
@@ -462,6 +486,12 @@ BIG_INT_WORD_TYPE BigInt::rcl(uint bits, BIG_INT_WORD_TYPE c) {
 	return lastC;
 }
 
+BigInt BigInt::operator<< (const uint bits) const {
+	BigInt res(*this);
+	res.rcl(bits, 0, true);
+	return res;
+}
+
 /* ---------- shift right ---------- */
 
 /**
@@ -469,7 +499,7 @@ BIG_INT_WORD_TYPE BigInt::rcl(uint bits, BIG_INT_WORD_TYPE c) {
  *
  * this method moves only words
  */
-void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, BIG_INT_WORD_TYPE c) {
+void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
 	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
@@ -520,7 +550,7 @@ void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, uint bits, 
  * let this is 000000010
  * after rcr_moveBits(2, 1) there'll be 110000000 and rcr_moveBits returns 1
  */
-BIG_INT_WORD_TYPE BigInt::rcr_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
+BIG_INT_WORD_TYPE BigInt::rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	assert ( bits>0 && bits<BIG_INT_BITS_PER_WORD );
 	
 	uint move = BIG_INT_BITS_PER_WORD - bits;
@@ -556,7 +586,7 @@ BIG_INT_WORD_TYPE BigInt::rcr_moveBits(uint bits, BIG_INT_WORD_TYPE c) {
  * the value c will be set into the highest bits
  * and the method returns state of the last moved bit
  */
-BIG_INT_WORD_TYPE BigInt::rcr(uint bits, BIG_INT_WORD_TYPE c) {
+BIG_INT_WORD_TYPE BigInt::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
 	BIG_INT_WORD_TYPE lastC    = 0;
 	uint restBits = bits;
 	
@@ -593,6 +623,12 @@ BIG_INT_WORD_TYPE BigInt::rcr(uint bits, BIG_INT_WORD_TYPE c) {
 	 */
 	
 	return lastC;
+}
+
+BigInt BigInt::operator>> (const uint bits) const {
+	BigInt res(*this);
+	res.rcr(bits);
+	return res;
 }
 
 /* ---------- addition ---------- */
@@ -1719,6 +1755,57 @@ BigInt BigInt::operator% (const BigInt& other) const {
 	return reminder;
 }
 
+/*!
+ power this = this ^ pow
+ (pow without a sign)
+ 
+ binary algorithm (r-to-l)
+ 
+ */
+BigInt BigInt::pow(BigInt pow) {
+	//if( IsNan() )
+	//	return 1;
+	
+	if( this->isZero() ) {
+		if( pow.isZero() ) {
+			// we don't define zero^zero
+			std::string msg = "BigInt zero^zero is not defined.";
+			std::cerr << msg << std::endl;
+			throw std::runtime_error(msg);
+		}
+		
+		// 0^(+something) is zero
+		//return 0;
+		return *this;
+	}
+	
+	BigInt start(*this);
+	BigInt result(1);
+	uint c = 0;
+	
+	//while( !c ) {
+	while( true ) {
+		if( pow.value[0] & 1 ) {
+			//c += result.mul(start);
+			result = result * start;
+		}
+		
+		pow.rcr(1);
+		
+		if( pow.isZero() ) {
+			break;
+		}
+		
+		//c += start.Mul(start);
+		start = start * start;
+	}
+	
+	//*this = result;
+	//return CheckCarry(c);
+	return result;
+}
+
+/* ---------- comparisons ---------- */
 bool BigInt::operator< (const BigInt& other) const {
 	if (this->wordSize < other.wordSize) {
 		return true;
