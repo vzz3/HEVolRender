@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <cmath>		/* ciel */
+#include <math.h>       /* log2 */
 
 using namespace ppvr::math;
 
@@ -41,21 +43,43 @@ BigInt BigInt::fromUint64(const uint64_t& uint64Val) {
 BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) {
 	assert(base <= 16);
 	
-	BigInt val(0);
-	BigInt pow(1);
-	BigInt bigBase(base);
-	BigInt t(0);
+	// wordSize for 8bit words (2^8=256, l: string Length, b: base)
+	// wordSize = log_256(b^l)
+	//			= log_2(b^l) / 8
+	//			= (log_b(b^l) / log_b(2) ) * (1/8)
+	//			= (l / log_b(2)) * (1/8)
+	//			= (l / (log_2(2) / log_2(b)) * (1/8)
+	//			= (l / (       1 / log_2(b)) * (1/8)
+	//			= (l * log_2(b) * (1/8)
+	//std::cout << "string length: " << str.length() << std::endl;
+	double sizeInBit = (double)str.length() * (log2((double)base));
+	uint wordSize = std::ceil(sizeInBit / (double)BIG_INT_BITS_PER_WORD);
+	//uint wordSize = 1;
+	BigInt val(0, wordSize);
+	
+	//BigInt val(0);
+	BigInt pow(1, wordSize);
+	BigInt powTmp(0, wordSize);
+	//BigInt bigBase(base);
+	BigInt t(0, 1);
+	BigInt tPow(0, wordSize);
 	for(size_t i = str.length(); i>0; i--) {
 		char c = str[i-1];
-		if( base > 10 && c >= 'A' &&  c <= 'F') {
-			t = BigInt( 10 + c - 'A' );
+		if(c == ' ') {
+			continue;
+		} else if( base > 10 && c >= 'A' &&  c <= 'F') {
+			t.value[0] = 10 + c - 'A';
 		} else if( base > 10 && c >= 'a' &&  c <= 'f') {
-			t = BigInt( 10 + c - 'a');
+			t.value[0] = 10 + c - 'a';
 		} else {
-			t = BigInt( c - '0');
+			t.value[0] = c - '0';
 		}
-		val = val + t * pow;
-		pow = pow * bigBase;
+		
+		t.mulSchool(t, pow, tPow);
+		val.add(tPow);
+		
+		powTmp = pow;
+		powTmp.mulInt(base, pow);
 	}
 	
 	return val;
@@ -991,54 +1015,59 @@ void BigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, B
 /**
  * multiplication: this = this * ss2
  */
-void BigInt::mulInt(BIG_INT_WORD_TYPE ss2) {
+void BigInt::mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const {
 	if( ss2 == 0 ) {
-		this->value[0] = 0;
-		this->wordSize = 1;
+		result.setZero();
 		return;
 	}
 	
-	BigInt u(this->value, this->wordCapacity, this->wordSize); // "copy" the data from this to u
+	//BigInt u(this->value, this->wordCapacity, this->wordSize); // "copy" the data from this to u
 	
 	// create new value for this
-	this->value = new BIG_INT_WORD_TYPE[u.wordSize+1];
-	this->wordCapacity = u.wordSize+1;
-	std::fill_n(&this->value[0], this->wordCapacity, 0);
+	//this->value = new BIG_INT_WORD_TYPE[this->wordSize+1];
+	//this->wordCapacity = this->wordSize+1;
+	//std::fill_n(&this->value[0], this->wordCapacity, 0);
+	result.reserveWords(this->wordSize+1);
+	std::fill_n(result.value, this->wordSize+1, 0);
 	
 	BIG_INT_WORD_TYPE r2,r1;
-	BIG_INT_WORD_COUNT_TYPE x1size=u.wordSize;
+	BIG_INT_WORD_COUNT_TYPE x1size=this->wordSize;
 	BIG_INT_WORD_COUNT_TYPE x1start=0;
 	
 	// try to save some CPU sycles if this contains words with 0 at the start or at the end
 	// if( value_size > 2 )
-	if( u.wordSize > 2 ) {
+	if( this->wordSize > 2 ) {
 		// if the value_size is smaller than or equal to 2
 		// there is no sense to set x1size and x1start to another values
 		
-		for(x1size=u.wordSize ; x1size>0 && u.value[x1size-1]==0 ; --x1size);
+		for(x1size=this->wordSize ; x1size>0 && this->value[x1size-1]==0 ; --x1size);
 		
 		if( x1size == 0 ) {
 			// this is 0: 0*x => 0
-			this->wordSize = 1;
+			//this->wordSize = 1;
+			result.setZero();
 			return;
 		}
 		
-		for(x1start=0 ; x1start<x1size && u.value[x1start]==0 ; ++x1start);
+		for(x1start=0 ; x1start<x1size && this->value[x1start]==0 ; ++x1start);
 	}
 	
+	
 	for(BIG_INT_WORD_COUNT_TYPE x1=x1start ; x1<x1size ; ++x1) {
-		this->mulTwoWords(u.value[x1], ss2, &r2, &r1 );
-		this->addTwoInts(r2, r1, x1, this->value, this->wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
+		this->mulTwoWords(this->value[x1], ss2, &r2, &r1 );
+		this->addTwoInts(r2, r1, x1, result.value, result.wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
 	}
 	
 	// check if the most significant word is > 0 and increase the wordSize if it is.
 	// TODO remove this if addTwoInts() can take care of the this->wordSize
-	if(this->value[this->wordSize-1] != 0) {
-		this->wordSize = this->wordCapacity;
+	if(result.value[this->wordSize] == 0) {
+		result.wordSize = this->wordSize;
+	} else {
+		result.wordSize = this->wordSize + 1;
 	}
 }
 
-BigInt BigInt::mulSchool(const BigInt& a, const BigInt& b) const {
+void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
 //	return mulSchool_1(a, b);
 //}
 //
@@ -1069,34 +1098,40 @@ BigInt BigInt::mulSchool(const BigInt& a, const BigInt& b) const {
 //BigInt BigInt::mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const {
 	
 	if( aSize==0 || bSize==0 ) {
-		return BigInt(0);
+		//return BigInt(0);
+		result.setZero();
 	}
 	
 	BIG_INT_WORD_TYPE r2, r1;
 	
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = aSize + bSize; // std::max(aSize, bSize) * 2;
-	BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount];
-	std::fill_n(resValue, maxWordCount, 0);
+	//BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount];
+	//std::fill_n(resValue, maxWordCount, 0);
+	result.reserveWords(maxWordCount);
+	std::fill_n(result.value, maxWordCount, 0);
 	
 	for(uint aI=aStart ; aI<aSize ; ++aI)
 	{
 		for(uint bI=bStart ; bI<bSize ; ++bI)
 		{
 			mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
-			addTwoInts(r2, r1, bI+aI, resValue, maxWordCount);
+			addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
 			// here will never be a carry
 		}
 	}
 	
 	// optimize word count
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex;
-	for(usedWordIndex = maxWordCount; usedWordIndex>0 && resValue[usedWordIndex-1] == 0; --usedWordIndex);
+	for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
 	
-	return BigInt(resValue, maxWordCount, usedWordIndex);
+	result.wordSize = usedWordIndex;
+	//return BigInt(resValue, maxWordCount, usedWordIndex);
 }
 
 BigInt BigInt::operator* (const BigInt& other) const {
-	return mulSchool(*this, other);
+	BigInt result = BigInt(0, this->wordSize + other.wordSize);
+	this->mulSchool(*this, other, result);
+	return result;
 }
 
 /* ---------- division ---------- */
@@ -1643,7 +1678,7 @@ void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD
 	
 	//UInt<value_size+1> vv_temp(vv);
 	BigInt vv_temp(vv);
-	vv_temp.mulInt(qp);
+	vv.mulInt(qp, vv_temp);
 	
 	//  D5. [Test Remainder]
 	if( uu.sub(vv_temp) ) {

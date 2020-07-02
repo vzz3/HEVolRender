@@ -363,9 +363,9 @@ namespace ppvr {
 			/**
 			 * multiplication: this = this * ss2
 			 */
-			void mulInt(BIG_INT_WORD_TYPE ss2);
+			void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
 			
-			BigInt mulSchool(const BigInt& a, const BigInt& b) const;
+			void mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const;
 			//BigInt mulSchool_1(const BigInt& a, const BigInt& b) const;
 			//BigInt mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const
 			
