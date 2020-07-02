@@ -405,7 +405,7 @@ namespace ppvr {
 			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE *targetWordCount) const;
 			
 			void div_division(BigInt divisor, BigInt * remainder, uint m, uint n);
-			void div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE u_max) const;
+			void div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
 			void div_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
 			BIG_INT_WORD_TYPE div_normalize(BigInt& divisor, uint n, uint & d);
 			void div_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE d);

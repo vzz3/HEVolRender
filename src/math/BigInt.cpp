@@ -1452,8 +1452,8 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	//UInt<value_size> q;
 	BigInt q(0, maxWordCount);
 	
-	uint d, u_value_size, j=m;
-	BIG_INT_WORD_TYPE u0, u1, u2, v1, v0;
+	uint d, j=m;
+	BIG_INT_WORD_TYPE u_value_size, u0, u1, u2, v1, v0;
 	
 	u_value_size = this->div_normalize(divisor, n, d);
 	
@@ -1511,7 +1511,7 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 }
 
 
-void BigInt::div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE u_max) const {
+void BigInt::div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	//for(i=0 ; i<n ; ++i, ++j)
