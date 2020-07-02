@@ -61,21 +61,24 @@ BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) 
 	BigInt pow(1, wordSize);
 	BigInt powTmp(0, wordSize);
 	//BigInt bigBase(base);
-	BigInt t(0, 1);
+	//BigInt t(0, 1);
+	BIG_INT_WORD_TYPE t;
 	BigInt tPow(0, wordSize);
 	for(size_t i = str.length(); i>0; i--) {
 		char c = str[i-1];
-		if(c == ' ') {
-			continue;
+		if(c >= '0' &&  c <= '9') {
+			t = c - '0';
 		} else if( base > 10 && c >= 'A' &&  c <= 'F') {
-			t.value[0] = 10 + c - 'A';
+			t = 10 + c - 'A';
 		} else if( base > 10 && c >= 'a' &&  c <= 'f') {
-			t.value[0] = 10 + c - 'a';
+			t = 10 + c - 'a';
 		} else {
-			t.value[0] = c - '0';
+			continue;
 		}
 		
-		t.mulSchool(t, pow, tPow);
+		powTmp = pow;
+		
+		pow.mulInt(t, tPow);
 		val.add(tPow);
 		
 		powTmp = pow;
