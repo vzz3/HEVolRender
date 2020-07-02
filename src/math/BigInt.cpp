@@ -218,7 +218,7 @@ inline void BigInt::setOne() {
 	this->wordSize = 1;
 }
 
-inline bool BigInt::isZero() {
+inline bool BigInt::isZero() const {
 	return (this->wordSize == 1 && this->value[0] == 0);
 }
 
@@ -1800,7 +1800,7 @@ BigInt BigInt::operator% (const BigInt& other) const {
  binary algorithm (r-to-l)
  
  */
-BigInt BigInt::pow(BigInt pow) {
+BigInt BigInt::pow(BigInt pow) const {
 	//if( IsNan() )
 	//	return 1;
 	
@@ -1840,6 +1840,48 @@ BigInt BigInt::pow(BigInt pow) {
 	
 	//*this = result;
 	//return CheckCarry(c);
+	return result;
+}
+
+/**
+ * square root
+ * e.g. BigInt(9).sqrt() = 3
+ * ('digit-by-digit' algorithm)
+ */
+BigInt BigInt::sqrt() const {
+	if( this->isZero() ) {
+		return BigInt(0);
+	}
+	
+	BigInt bit(0, this->wordSize), temp(0, this->wordSize), result(0, this->wordSize);
+	
+	BigInt value(*this);
+	
+	//this->setZero();
+	//bit.SetZero();
+	std::fill_n(bit.value, this->wordSize, 0);
+	bit.value[this->wordSize-1] = (BIG_INT_WORD_HIGHEST_BIT >> 1);
+	bit.wordSize = this->wordSize;
+	
+	while( bit > value ) {
+		bit.rcr(2);
+	}
+	
+	while( !bit.isZero() ) {
+		temp = result;
+		temp.add(bit);
+		
+		if( value >= temp ) {
+			value.sub(temp);
+			result.rcr(1);
+			result.add(bit);
+		} else {
+			result.rcr(1);
+		}
+		
+		bit.rcr(2);
+	}
+	
 	return result;
 }
 

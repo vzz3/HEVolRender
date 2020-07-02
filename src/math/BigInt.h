@@ -54,7 +54,14 @@ namespace ppvr {
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
 			 */
-			BigInt pow(BigInt pow);
+			BigInt pow(BigInt pow) const;
+			
+			/**
+			 * square root
+			 * e.g. BigInt(9).sqrt() = 3
+			 * ('digit-by-digit' algorithm)
+			 */
+			BigInt sqrt() const;
 			
 			// --- Comparison operators ---
 			bool operator< (const BigInt& other) const;
@@ -88,7 +95,7 @@ namespace ppvr {
 			
 			void setOne();
 			
-			bool isZero();
+			bool isZero() const;
 			
 			/**
 			 * this method returns the number of the highest set bit in word
