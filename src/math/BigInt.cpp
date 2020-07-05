@@ -88,6 +88,8 @@ BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) 
 	return val;
 }
 
+BigInt::BigInt(): BigInt(0, 0) {}
+
 BigInt::BigInt(const BIG_INT_WORD_TYPE& value): BigInt(value, 0) {}
 
 BigInt::BigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity) {
@@ -208,30 +210,57 @@ void BigInt::reserveWords( BIG_INT_WORD_COUNT_TYPE newCapacity ) {
 	this->wordCapacity = newCapacity;
 }
 
-inline void BigInt::setZero() {
+void BigInt::setZero() {
 	this->value[0] = 0;
 	this->wordSize = 1;
 }
 
-inline void BigInt::setOne() {
+void BigInt::setOne() {
 	this->value[0] = 1;
 	this->wordSize = 1;
 }
 
-inline bool BigInt::isZero() const {
+bool BigInt::isZero() const {
 	return (this->wordSize == 1 && this->value[0] == 0);
+}
+
+bool BigInt::isOne() const {
+	return (this->wordSize == 1 && this->value[0] == 1);
+}
+
+bool BigInt::isEven() const {
+	return !(this->testBit(0));
+}
+
+bool BigInt::isOdd() const {
+	return this->testBit(0);
+}
+
+/**
+ * Returns {@code true} if and only if the designated bit is set.
+ * (Computes {@code ((this & (1<<n)) != 0)}.)
+ *
+ * @param  n index of bit to test.
+ * @return {@code true} if and only if the designated bit is set.
+ * @throws ArithmeticException {@code n} is negative.
+ */
+bool BigInt::testBit(uint n) const {
+	uint restBits   = n % BIG_INT_BITS_PER_WORD;
+	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
+	
+	return ((this->value[allWords] >> restBits) & 1);
 }
 
 /**
  * this method returns the number of the highest set bit in word
  * if the 'word' is zero this method returns '-1'
  */
-int BigInt::findLeadingBitInWord(BIG_INT_WORD_TYPE word) const {
+int BigInt::findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const {
 	if( word == 0 ) {
 		return -1;
 	}
 	
-	uint bit = BIG_INT_BITS_PER_WORD - 1;
+	int bit = BIG_INT_BITS_PER_WORD - 1;
 	
 	while( (word & BIG_INT_WORD_HIGHEST_BIT) == 0 ) {
 		word = word << 1;
@@ -239,6 +268,70 @@ int BigInt::findLeadingBitInWord(BIG_INT_WORD_TYPE word) const {
 	}
 	
 	return bit;
+}
+
+/**
+ * this method returns the number of the lowest set bit in word
+ * if the 'word' is zero this method returns '-1'
+ */
+int BigInt::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const {
+	if( word == 0 ) {
+		return -1;
+	}
+	
+	int bit = 0;
+	
+	while( (word & 1) == 0 ) {
+		word = word >> 1;
+		bit++;
+	}
+	
+	return bit;
+}
+
+/**
+ * Returns the index of the leftmost (highest-order) one bit in this
+ * BigInteger (the number of zero bits to the left of the leftmost
+ * one bit).  Returns -1 if this BigInteger contains no one bits.
+ *
+ * @return index of the leftmost one bit in this BigInteger.
+ */
+int BigInt::findHighestSetBit() const {
+	if(this->isZero()) {
+		return -1;
+	}
+	
+	int wordIndex = this->wordSize-1;
+	
+	BIG_INT_WORD_TYPE word = this->value[wordIndex];
+	int bit = this->findHighestSetBitInWord(word);
+	
+	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
+}
+
+/**
+ * Returns the index of the rightmost (lowest-order) one bit in this
+ * BigInteger (the number of zero bits to the right of the rightmost
+ * one bit).  Returns -1 if this BigInteger contains no one bits.
+ *
+ * @return index of the rightmost one bit in this BigInteger.
+ */
+int BigInt::findLowestSetBit() const {
+	if(this->isZero()) {
+		return -1;
+	}
+	
+	int wordIndex=0;
+	for(wordIndex=0; wordIndex < this->wordSize && this->value[wordIndex] == 0; wordIndex++);
+	
+	BIG_INT_WORD_TYPE word = this->value[wordIndex-1];
+	int bit = this->findLowestSetBitInWord(word);
+	
+	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
+}
+
+int BigInt::bitLength() const {
+	return findHighestSetBit()+1;
 }
 
 /**
@@ -464,7 +557,7 @@ BIG_INT_WORD_TYPE BigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const 
 		// calculate required word size
 		BIG_INT_WORD_TYPE curLasWordIndex = this->wordSize - 1;
 		uint newTotalBits = (curLasWordIndex) * BIG_INT_BITS_PER_WORD // currently total bits used
-			+ this->findLeadingBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingBitInWord() returns -1 the "this->wordSize" is already wrong!)
+			+ this->findHighestSetBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingSetBitInWord() returns -1 the "this->wordSize" is already wrong!)
 			+ bits;
 		uint newWordCount = newTotalBits / BIG_INT_BITS_PER_WORD;
 		if(newTotalBits % BIG_INT_BITS_PER_WORD > 0) {
@@ -1579,7 +1672,7 @@ BIG_INT_WORD_TYPE BigInt::div_normalize(BigInt& divisor, uint n, uint & d) {
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 	
-	uint bit  = (uint)this->findLeadingBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
+	uint bit  = (uint)this->findHighestSetBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
 	uint move = (BIG_INT_BITS_PER_WORD - bit - 1);
 	d         = move;
 	BIG_INT_WORD_TYPE res  = this->value[this->wordSize -1];

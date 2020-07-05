@@ -23,6 +23,7 @@ namespace ppvr {
 			static BigInt fromUint64(const uint64_t& value);
 			static BigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 			
+			BigInt();
 			BigInt(const BIG_INT_WORD_TYPE& value);
 			BigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity);
 			BigInt(const BigInt &src);
@@ -91,17 +92,79 @@ namespace ppvr {
 			 */
 			void reserveWords( BIG_INT_WORD_COUNT_TYPE newCapacity );
 			
+		protected:
 			void setZero();
 			
 			void setOne();
 			
+		public:
 			bool isZero() const;
 			
+			bool isOne() const;
+			
+			
+			/**
+			 * Returns true iff this MutableBigInteger is even.
+			 */
+			bool isEven() const;
+			
+			/**
+			 * Returns true iff this MutableBigInteger is odd.
+			 */
+			bool isOdd() const;
+			
+		protected:
+			/**
+			 * Returns {@code true} if and only if the designated bit is set.
+			 * (Computes {@code ((this & (1<<n)) != 0)}.)
+			 *
+			 * @param  n index of bit to test.
+			 * @return {@code true} if and only if the designated bit is set.
+			 * @throws ArithmeticException {@code n} is negative.
+			 */
+			bool testBit(uint n) const;
+			
+		private:
 			/**
 			 * this method returns the number of the highest set bit in word
 			 * if the 'word' is zero this method returns '-1'
 			 */
-			int findLeadingBitInWord(BIG_INT_WORD_TYPE word) const;
+			int findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const;
+			
+			/**
+			 * this method returns the number of the lowest set bit in word
+			 * if the 'word' is zero this method returns '-1'
+			 */
+			int findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const;
+			
+		protected:
+			/**
+			 * Returns the index of the leftmost (highest-order) one bit in this
+			 * BigInteger (the number of zero bits to the left of the leftmost
+			 * one bit).  Returns -1 if this BigInteger contains no one bits.
+			 *
+			 * @return index of the leftmost one bit in this BigInteger.
+			 */
+			int findHighestSetBit() const;
+			
+			/**
+			 * Returns the index of the rightmost (lowest-order) one bit in this
+			 * BigInteger (the number of zero bits to the right of the rightmost
+			 * one bit).  Returns -1 if this BigInteger contains no one bits.
+			 *
+			 * @return index of the rightmost one bit in this BigInteger.
+			 */
+			int findLowestSetBit() const;
+		
+		public:
+			int bitLength() const;
+			
+		protected:
+			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
+				return this->wordSize;
+			}
+			
+		private:
 			
 			/**
 			 * Replace target.low with src.low bits.
@@ -354,7 +417,9 @@ namespace ppvr {
 			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
 			
 			BIG_INT_WORD_TYPE sub(const BigInt& other);
-			/* ---------- multiplication ---------- */
+			
+			
+		/* ---------- multiplication ---------- */
 			
 			/**
 			 * multiplication: result_high:result_low = a * b
@@ -376,7 +441,7 @@ namespace ppvr {
 			//BigInt mulSchool_1(const BigInt& a, const BigInt& b) const;
 			//BigInt mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const
 			
-			/* ---------- division ---------- */
+		/* ---------- division ---------- */
 			
 			/**
 			 * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
@@ -420,7 +485,6 @@ namespace ppvr {
 			void div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const;
 			
 			void div(const BigInt& divisor, BigInt* remainder);
-			
 			
 		};
 	}
