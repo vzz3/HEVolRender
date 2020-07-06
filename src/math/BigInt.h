@@ -350,7 +350,7 @@ namespace ppvr {
 			 * this carry would be passed to the value[3] etc.)
 			 */
 			BIG_INT_WORD_TYPE addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
-			void addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index);
+			//void addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index);
 			
 			/**
 			 * this method adds one word (at a specific position)
@@ -375,6 +375,12 @@ namespace ppvr {
 			 * of course if there was a carry from table[2] it would be returned
 			 */
 			BIG_INT_WORD_TYPE addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
+			
+		protected:
+			/**
+			 * this = this + word
+			 */
+			void addInt(const BIG_INT_WORD_TYPE word);
 			
 			void add(const BigInt &other, BigInt &result) const;
 			void add(const BigInt &other);
@@ -419,6 +425,13 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
 			
+		protected:
+			/**
+			 * this = this - word
+			 * returns the carry (borrow) if this was < word
+			 */
+			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word);
+			
 			/**
 			 * this method's subtracting other from the 'this' and subtracting
 			 * carry if it has been defined
@@ -446,12 +459,25 @@ namespace ppvr {
 			 */
 			void mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) const;
 			
+		protected:
 			/**
 			 * multiplication: result = this * ss2
 			 */
 			void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
 			
+		private:
 			void mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const;
+			
+		protected:
+			/**
+			 * result = this * b
+			 */
+			void mul(const BigInt& b, BigInt& result) const;
+			
+			/**
+			 * this = this * b
+			 */
+			void mul(const BigInt& b);
 			
 		public:
 			BigInt operator* (const BigInt& other) const;
@@ -492,6 +518,7 @@ namespace ppvr {
 			
 			// -- divInt
 			
+		protected:
 			/**
 			 * division by one unsigned word
 			 * restul = this / divisor
@@ -508,6 +535,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
 			
+		private:
 			// -- divKnuth
 			
 			void divKnuth_division(BigInt divisor, BigInt &result, BigInt& remainder, uint m, uint n) const;
@@ -547,6 +575,7 @@ namespace ppvr {
 			 */
 			void divKnuth(const BigInt& divisor, BigInt &result, BigInt& remainder) const;
 			
+		protected:
 			/**
 			 * result = this / divisor
 			 */

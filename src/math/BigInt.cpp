@@ -699,6 +699,7 @@ BIG_INT_WORD_TYPE BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG
 	return c;
 }
 
+/*
 void BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index) {
 	//assert( index < (targetWordCount - 1) ); // TODO
 	this->reserveWords(index+2);
@@ -730,18 +731,31 @@ void BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYP
 		this->wordSize = newWordSize;
 	}
 }
+*/
 
-BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE world, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
+BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
 	assert( index < targetWordCount );
 	
 	BIG_INT_WORD_TYPE c;
-	c = addTwoWords(targetArray[index], world, 0, &targetArray[index]);
+	c = addTwoWords(targetArray[index], word, 0, &targetArray[index]);
 	
 	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c ; ++i) {
 		c = addTwoWords(targetArray[i], 0, c, &targetArray[i]);
 	}
 	
 	return c;
+}
+
+void BigInt::addInt(const BIG_INT_WORD_TYPE word) {
+	
+	BIG_INT_WORD_TYPE c = this->addInt(word, 0, this->value, this->wordSize);
+	
+	// increate the word count in order to add the last carry
+	if(c != 0) {
+		this->reserveWords(this->wordSize + 1);
+		this->value[this->wordSize] = c;
+		this->wordSize = this->wordSize + 1;
+	}
 }
 
 void BigInt::add(const BigInt &other, BigInt &result) const {
@@ -813,6 +827,18 @@ BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WOR
 	
 	return c;
 }
+
+BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word) {
+	BIG_INT_WORD_TYPE c = this->subInt(word, 0, this->value, this->wordSize);
+	
+	// reduce word size if a word was truncated
+	if(this->value[this->wordSize-1] == 0) {
+		this->wordSize = this->wordSize-1;
+	}
+	
+	return c;
+}
+
 
 BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other, BIG_INT_WORD_TYPE carry, BigInt &result) const {
 	BIG_INT_WORD_TYPE a,b,c;
@@ -994,9 +1020,19 @@ void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
 	result.wordSize = usedWordIndex;
 }
 
+void BigInt::mul(const BigInt& b, BigInt& result) const {
+	this->mulSchool(*this, b, result);
+}
+
+void BigInt::mul(const BigInt& b) {
+	BigInt result = BigInt(0, this->wordSize + b.wordSize);
+	this->mul(b, result);
+	*this = result;
+}
+
 BigInt BigInt::operator* (const BigInt& other) const {
 	BigInt result = BigInt(0, this->wordSize + other.wordSize);
-	this->mulSchool(*this, other, result);
+	this->mul(other, result);
 	return result;
 }
 
@@ -1403,7 +1439,8 @@ BIG_INT_WORD_TYPE BigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_
 		
 		if( decrease ) {
 			//qp.SubOne();
-			this->subInt(1, 0, &qp.value[0], 2);
+			//this->subInt(1, 0, &qp.value[0], 2);
+			qp.subInt(1);
 			
 			rp += v1;
 			
