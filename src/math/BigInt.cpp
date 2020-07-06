@@ -9,12 +9,20 @@
 
 using namespace ppvr::math;
 
+// ----- statics -----
+
 BigInt BigInt::ZERO(0);
 BigInt BigInt::ONE(1);
 BigInt BigInt::TWO(2);
 BigInt BigInt::TEN(10);
 
 BigInt BigInt::fromUint64(const uint64_t& uint64Val) {
+	BigInt res(0);
+	BigInt::fromUint64(uint64Val, res);
+	return res;
+}
+
+BigInt& BigInt::fromUint64(const uint64_t& uint64Val, BigInt &target ) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = 1;
 	size_t wordsFor64Bit = (sizeof(uint64_t) * CHAR_BIT) / BIG_INT_BITS_PER_WORD;
 	
@@ -29,18 +37,25 @@ BigInt BigInt::fromUint64(const uint64_t& uint64Val) {
 	for(; (uint64Val >> (requiredWords * BIG_INT_BITS_PER_WORD)) > 0 && requiredWords < wordsFor64Bit; requiredWords++);
 	
 	// alocate word store array
-	BIG_INT_WORD_TYPE *value = new BIG_INT_WORD_TYPE[requiredWords];
+	target.reserveWords(requiredWords);
 	
 	// copy bits from uint64 into words
 	for(BIG_INT_WORD_COUNT_TYPE i = 0; i < requiredWords; i++) {
-		value[i] = (BIG_INT_WORD_TYPE)(uint64Val >> (i * BIG_INT_BITS_PER_WORD));
+		target.value[i] = (BIG_INT_WORD_TYPE)(uint64Val >> (i * BIG_INT_BITS_PER_WORD));
 	}
 	
-	BigInt res(value, requiredWords, requiredWords);
-	return res;
+	//BigInt res(value, requiredWords, requiredWords);
+	target.wordSize = requiredWords;
+	return target;
 }
 
 BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) {
+	BigInt res(0);
+	BigInt::fromString(str, base, res);
+	return res;
+}
+
+BigInt& BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base, BigInt &target ) {
 	assert(base <= 16);
 	
 	// wordSize for 8bit words (2^8=256, l: string Length, b: base)
@@ -55,7 +70,8 @@ BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) 
 	double sizeInBit = (double)str.length() * (log2((double)base));
 	uint wordSize = std::ceil(sizeInBit / (double)BIG_INT_BITS_PER_WORD);
 	//uint wordSize = 1;
-	BigInt val(0, wordSize);
+	//BigInt val(0, wordSize);
+	target.reserveWords(wordSize);
 	
 	//BigInt val(0);
 	BigInt pow(1, wordSize);
@@ -79,14 +95,16 @@ BigInt BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) 
 		powTmp = pow;
 		
 		pow.mulInt(t, tPow);
-		val.add(tPow);
+		target.add(tPow);
 		
 		powTmp = pow;
 		powTmp.mulInt(base, pow);
 	}
 	
-	return val;
+	return target;
 }
+
+// ----- constructors -----
 
 BigInt::BigInt(): BigInt(0, 0) {}
 
@@ -124,6 +142,8 @@ BigInt::BigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, B
 BigInt::~BigInt() {
 	delete [] this->value;
 }
+
+// ----- value export - toString / toUint64 -----
 
 uint64_t BigInt::toUint64() const {
 	uint64_t res = 0;
@@ -192,7 +212,28 @@ std::string BigInt::toStringDec() const {
 	return ret;
 }
 
-void BigInt::reserveWords( BIG_INT_WORD_COUNT_TYPE newCapacity ) {
+// ----- memory managment -----
+
+BigInt& BigInt::operator= (const BigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+	
+	// reuse storage when possible
+	if(this->wordCapacity < other.wordSize) {
+		delete [] this->value;
+		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
+		this->wordCapacity = other.wordSize;
+	}
+	
+	this->wordSize = other.wordSize;
+	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
+	
+	return *this;
+}
+
+void BigInt::reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity ) {
 	if(newCapacity <= this->wordCapacity) {
 		return;
 	}
@@ -200,14 +241,29 @@ void BigInt::reserveWords( BIG_INT_WORD_COUNT_TYPE newCapacity ) {
 	BIG_INT_WORD_TYPE *newValue = new BIG_INT_WORD_TYPE[newCapacity];
 	std::copy(&this->value[0], &this->value[0] + this->wordSize, newValue);
 	
-	// TODO inizialize all remianing words with 0 (the words with the indeces this->wordSize to newCapacity-1)?
-	
 	// free old word storage array
 	delete [] this->value;
 	
 	// set new data to this
 	this->value = newValue;
 	this->wordCapacity = newCapacity;
+}
+
+void BigInt::reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue ) {
+	this->reserveWords(newCapacity);
+	
+	// inizialize all words with an index >= this->wordSize (all alocated but not used words. this can be more then the (newCapacity - this->wordSize) because this->this->wordCapacity can be > then newCapacity)
+	this->initUnusedWords();
+}
+
+void BigInt::initUnusedWords(const BIG_INT_WORD_TYPE initValue) {
+	std::fill_n(&this->value[this->wordSize], this->wordCapacity - this->wordSize, initValue);
+}
+
+// ----- bit utilities -----
+
+int BigInt::bitLength() const {
+	return findHighestSetBit()+1;
 }
 
 void BigInt::setZero() {
@@ -236,14 +292,6 @@ bool BigInt::isOdd() const {
 	return this->testBit(0);
 }
 
-/**
- * Returns {@code true} if and only if the designated bit is set.
- * (Computes {@code ((this & (1<<n)) != 0)}.)
- *
- * @param  n index of bit to test.
- * @return {@code true} if and only if the designated bit is set.
- * @throws ArithmeticException {@code n} is negative.
- */
 bool BigInt::testBit(uint n) const {
 	uint restBits   = n % BIG_INT_BITS_PER_WORD;
 	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
@@ -251,10 +299,6 @@ bool BigInt::testBit(uint n) const {
 	return ((this->value[allWords] >> restBits) & 1);
 }
 
-/**
- * this method returns the number of the highest set bit in word
- * if the 'word' is zero this method returns '-1'
- */
 int BigInt::findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const {
 	if( word == 0 ) {
 		return -1;
@@ -270,10 +314,6 @@ int BigInt::findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const {
 	return bit;
 }
 
-/**
- * this method returns the number of the lowest set bit in word
- * if the 'word' is zero this method returns '-1'
- */
 int BigInt::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const {
 	if( word == 0 ) {
 		return -1;
@@ -289,13 +329,6 @@ int BigInt::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const {
 	return bit;
 }
 
-/**
- * Returns the index of the leftmost (highest-order) one bit in this
- * BigInteger (the number of zero bits to the left of the leftmost
- * one bit).  Returns -1 if this BigInteger contains no one bits.
- *
- * @return index of the leftmost one bit in this BigInteger.
- */
 int BigInt::findHighestSetBit() const {
 	if(this->isZero()) {
 		return -1;
@@ -309,13 +342,6 @@ int BigInt::findHighestSetBit() const {
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
 
-/**
- * Returns the index of the rightmost (lowest-order) one bit in this
- * BigInteger (the number of zero bits to the right of the rightmost
- * one bit).  Returns -1 if this BigInteger contains no one bits.
- *
- * @return index of the rightmost one bit in this BigInteger.
- */
 int BigInt::findLowestSetBit() const {
 	if(this->isZero()) {
 		return -1;
@@ -330,18 +356,9 @@ int BigInt::findLowestSetBit() const {
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
 
-int BigInt::bitLength() const {
-	return findHighestSetBit()+1;
-}
+// ----- word utilities -----
 
-/**
- * Replace target.low with src.low bits.
- *
- * target:	hhhhllll
- * src:		HHHHLLLL
- * res:		hhhhLLLL
- */
-inline BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set low bits to 0 and keep the high bits
 		this->getHighAsHighBits(target)
@@ -353,14 +370,7 @@ inline BIG_INT_WORD_TYPE BigInt::setLowFromLowBits(BIG_INT_WORD_TYPE target, BIG
 	return res;
 }
 
-/**
- * Replace target.low with src.high bits.
- *
- * target:	hhhhllll
- * src:		HHHHLLLL
- * res:		hhhhHHHH
- */
-inline BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set low bits to 0 and keep the high bits
 		//(target & BIG_INT_WORD_HIGH_BIT_MASK)
@@ -374,14 +384,7 @@ inline BIG_INT_WORD_TYPE BigInt::setLowFromHighBits(BIG_INT_WORD_TYPE target, BI
 	return res;
 }
 
-/**
- * Replace target.high with src.high bits.
- *
- * target:	hhhhllll
- * src:		HHHHLLLL
- * res:		HHHHllll
- */
-inline BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set high bits to 0 and keep the low bits
 		this->getLowAsLowBits(target)
@@ -393,14 +396,7 @@ inline BIG_INT_WORD_TYPE BigInt::setHighFromHighBits(BIG_INT_WORD_TYPE target, B
 	return res;
 }
 
-/**
- * Replace target.high with src.low bits.
- *
- * target:	hhhhllll
- * src:		HHHHLLLL
- * res:		LLLLllll
- */
-inline BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(BIG_INT_WORD_TYPE target, BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res =
 		// set high bits to 0 and keep the low bits
 		//(target & BIG_INT_WORD_LOW_BIT_MASK)
@@ -414,59 +410,28 @@ inline BIG_INT_WORD_TYPE BigInt::setHighFromLowBits(BIG_INT_WORD_TYPE target, BI
 	return res;
 }
 
-/**
- * Set low bit to 0 and keep the high bits.
- *
- * src:	HHHHLLLL
- * res:	HHHH0000
- */
-inline BIG_INT_WORD_TYPE BigInt::getHighAsHighBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getHighAsHighBits(const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_HIGH_BIT_MASK);
 	return res;
 }
 
-/**
- * Move the high bits of src to the low bits. The high bits will be 0.
- *
- * src:	HHHHLLLL
- * res:	0000HHHH
- */
-inline BIG_INT_WORD_TYPE BigInt::getHighAsLowBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getHighAsLowBits(const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src >> (BIG_INT_BITS_PER_WORD/2));
 	return res;
 }
 
-/**
- * Set high bit to 0 and keep the low bits.
- *
- * src:	HHHHLLLL
- * res:	0000LLLL
- */
-inline BIG_INT_WORD_TYPE BigInt::getLowAsLowBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getLowAsLowBits(const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_LOW_BIT_MASK);
 	return res;
 }
 
-/**
- * Move the low bits of src to the high bits. The low bits will be 0.
- *
- * src:	HHHHLLLL
- * res:	LLLL0000
- */
-inline BIG_INT_WORD_TYPE BigInt::getLowAsHighBits(BIG_INT_WORD_TYPE src) const {
+inline BIG_INT_WORD_TYPE BigInt::getLowAsHighBits(const BIG_INT_WORD_TYPE src) const {
 	BIG_INT_WORD_TYPE res = (src << (BIG_INT_BITS_PER_WORD/2));
 	return res;
 }
 
-/* ---------- shift left ---------- */
+// ----- shift left -----
 
-/**
- * an auxiliary method for moving bits into the left hand side
- *
- * this method moves only words
- *
- * This method does not increase the the word count => it drops informations that are on left end!
- */
 void BigInt::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
@@ -505,20 +470,6 @@ void BigInt::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint 
 	}
 }
 
-/**
- * this method moves all bits into the left hand side
- * return value <- this <- c
- *
- * the lowest *bits* will be held the 'c' and
- * the state of one additional bit (on the left hand side)
- * will be returned
- *
- * for example:
- * let this is 001010000
- * after rcl_moveBits(3, 1) there'll be 010000111 and rcl_moveBits returns 1
- *
- * This method does not increase the the word count => it drops informations that are on left end!
- */
 BIG_INT_WORD_TYPE BigInt::rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	assert( bits>0 && bits<BIG_INT_BITS_PER_WORD );
 	
@@ -538,18 +489,6 @@ BIG_INT_WORD_TYPE BigInt::rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	return (c & 1);
 }
 
-/**
- * moving all bits into the left side 'bits' times
- * return value <- this <- C
- *
- * bits is from a range of <0, man * BIG_INT_BITS_PER_WORD>
- * or it can be even bigger then all bits will be set to 'c'
- *
- * the value c will be set into the lowest bits
- * and the method returns state of the last moved bit
- *
- * This method does not increase the the word count => it drops informations that are on left end!
- */
 BIG_INT_WORD_TYPE BigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const bool resize) {
 	BIG_INT_WORD_TYPE lastC    = 0;
 	uint restBits = bits;
@@ -612,13 +551,8 @@ BigInt BigInt::operator<< (const uint bits) const {
 	return res;
 }
 
-/* ---------- shift right ---------- */
+// ----- shift right -----
 
-/**
- * an auxiliary method for moving bits into the right hand side
- *
- * this method moves only words
- */
 void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
@@ -658,18 +592,6 @@ void BigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint 
 	}
 }
 
-/**
- * this method moves all bits into the right hand side
- * C -> this -> return value
- *
- * the highest *bits* will be held the 'c' and
- * the state of one additional bit (on the right hand side)
- * will be returned
- *
- * for example:
- * let this is 000000010
- * after rcr_moveBits(2, 1) there'll be 110000000 and rcr_moveBits returns 1
- */
 BIG_INT_WORD_TYPE BigInt::rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	assert ( bits>0 && bits<BIG_INT_BITS_PER_WORD );
 	
@@ -696,16 +618,6 @@ BIG_INT_WORD_TYPE BigInt::rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
 	return c;
 }
 
-/**
- * moving all bits into the right side 'bits' times
- * c -> this -> return value
- *
- * bits is from a range of <0, man * TTMATH_BITS_PER_UINT>
- * or it can be even bigger then all bits will be set to 'c'
- *
- * the value c will be set into the highest bits
- * and the method returns state of the last moved bit
- */
 BIG_INT_WORD_TYPE BigInt::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
 	BIG_INT_WORD_TYPE lastC    = 0;
 	uint restBits = bits;
@@ -751,7 +663,7 @@ BigInt BigInt::operator>> (const uint bits) const {
 	return res;
 }
 
-/* ---------- addition ---------- */
+// ----- addition -----
 
 BIG_INT_WORD_TYPE BigInt::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) const {
 	BIG_INT_WORD_TYPE temp;
@@ -771,7 +683,7 @@ BIG_INT_WORD_TYPE BigInt::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_W
 	return carry;
 }
 
-BIG_INT_WORD_TYPE BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE * targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
+BIG_INT_WORD_TYPE BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
 	assert( index < (targetWordCount - 1) ); // TODO
 	
 	BIG_INT_WORD_TYPE c;
@@ -785,29 +697,39 @@ BIG_INT_WORD_TYPE BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG
 	return c;
 }
 
-/**
- * this method adds one word (at a specific position)
- * and returns a carry (if it was)
- *
- * if we've got (value_size=3):
- *
- * table[0] = 10;
- * table[1] = 30;
- * table[2] = 5;
- *
- * and we call:
- *
- * AddInt(2,1)
- *
- * then it'll be:
- *
- * table[0] = 10;
- * table[1] = 30 + 2;
- * table[2] = 5;
- *
- * of course if there was a carry from table[2] it would be returned
- */
-BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE world, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
+void BigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index) {
+	//assert( index < (targetWordCount - 1) ); // TODO
+	this->reserveWords(index+2);
+	
+	BIG_INT_WORD_TYPE c;
+	
+	c = addTwoWords((index   < this->wordSize ? this->value[index  ] : 0),   wordLow, 0, &this->value[index  ]);
+	c = addTwoWords((index+1 < this->wordSize ? this->value[index+1] : 0),  wordHigh, c, &this->value[index+1]);
+	
+	if(this->wordSize < index+2) {
+		// increas word size if required
+		if(this->value[index+1] != 0) {
+			this->wordSize = index+2;
+		} else if (this->value[index] != 0) {
+			this->wordSize = index+1;
+		}
+	} else {
+		// propagate carry to more significant words
+		for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < this->wordSize && c ; ++i) { // TODO
+			c = addTwoWords(this->value[i], 0, c, &this->value[i]);
+		}
+	}
+	
+	// add carry to new word
+	if(c != 0) {
+		BIG_INT_WORD_COUNT_TYPE newWordSize = this->wordSize+1;
+		this->reserveWords(newWordSize);
+		this->value[this->wordSize] = c;
+		this->wordSize = newWordSize;
+	}
+}
+
+BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE world, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
 	assert( index < targetWordCount );
 	
 	BIG_INT_WORD_TYPE c;
@@ -820,55 +742,45 @@ BIG_INT_WORD_TYPE BigInt::addInt(const BIG_INT_WORD_TYPE world, const BIG_INT_WO
 	return c;
 }
 
-void BigInt::add(const BigInt &other) {
+void BigInt::add(const BigInt &other, BigInt &result) const {
 	BIG_INT_WORD_TYPE carry = 0;
 	BIG_INT_WORD_TYPE a,b;//,c;
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordSize, other.wordSize);
 	//BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount+1];
-	if(this->wordCapacity < maxWordCount) {
-		this->reserveWords(maxWordCount+1); // If we need to resize the storage array than also preserve the space for a possible carry bit
+	if(result.wordCapacity < maxWordCount) {
+		result.reserveWords(maxWordCount+1); // If we need to resize the storage array than also preserve the space for a possible carry bit
 	}
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<maxWordCount; i++) {
-		if(this->wordSize > i) {
-			a = this->value[i];
-		} else {
-			a = 0;
-		}
-		if(other.wordSize > i) {
-			b = other.value[i];
-		} else {
-			b = 0;
-		}
+		a = this->wordSize > i ? this->value[i] : 0;
+		b = other.wordSize > i ? other.value[i] : 0;
 		
-		carry = addTwoWords(a, b, carry, &this->value[i]);
+		carry = addTwoWords(a, b, carry, &result.value[i]);
 	}
 	
 	if(carry > 0) {
-		this->reserveWords(maxWordCount+1); // reserve space for carry bit
+		result.reserveWords(maxWordCount+1); // reserve space for carry bit
 		
-		this->value[maxWordCount] = carry;
-		this->wordSize = maxWordCount+1;
+		result.value[maxWordCount] = carry;
+		result.wordSize = maxWordCount+1;
 	} else {
-		this->wordSize = maxWordCount;
+		result.wordSize = maxWordCount;
 	}
+}
+
+void BigInt::add(const BigInt &other) {
+	this->add(other, *this);
 }
 
 BigInt BigInt::operator+ (const BigInt& other) const {
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordSize, other.wordSize);
-	BigInt result(*this, maxWordCount+1); // copy this to new BigInt with enough space for all words and even a carry bit
-	result.add(other);
+	BigInt result(0, maxWordCount+1);
+	this->add(other, result);
 	return result;
 }
 
-/* ---------- substraction ---------- */
+// ----- substraction -----
 
-/**
- * this method subtractes one word from the other
- * returns carry
- *
- * this method is created only when TTMATH_NOASM macro is defined
- */
-BIG_INT_WORD_TYPE BigInt::subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) const {
+BIG_INT_WORD_TYPE BigInt::subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) const {
 	if( carry == 0 ) {
 		*result = a - b;
 		
@@ -887,29 +799,7 @@ BIG_INT_WORD_TYPE BigInt::subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_W
 	return carry;
 }
 
-/**
- * this method subtracts one word (at a specific position)
- * and returns a carry (if it was)
- *
- * if we've got (value_size=3):
- *
- * table[0] = 10;
- * table[1] = 30;
- * table[2] = 5;
- *
- * and we call:
- *
- * SubInt(2,1)
- *
- * then it'll be:
- *
- * table[0] = 10;
- * table[1] = 30 - 2;
- * table[2] = 5;
- *
- * of course if there was a carry from table[2] it would be returned
- */
-BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
+BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
 	assert( index < targetWordCount );
 	
 	BIG_INT_WORD_TYPE c;
@@ -922,95 +812,42 @@ BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WOR
 	return c;
 }
 
-/*!
- this method's subtracting ss2 from the 'this' and subtracting
- carry if it has been defined
- (this = this - ss2 - c)
- 
- c must be zero or one (might be a bigger value than 1)
- function returns carry (borrow) (1) (if it was)
- */
-BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other) {
-	//if(other > *this) {
-	//	std::string msg = "ERROR substract BigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
-	//	std::cerr << msg << std::endl;
-	//	throw std::runtime_error(msg);
-	//}
-	
-	BIG_INT_WORD_TYPE carry = 0; // carry = "borrow"
+BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other, BIG_INT_WORD_TYPE carry, BigInt &result) const {
 	BIG_INT_WORD_TYPE a,b,c;
-	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordSize, other.wordSize);
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex = 0;
+	result.reserveWords(this->wordSize);
 	
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<this->wordSize; i++) {
-		if(other.wordSize > i) {
-			b = other.value[i];
-		} else {
-			b = 0;
-		}
+		b = other.wordSize > i ? other.value[i] : 0;
 		
-		carry = subTwoWords(this->value[i], b, carry, &this->value[i]);
-		if(this->value[i] > 0) {
+		carry = subTwoWords(this->value[i], b, carry, &result.value[i]);
+		if(result.value[i] > 0) {
 			usedWordIndex = i;
 		}
 	}
 	
-	// carry > 0 : can not happen if this <= other at the beginning of the method
-	//assert(carry == 0);
-	
-	this->wordSize = usedWordIndex+1;
-	
+	result.wordSize = usedWordIndex+1;
 	return carry;
 }
 
+BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other) {
+	return this->sub(other, 0, *this);
+}
+
 BigInt BigInt::operator- (const BigInt& other) const {
-	/*
-	BIG_INT_WORD_TYPE carry = 0;
-	BIG_INT_WORD_TYPE a,b,c;
-	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->wordCount, other.wordCount);
-	BIG_INT_WORD_COUNT_TYPE usedWordIndex = 0;
-	BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount+1];
-	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<maxWordCount; i++) {
-		if(this->wordCount > i) {
-			a = this->value[i];
-		} else {
-			a = 0;
-		}
-		if(other.wordCount > i) {
-			b = other.value[i];
-		} else {
-			b = 0;
-		}
-		
-		carry = addTwoWords(a, b, carry, &resValue[i]);
-		if(resValue[i] > 0) {
-			usedWordIndex = i;
-		}
-	}
-	
-	if (carry > 0) {
-		std::string msg = "ERROR substract BigInt a - b with a < b!";
-		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
-	}
-	
-	return BigInt(resValue, usedWordIndex+1);
-	*/
-	
-	
 	if(other > *this) {
 		std::string msg = "ERROR substract BigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
 		std::cerr << msg << std::endl;
 		throw std::runtime_error(msg);
 	}
-	BigInt result(*this); // copy this to new BigInt
-	result.sub(other);
+	BigInt result(0,this->wordSize);
+	this->sub(other, 0, result);
 	return result;
 }
 
-/* ---------- multiplication ---------- */
+// ----- multiplication -----
 
-void BigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE * resultHigh, BIG_INT_WORD_TYPE * resultLow) const {
+void BigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) const {
 	/*
 		expect BIG_INT_WORD_TYPE to be a 64 bits variable:
 		we don't have a native type which has 128 bits
@@ -1018,18 +855,10 @@ void BigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, B
 		and using 4 multiplications (with additions and carry correctness)
 	 */
 	
-	BIG_INT_WORD_TYPE aLow = this->getLowAsLowBits(a);// a & BIG_INT_WORD_LOW_BIT_MASK;
-	BIG_INT_WORD_TYPE bLow = this->getLowAsLowBits(b);// b & BIG_INT_WORD_LOW_BIT_MASK;
-	BIG_INT_WORD_TYPE aHigh = this->getHighAsLowBits(a);// a >> (sizeof(BIG_INT_WORD_TYPE) * 4);
-	BIG_INT_WORD_TYPE bHigh = this->getHighAsLowBits(b);// b >> (sizeof(BIG_INT_WORD_TYPE) * 4);
-	
-	//uint_ a_;
-	//uint_ b_;
-	//uint_ res_high1, res_high2;
-	//uint_ res_low1,  res_low2;
-	
-	//a_.u = a;
-	//b_.u = b;
+	BIG_INT_WORD_TYPE aLow = this->getLowAsLowBits(a); 		// aLow = a.low;
+	BIG_INT_WORD_TYPE bLow = this->getLowAsLowBits(b); 		// aLow = b.low;
+	BIG_INT_WORD_TYPE aHigh = this->getHighAsLowBits(a); 	// aHigh = a.high;
+	BIG_INT_WORD_TYPE bHigh = this->getHighAsLowBits(b); 	// bHigh = b.high;
 	
 	BIG_INT_WORD_TYPE res_high1, res_high2;
 	BIG_INT_WORD_TYPE res_low1, res_low2;
@@ -1037,92 +866,47 @@ void BigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, B
 	/*
 		the multiplication is as follows (schoolbook algorithm with O(n^2) ):
 	 
-										 32 bits         32 bits
+										 32 bits          32 bits
 	 
 										 +--------------------------------+
-										 |   a_.u_.high   |   a_.u_.low   |
+										 |     a.high     |     a.low     |
 										 +--------------------------------+
-										 |   b_.u_.high   |   b_.u_.low   |
+										 |     b.high     |     b.low     |
 		+--------------------------------+--------------------------------+
-		|           res_high1.u          |           res_low1.u           |
+		|            res_high1           |            res_low1            |
 		+--------------------------------+--------------------------------+
-		|           res_high2.u          |           res_low2.u           |
+		|            res_high2           |            res_low2            |
 		+--------------------------------+--------------------------------+
 	 
 		64 bits                          64 bits
 	*/
 	
 	
-	//uint_ temp;
 	BIG_INT_WORD_TYPE temp;
 	
-	//res_low1.u        = uint(b_.u_.low) * uint(a_.u_.low);
-	res_low1 = bLow * aLow;
+	res_low1  = bLow * aLow; 										// res_low1 = b.low * a.low
+	temp 	  = this->getHighAsLowBits(res_low1) + bLow * aHigh;	// temp = res_low1.high + b.low * a.high
+	res_low1  = this->setHighFromLowBits(res_low1, temp); 			// res_low1.high = temp.low
+	res_high1 = this->setLowFromHighBits(res_high1, temp); 			// res_high1.low = temp.high
+	res_high1 = this->getLowAsLowBits(res_high1); 					// res_high1.high = 0
 	
-	// --
+	res_low2  = this->getHighAsHighBits(res_low2); 					// res_low2.low = 0
+	temp	  = bHigh * aLow; 										// b.high * a.low
+	res_low2  = this->setHighFromLowBits(res_low2, temp); 			// res_low2.high = temp.low
 	
-	//temp.u            = uint(res_low1.u_.high) + uint(b_.u_.low) * uint(a_.u_.high);
-	//temp = (res_low1 >> (sizeof(BIG_INT_WORD_TYPE) * 4)) + bLow * aHigh; // res_low1.high + bLow * aHigh
-	temp = this->getHighAsLowBits(res_low1) + bLow * aHigh; // res_low1.high + bLow * aHigh
+	res_high2 = bHigh * aHigh + this->getHighAsLowBits(temp); 		// res_high2 = b.high * a.high + temp.high
 	
-	//res_low1.u_.high  = temp.u_.low;
-	//res_low1 = (res_low1 & BIG_INT_WORD_LOW_BIT_MASK) | (temp << (sizeof(BIG_INT_WORD_TYPE) * 4)); // replace res_low1.high with temp.low
-	res_low1 = this->setHighFromLowBits(res_low1, temp); // replace res_low1.high with temp.low
-	
-	//res_high1.u_.low  = temp.u_.high;
-	//res_high1 = (res_high1 & BIG_INT_WORD_HIGH_BIT_MASK) | (temp >> (sizeof(BIG_INT_WORD_TYPE) * 4)); // replace res_high1.low with temp.high
-	res_high1 = this->setLowFromHighBits(res_high1, temp); // replace res_high1.low with temp.high
-	
-	//res_high1.u_.high = 0;
-	//res_high1 = (res_high1 & BIG_INT_WORD_LOW_BIT_MASK); // set higher bits to 0 (res_high1.high = 0)
-	res_high1 = this->getLowAsLowBits(res_high1);
-	
-	// --
-	
-	//res_low2.u_.low   = 0;
-	//res_low2 = (res_low2 & BIG_INT_WORD_HIGH_BIT_MASK); // set lower bits to 0 (res_low2.low = 0)
-	res_low2 = this->getHighAsHighBits(res_low2);
-	
-	//temp.u            = uint(b_.u_.high) * uint(a_.u_.low);
-	temp				= bHigh * aLow;
-	
-	//res_low2.u_.high  = temp.u_.low;
-	//res_low2 = (res_low2 & BIG_INT_WORD_LOW_BIT_MASK) | (temp << (sizeof(BIG_INT_WORD_TYPE) * 4));
-	res_low2 = this->setHighFromLowBits(res_low2, temp);
-	
-	// --
-	
-	//res_high2.u       = uint(b_.u_.high) * uint(a_.u_.high) + uint(temp.u_.high);
-	//res_high2 = bHigh * aHigh + (temp >> (sizeof(BIG_INT_WORD_TYPE) * 4)); // bHigh * aHigh + temp.high
-	res_high2 = bHigh * aHigh + this->getHighAsLowBits(temp);
-	
-	// --
-	
-	//uint c = AddTwoWords(res_low1.u, res_low2.u, 0, &res_low2.u);
-	BIG_INT_WORD_TYPE c = addTwoWords(res_low1, res_low2, 0, &res_low2);
-	
-	//AddTwoWords(res_high1.u, res_high2.u, c, &res_high2.u);                 // there is no carry from here
-	addTwoWords(res_high1, res_high2, c, &res_high2);                 // there is no carry from here
-	
-	*resultHigh = res_high2;
-	*resultLow  = res_low2;
+	BIG_INT_WORD_TYPE c = this->addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
+						  this->addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
 }
 
-/**
- * multiplication: this = this * ss2
- */
 void BigInt::mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const {
 	if( ss2 == 0 ) {
 		result.setZero();
 		return;
 	}
 	
-	//BigInt u(this->value, this->wordCapacity, this->wordSize); // "copy" the data from this to u
-	
-	// create new value for this
-	//this->value = new BIG_INT_WORD_TYPE[this->wordSize+1];
-	//this->wordCapacity = this->wordSize+1;
-	//std::fill_n(&this->value[0], this->wordCapacity, 0);
+	// reserve words at the result and inizialize ith with zeros
 	result.reserveWords(this->wordSize+1);
 	std::fill_n(result.value, this->wordSize+1, 0);
 	
@@ -1140,7 +924,6 @@ void BigInt::mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const {
 		
 		if( x1size == 0 ) {
 			// this is 0: 0*x => 0
-			//this->wordSize = 1;
 			result.setZero();
 			return;
 		}
@@ -1148,7 +931,7 @@ void BigInt::mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const {
 		for(x1start=0 ; x1start<x1size && this->value[x1start]==0 ; ++x1start);
 	}
 	
-	
+	// performe the multiplication
 	for(BIG_INT_WORD_COUNT_TYPE x1=x1start ; x1<x1size ; ++x1) {
 		this->mulTwoWords(this->value[x1], ss2, &r2, &r1 );
 		this->addTwoInts(r2, r1, x1, result.value, result.wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
@@ -1164,10 +947,6 @@ void BigInt::mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const {
 }
 
 void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
-//	return mulSchool_1(a, b);
-//}
-//
-//BigInt BigInt::mulSchool_1(const BigInt& a, const BigInt& b) const {
 	BIG_INT_WORD_COUNT_TYPE aSize  = a.wordSize, 	bSize  = b.wordSize;
 	BIG_INT_WORD_COUNT_TYPE aStart = 0,       		bStart = 0;
 	
@@ -1176,7 +955,6 @@ void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
 		// there is no sense to set aSize (and others) to another values
 		
 		for(aSize=a.wordSize ; aSize>0 && a.value[aSize-1]==0 ; --aSize);
-		
 		for(aStart=0 ; aStart<aSize && a.value[aStart]==0 ; ++aStart);
 	}
 	if( b.wordSize > 2 ) {
@@ -1184,25 +962,16 @@ void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
 		// there is no sense to set bSize (and others) to another values
 		
 		for(bSize=b.wordSize ; bSize>0 && b.value[bSize-1]==0 ; --bSize);
-		
 		for(bStart=0 ; bStart<bSize && b.value[bStart]==0 ; ++bStart);
 	}
 	
-//	Mul2Big3<ss_size>(ss1, ss2, result, x1start, aSize, x2start, bSize);
-//}
-//
-//BigInt BigInt::mulSchool_2(const BigInt& a, const BigInt& b, const BIG_INT_WORD_COUNT_TYPE aStart, const BIG_INT_WORD_COUNT_TYPE aSize, const BIG_INT_WORD_COUNT_TYPE bStart, BIG_INT_WORD_COUNT_TYPE bSize) const {
-	
 	if( aSize==0 || bSize==0 ) {
-		//return BigInt(0);
 		result.setZero();
 	}
 	
 	BIG_INT_WORD_TYPE r2, r1;
 	
-	BIG_INT_WORD_COUNT_TYPE maxWordCount = aSize + bSize; // std::max(aSize, bSize) * 2;
-	//BIG_INT_WORD_TYPE* resValue = new BIG_INT_WORD_TYPE[maxWordCount];
-	//std::fill_n(resValue, maxWordCount, 0);
+	BIG_INT_WORD_COUNT_TYPE maxWordCount = aSize + bSize;
 	result.reserveWords(maxWordCount);
 	std::fill_n(result.value, maxWordCount, 0);
 	
@@ -1221,7 +990,6 @@ void BigInt::mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const {
 	for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
 	
 	result.wordSize = usedWordIndex;
-	//return BigInt(resValue, maxWordCount, usedWordIndex);
 }
 
 BigInt BigInt::operator* (const BigInt& other) const {
@@ -1230,141 +998,84 @@ BigInt BigInt::operator* (const BigInt& other) const {
 	return result;
 }
 
-/* ---------- division ---------- */
+// ----- division -----
 
-/**
- * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
- * result = a:b / c and rest - remainder
- *
- *
- * WARNING:
- * the c has to be suitably large for the result being keeped in one word,
- * if c is equal zero there'll be a hardware interruption (0)
- * and probably the end of your program
- *
- */
-void BigInt::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE *result, BIG_INT_WORD_TYPE * rest) const {
+// -- divTwoWords
+
+void BigInt::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder) const {
 	// c = divisor
 	// (a < c ) for the result to be one word
-	assert( c != 0 && a < c );
-	
-	//uint_ c_;
-	//c_.u = c;
-	BIG_INT_WORD_TYPE c_ = c;
+	assert( divisor != 0 && a < divisor );
 	
 	if( a == 0 ) {
-		*result    = b / c;
-		*rest = b % c;
+		*result    = b / divisor;
+		if(remainder != NULL) {
+			*remainder = b % divisor;
+		}
 	} else {
-		if( this->getHighAsLowBits(c_) == 0 ) {
-			// higher half of 'c' is zero
-			// then higher half of 'a' is zero too (look at the asserts at the beginning - 'a' is smaller than 'c')
-			BIG_INT_WORD_TYPE a_, b_, res_, temp1, temp2;
+		if( this->getHighAsLowBits(divisor) == 0 ) {
+			// higher half of 'divisor' is zero
+			// then higher half of 'a' is zero too (look at the asserts at the beginning - 'a' is smaller than 'divisor')
+			BIG_INT_WORD_TYPE res, temp1, temp2;
 			
-			//a_.u = a;
-			a_ = a;
+			temp1 = this->getLowAsHighBits(a); // this->setHighFromLowBits(temp1, a); 	// temp1.high 	= a.low
+			temp1 = this->setLowFromHighBits(temp1, b); 								// temp1.low 	= b.high
+			res = this->setHighFromLowBits(res, (temp1 / divisor)); 					// res_.high 	= (temp1.u / c).low
+			temp2 = this->setHighFromLowBits(temp2, (temp1 % divisor)); 				// temp2.high 	= (temp1.u % c).low
+			temp2 = this->setLowFromLowBits(temp2, b); 									// temp2.low 	= b.low
+			res = this->setLowFromLowBits(res, (temp2 / divisor)); 						// res_.low 	= (temp2.u / c).low
+			*result = res;
 			
-			//b_.u = b;
-			b_ = b;
-			
-			//temp1.u_.high = a_.u_.low;
-			temp1 = this->setHighFromLowBits(temp1, a_);
-			
-			//temp1.u_.low  = b_.u_.high;
-			temp1 = this->setLowFromHighBits(temp1, b_);
-			
-			//res_.u_.high  = (unsigned int)(temp1.u / c);
-			res_ = this->setHighFromLowBits(res_, (temp1 / c));
-			
-			//temp2.u_.high = (unsigned int)(temp1.u % c);
-			temp2 = this->setHighFromLowBits(temp2, (temp1 % c));
-			
-			//temp2.u_.low  = b_.u_.low;
-			temp2 = this->setLowFromLowBits(temp2, b_);
-			
-			//res_.u_.low  = (unsigned int)(temp2.u / c);
-			res_ = this->setLowFromLowBits(res_, (temp2 / c));
-			//*rest        = temp2.u % c;
-			*rest = temp2 % c;
-			
-			//*r = res_.u;
-			*result = res_;
+			if(remainder != NULL) {
+				*remainder = temp2 % divisor;
+			}
 		} else {
-			return this->divTwoWords2(a, b, c,  result,  rest);
+			this->divTwoWordsKnuth(a, b, divisor,  result,  remainder);
 		}
 	}
 }
 
-/**
- *
- * the same algorithm like the division algorithm for all words which is based on
- * "The art of computer programming 2" (4.3.1 page 257)
- * Donald E. Knuth
- * but now with the radix=2^32
- */
-void BigInt::divTwoWords2(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE * r, BIG_INT_WORD_TYPE * rest) const {
+// -- divTwoWordsKnuth
+
+void BigInt::divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder ) const {
 	// a is not zero
-	// c_.u_.high is not zero
+	// c.high is not zero
 	
-	//uint_ a_, b_, c_, u_, q_;
-	//unsigned int u3; // 32 bit
 	BIG_INT_WORD_TYPE u, q, u3;
 	BIG_INT_WORD_TYPE temp_qLow, temp_qHigh;
 	
-	
-	
-	//a_.u  = a;
-	//b_.u  = b;
-	//c_.u  = c;
-	
 	// normalizing
-	BIG_INT_WORD_TYPE d = this->divTwoWordsNormalize(a, b, c);
+	BIG_INT_WORD_TYPE d = this->divTwoWordsKnuth_normalize(a, b, c);
 	
-	// loop from j=1 to j=0
-	//   the first step (for j=2) is skipped because our result is only in one word,
-	//   (first 'q' were 0 and nothing would be changed)
-	////u_.u_.high = a_.u_.high;
-	//u = this->setHighFromHighBits(u, a);
-	////u_.u_.low  = a_.u_.low;
-	//u = this->setLowFromLowBits(u, a);
-	// TODO why not just:
 	u = a;
 	
-	//u3         = b_.u_.high;
-	u3 = this->getHighAsLowBits(b);
-	//q_.u_.high = DivTwoWordsCalculate(u_, u3, c_);
-	q = this->setHighFromLowBits(q, this->divTwoWordsCalculate(u, u3, c));
-	//MultiplySubtract(u_, u3, q_.u_.high, c_);
+	u3 = this->getHighAsLowBits(b); // u3 = b.high
+	q = this->setHighFromLowBits(q, this->divTwoWordsKnuth_calculate(u, u3, c)); // q.high = this->divTwoWordsCalculate(u, u3, c)
+	
 	temp_qHigh = this->getHighAsLowBits(q);
-	this->multiplySubtract(u, u3, temp_qHigh, c);
+	this->divTwoWordsKnuth_multiplySubtract(u, u3, temp_qHigh, c); // this->divTwoWordsMultiplySubtract(u, u3, q.high, c)
 	q = this->setHighFromLowBits(q, temp_qHigh);
 	
-	//u_.u_.high = u_.u_.low;
-	u = this->setHighFromLowBits(u, u);
-	//u_.u_.low  = u3;
-	u = this->setLowFromLowBits(u, u3);
-	//u3         = b_.u_.low;
-	u3 = this->getLowAsLowBits(b);
-	//q_.u_.low  = DivTwoWordsCalculate(u_, u3, c_);
-	q = this->setLowFromLowBits(q, this->divTwoWordsCalculate(u, u3, c));
-	//MultiplySubtract(u_, u3, q_.u_.low, c_);
+	u = this->setHighFromLowBits(u, u); // u.high = u.low
+	u = this->setLowFromLowBits(u, u3); // u.low = u3
+	u3 = this->getLowAsLowBits(b); // u3 = b.low
+	q = this->setLowFromLowBits(q, this->divTwoWordsKnuth_calculate(u, u3, c)); // q.low = this->divTwoWordsCalculate(u, u3, c)
+	
 	temp_qLow = this->getLowAsLowBits(q);
-	this->multiplySubtract(u, u3, temp_qLow, c);
+	this->divTwoWordsKnuth_multiplySubtract(u, u3, temp_qLow, c); // this->divTwoWordsMultiplySubtract(u_, u3, q_.u_.low, c_);
 	q = this->setLowFromLowBits(q, temp_qLow);
 	
-	//*r = q_.u;
-	*r = q;
+	*result = q;
 	
-	// unnormalizing for the remainder
-	//u_.u_.high = u_.u_.low;
-	u = this->getLowAsHighBits(u); // this->setHighFromLowBits(u, u);
-	//u_.u_.low  = u3;
-	u = this->setLowFromLowBits(u, u3);
-	//*rest = DivTwoWordsUnnormalize(u_.u, d);
-	*rest = this->divTwoWordsUnnormalize(u, d);
+	if(remainder != NULL) {
+		// unnormalizing for the remainder
+		u = this->getLowAsHighBits(u); // this->setHighFromLowBits(u, u); // u.high = u.low
+		u = this->setLowFromLowBits(u, u3); // u.low = u3;
+		*remainder = this->divTwoWordsKnuth_unnormalize(u, d);
+	}
 }
 
-BIG_INT_WORD_TYPE BigInt::divTwoWordsNormalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) const {
+BIG_INT_WORD_TYPE BigInt::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) const {
 	uint d = 0;
 	
 	for( ; (c & BIG_INT_WORD_HIGHEST_BIT) == 0 ; ++d ) {
@@ -1383,7 +1094,7 @@ BIG_INT_WORD_TYPE BigInt::divTwoWordsNormalize(BIG_INT_WORD_TYPE &a, BIG_INT_WOR
 	return d;
 }
 
-BIG_INT_WORD_TYPE BigInt::divTwoWordsUnnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) const {
+BIG_INT_WORD_TYPE BigInt::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) const {
 	if( d == 0 ) {
 		return u;
 	}
@@ -1393,77 +1104,57 @@ BIG_INT_WORD_TYPE BigInt::divTwoWordsUnnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WO
 	return u;
 }
 
-unsigned int BigInt::divTwoWordsCalculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const
-{
-	bool next_test;
-	//uint_ qp_, rp_, temp_;
+unsigned int BigInt::divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const {
+	bool nextTest;
 	BIG_INT_WORD_TYPE qp, rp, temp;
 	
-	//qp_.u = u_.u / uint(v_.u_.high);
-	qp = u / this->getHighAsLowBits(v);
-	//rp_.u = u_.u % uint(v_.u_.high);
-	rp = u % this->getHighAsLowBits(v);
+	qp = u / this->getHighAsLowBits(v); // qp = u / v.high
+	rp = u % this->getHighAsLowBits(v); // rp = u % v.high
 	
-	//TTMATH_ASSERT( qp_.u_.high==0 || qp_.u_.high==1 )
-	assert( this->getHighAsLowBits(qp) == 0 || this->getHighAsLowBits(qp) == 1);
+	assert( this->getHighAsLowBits(qp) == 0 || this->getHighAsLowBits(qp) == 1); // assert( qp.hight == 0 || qp.high == 1);
 	
 	do {
 		bool decrease = false;
-		
-		//if( qp_.u_.high == 1 )
-		if( this->getHighAsLowBits(qp) == 1 ) {
+		if( this->getHighAsLowBits(qp) == 1 ) { // if( qp.high == 1)
 			decrease = true;
 		} else {
-			//temp_.u_.high = rp_.u_.low;
-			temp = this->setHighFromLowBits(temp, rp);
-			//temp_.u_.low  = u3;
-			temp = this->setLowFromLowBits(temp, u3);
+			temp = this->setHighFromLowBits(temp, rp); // temp.hight = rp.low
+			temp = this->setLowFromLowBits(temp, u3); // temp.low = u3.low
 			
-			//if( qp_.u * uint(v_.u_.low) > temp_.u )
-			if( qp * this->getLowAsLowBits(v) > temp) {
+			if( qp * this->getLowAsLowBits(v) > temp) { // if( qp * v.low > temp )
 				decrease = true;
 			}
 		}
 		
-		next_test = false;
+		nextTest = false;
 		
 		if( decrease ) {
-			//--qp_.u;
 			--qp;
-			//rp_.u += v_.u_.high;
-			rp += this->getHighAsLowBits(v);
+			rp += this->getHighAsLowBits(v); // rp += v.high
 			
-			//if( rp_.u_.high == 0 )
-			if( this->getHighAsLowBits(rp) == 0) {
-				next_test = true;
+			if( this->getHighAsLowBits(rp) == 0) { // if( rp.high == 0 )
+				nextTest = true;
 			}
 		}
 	}
-	while( next_test );
+	while( nextTest );
 	
-	//return qp_.u_.low;
-	return this->getLowAsLowBits(qp);
+	return this->getLowAsLowBits(qp); // return qp.low
 }
 
-void BigInt::multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) const {
+void BigInt::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) const {
 	BIG_INT_WORD_TYPE temp, res_high, res_low;
 	this->mulTwoWords(v, q,  &res_high, &res_low);
 	
 	BIG_INT_WORD_TYPE sub_res_high, sub_res_low;
 	
-	//temp_.u_.high = u_.u_.low;
-	temp = this->setHighFromLowBits(temp, u);
-	//temp_.u_.low  = u3;
-	temp = this->setLowFromLowBits(temp, u3);
+	temp = this->setHighFromLowBits(temp, u); // temp.high = u.low
+	temp = this->setLowFromLowBits(temp, u3); // temp.low = u3.low
 	
-	//uint c = SubTwoWords(temp_.u, res_low, 0, &sub_res_low_.u);
 	BIG_INT_WORD_TYPE c = this->subTwoWords(temp, res_low, 0, &sub_res_low);
 	
-	//temp_.u_.high = 0;
-	temp = this->setHighFromLowBits(temp, 0);
-	//temp_.u_.low  = u_.u_.high;
-	temp = this->setLowFromHighBits(temp, u);
-	//c = SubTwoWords(temp_.u, res_high, c, &sub_res_high_.u);
+	temp = this->setHighFromLowBits(temp, 0); // temp.high = 0
+	temp = this->setLowFromHighBits(temp, u); // temp.low = u.high
 	c = this->subTwoWords(temp, res_high, c, &sub_res_high);
 	
 	if( c ) {
@@ -1473,19 +1164,13 @@ void BigInt::multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_
 		this->addTwoWords(sub_res_high, 0, c, &sub_res_high);
 	}
 	
-	//u_.u_.high = sub_res_high_.u_.low;
-	u = this->setHighFromLowBits(u, sub_res_high);
-	//u_.u_.low  = sub_res_low_.u_.high;
-	u = this->setLowFromHighBits(u, sub_res_low);
-	//u3         = sub_res_low_.u_.low;
-	u3 = this->getLowAsLowBits(sub_res_low);
+	u = this->setHighFromLowBits(u, sub_res_high); // u.high = sub_res_high.low
+	u = this->setLowFromHighBits(u, sub_res_low); // u.low = sub_res_low.high
+	u3 = this->getLowAsLowBits(sub_res_low); // u3 = sub_res_low.low;
 }
 
-/**
- * division by one unsigned word
- *
- * returns the remainder
- */
+// -- divInt
+
 BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE *targetWordSize) const {
 	if(divisor == 0) {
 		std::string msg = "BigInt devision by (uint)0.";
@@ -1530,7 +1215,9 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	return r;
 }
 
-void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
+// -- divKnuth
+
+void BigInt::divKnuth_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	// this = dividend, v = divisor
 	const BigInt* dividend = this;
 	
@@ -1548,7 +1235,7 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	uint d, j=m;
 	BIG_INT_WORD_TYPE u_value_size, u0, u1, u2, v1, v0;
 	
-	u_value_size = this->div_normalize(divisor, n, d);
+	u_value_size = this->divKnuth_normalize(divisor, n, d);
 	
 	if( j+n == this->wordSize ) {
 		u2 = u_value_size;
@@ -1569,11 +1256,11 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 		v1 = divisor.value[n-1]; // divisor  high
 		v0 = divisor.value[n-2]; // divident low
 		
-		BIG_INT_WORD_TYPE qp = this->div_calculate(u2,u1,u0, v1,v0);
+		BIG_INT_WORD_TYPE qp = this->divKnuth_calculate(u2,u1,u0, v1,v0);
 		
-		this->div_makeNewU(uu, j, n, u2);
-		this->div_multiplySubtract(uu, vv, qp);
-		this->div_copyNewU(uu, j, n);
+		this->divKnuth_makeNewU(uu, j, n, u2);
+		this->divKnuth_multiplySubtract(uu, vv, qp);
+		this->divKnuth_copyNewU(uu, j, n);
 		
 		q.value[j] = qp;
 		
@@ -1595,7 +1282,7 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	q.wordSize = newWordSize;
 	
 	if( remainder ) {
-		this->div_unnormalize(remainder, n, d);
+		this->divKnuth_unnormalize(remainder, n, d);
 	}
 	
 	*this = q;
@@ -1603,8 +1290,7 @@ void BigInt::div_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
 	//TTMATH_LOG("UInt::Div3_Division")
 }
 
-
-void BigInt::div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
+void BigInt::divKnuth_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	//for(i=0 ; i<n ; ++i, ++j)
@@ -1622,12 +1308,10 @@ void BigInt::div_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_CO
 	//	uu.table[i] = 0;
 	
 	uu.wordSize = i+1;
-	
-	//TTMATH_LOG("UInt::Div3_MakeNewU")
 }
 
 
-void BigInt::div_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
+void BigInt::divKnuth_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	for(i=0 ; i<n ; ++i) {
@@ -1637,38 +1321,10 @@ void BigInt::div_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_
 	if( i+j < this->wordSize ) {
 		this->value[i+j] = uu.value[i];
 	}
-	
-	//TTMATH_LOG("UInt::Div3_CopyNewU")
 }
 
 
-/*!
- we're making the new 'vv'
- the value is actually the same but the 'table' is bigger (value_size+1)
- * /
-void Div3_MakeBiggerV(const UInt<value_size> & v, UInt<value_size+1> & vv)
-{
-	for(uint i=0 ; i<value_size ; ++i)
-		vv.table[i] = v.table[i];
-	
-	vv.table[value_size] = 0;
-	
-	TTMATH_LOG("UInt::Div3_MakeBiggerV")
-}
-*/
-
-/**
- * D1. [Normaliez]
- *
- * we're moving all bits from 'divisor' into the left side of the n-1 word
- * (the highest bit at divisor.value[n-1] will be equal one,
- * the bits from 'dividend' we're moving the same times as 'divisor')
- *
- * return values:
- * -  d - how many times we've moved
- * -  return - the next-left value from 'this' (that after value[value_size-1])
- */
-BIG_INT_WORD_TYPE BigInt::div_normalize(BigInt& divisor, uint n, uint & d) {
+BIG_INT_WORD_TYPE BigInt::divKnuth_normalize(BigInt& divisor, uint n, uint & d) {
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 	
@@ -1691,7 +1347,7 @@ BIG_INT_WORD_TYPE BigInt::div_normalize(BigInt& divisor, uint n, uint & d) {
 	return res;
 }
 
-void BigInt::div_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE d) {
+void BigInt::divKnuth_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE d) {
 	//for(BIG_INT_WORD_COUNT_TYPE i=n ; i<this->wordSize ; ++i) {
 	//	this->value[i] = 0;
 	//}
@@ -1704,8 +1360,7 @@ void BigInt::div_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_
 	//TTMATH_LOG("UInt::Div3_Unnormalize")
 }
 
-
-BIG_INT_WORD_TYPE BigInt::div_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
+BIG_INT_WORD_TYPE BigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
 	//UInt<2> u_temp;
 	// u_temp in qp (quotient) umbenant
 	BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
@@ -1759,17 +1414,10 @@ BIG_INT_WORD_TYPE BigInt::div_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE 
 	}
 	while( next_test );
 	
-	//TTMATH_LOG("UInt::Div3_Calculate")
-	
 	return qp[0];
 }
 
-/**
- * D4. [Multiply and subtract]
- *		includes also: D5. [Test Remainder] and D6. [add back]
- *
- */
-void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const {
+void BigInt::divKnuth_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const {
 	// D4 (in the book)
 	
 	//UInt<value_size+1> vv_temp(vv);
@@ -1795,21 +1443,9 @@ void BigInt::div_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD
 		// Therefore, I truncate this word again (if it was added.);
 		uu.wordSize = uuWordSizeWithoutCarry;
 	}
-	
-	
-	//TTMATH_LOG("UInt::Div3_MultiplySubtract")
 }
 
-
-/*!
- the third division algorithm
- 
- this algorithm is described in the following book:
- "The art of computer programming 2" (4.3.1 page 257)
- Donald E. Knuth
- !! give the description here (from the book)
- */
-void BigInt::div(const BigInt& divisor, BigInt* remainder) {
+void BigInt::divKnuth(const BigInt& divisor, BigInt* remainder) {
 	const BigInt& dividend = *this;
 	if(divisor == BigInt::ZERO) {
 		std::string msg = "BigInt devision by (BigInt)0.";
@@ -1867,9 +1503,11 @@ void BigInt::div(const BigInt& divisor, BigInt* remainder) {
 	++m;
 	++n;
 	m = m - n;
-	this->div_division(divisor, remainder, m, n);
-	
-	//TTMATH_LOG("UInt::Div3")
+	this->divKnuth_division(divisor, remainder, m, n);
+}
+
+void BigInt::div(const BigInt& divisor, BigInt* remainder) {
+	this->divKnuth(divisor, remainder);
 }
 
 BigInt BigInt::operator/ (const BigInt& other) const {
@@ -1886,13 +1524,6 @@ BigInt BigInt::operator% (const BigInt& other) const {
 	return reminder;
 }
 
-/*!
- power this = this ^ pow
- (pow without a sign)
- 
- binary algorithm (r-to-l)
- 
- */
 BigInt BigInt::pow(BigInt pow) const {
 	//if( IsNan() )
 	//	return 1;
@@ -1936,11 +1567,6 @@ BigInt BigInt::pow(BigInt pow) const {
 	return result;
 }
 
-/**
- * square root
- * e.g. BigInt(9).sqrt() = 3
- * ('digit-by-digit' algorithm)
- */
 BigInt BigInt::sqrt() const {
 	if( this->isZero() ) {
 		return BigInt(0);
@@ -1977,6 +1603,7 @@ BigInt BigInt::sqrt() const {
 	
 	return result;
 }
+
 
 /* ---------- comparisons ---------- */
 bool BigInt::operator< (const BigInt& other) const {
@@ -2036,21 +1663,4 @@ bool BigInt::operator!= (const BigInt& other) const {
 	return (!(*this == other));
 }
 
-BigInt& BigInt::operator= (const BigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-	
-	// reuse storage when possible
-	if(this->wordCapacity < other.wordSize) {
-		delete [] this->value;
-		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
-		this->wordCapacity = other.wordSize;
-	}
-	
-	this->wordSize = other.wordSize;
-	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
-	
-	return *this;
-}
+

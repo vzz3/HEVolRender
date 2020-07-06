@@ -299,6 +299,9 @@ SInfinitBigInt SInfinitBigInt::gcdExtended(const SInfinitBigInt &a, const SInfin
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
 	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
 	
+	// Implementing the Extended Euclidean Algorithm with Unsigned Inputs
+	// https://jeffhurchalla.com/2018/10/13/implementing-the-extended-euclidean-algorithm-with-unsigned-inputs/
+	
 	int_fast8_t signumA = a.signum;
 	int_fast8_t signumB = b.signum;
 	
@@ -431,17 +434,17 @@ SInfinitBigInt SInfinitBigInt::modPow(const SInfinitBigInt &exponent, const SInf
 	
 	// Trivial cases: exponent = 0
 	if (exponent.isZero()) {
-		return (m.isOne() ? BigInt(0) : BigInt(1));
+		return (m.isOne() ? SInfinitBigInt(0) : SInfinitBigInt(1));
 	}
 	
 	// Trivial cases: base = 1
 	if (this->isOne()) {
-		return (m.isOne() ? BigInt(0) : BigInt(1));
+		return (m.isOne() ? SInfinitBigInt(0) : SInfinitBigInt(1));
 	}
 	
 	// Trivial cases: base = 0
 	if (this->isZero() &&  exponent.signum >= 0) {
-		return BigInt(0);
+		return SInfinitBigInt(0);
 	}
 	
 	// Trivial cases: base = -1 && (exponent % 2 = 0)
@@ -515,7 +518,7 @@ SInfinitBigInt SInfinitBigInt::modPow(const SInfinitBigInt &exponent, const SInf
 	 */
 }
 
-SInfinitBigInt SInfinitBigInt::modPow_naiv(const SInfinitBigInt &exponent, const SInfinitBigInt &modulus) const {
+SInfinitBigInt SInfinitBigInt::modPow_naiv(const SInfinitBigInt &exponent, const BigInt &modulus) const {
 	if(modulus.BigInt::isOne()) {
 		return SInfinitBigInt(1);
 	}

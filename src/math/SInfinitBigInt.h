@@ -141,7 +141,7 @@ namespace ppvr {
 			
 		private:
 			
-			SInfinitBigInt modPow_naiv(const SInfinitBigInt &exponent, const SInfinitBigInt &modulus) const;
+			SInfinitBigInt modPow_naiv(const SInfinitBigInt &exponent, const BigInt &modulus) const;
 			
 			/**
 			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
