@@ -140,7 +140,9 @@ BigInt::BigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, B
 }
 
 BigInt::~BigInt() {
-	delete [] this->value;
+	if(this->value != NULL) {
+		delete [] this->value;
+	}
 }
 
 // ----- value export - toString / toUint64 -----
@@ -205,7 +207,7 @@ std::string BigInt::toStringDec() const {
 	while (ZERO < tmp) {
 		//tmp.div(BigInt::TEN, &reminder);
 		//decDigit = reminder.value[0];
-		decDigit = this->divInt( 10, tmp.value, &tmp.wordSize );
+		decDigit = tmp.divInt( 10 );
 		ret = digits[decDigit] + ret;
 	}
 	
@@ -1171,7 +1173,7 @@ void BigInt::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WOR
 
 // -- divInt
 
-BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE *targetWordSize) const {
+BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BigInt& result) const {
 	if(divisor == 0) {
 		std::string msg = "BigInt devision by (uint)0.";
 		std::cerr << msg << std::endl;
@@ -1179,11 +1181,16 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	}
 	
 	if( divisor == 1 ) {
+		if(this != &result) {
+			result = *this;
+		}
 		return 0;
 	}
 	
+	result.reserveWords(this->wordSize);
+	
 	//UInt<value_size> dividend(*this);
-	BIG_INT_WORD_TYPE *dividend = targetArray;
+	const BIG_INT_WORD_TYPE* dividend = this->value;
 	//SetZero();
 	//BIG_INT_WORD_TYPE *result = new BIG_INT_WORD_TYPE[targetWordCount];
 	//std::fill_n(result, targetWordCount, 0);
@@ -1191,18 +1198,18 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	int i;  // i must be with a sign
 	BIG_INT_WORD_TYPE r = 0;
 	
-	BIG_INT_WORD_COUNT_TYPE newWordSize = *targetWordSize;
+	BIG_INT_WORD_COUNT_TYPE newWordSize = this->wordSize;
 	bool nonZeroWordRes = false;
 	
 	// we're looking for the last word in dividend (most significant word that is not null)
 	//for(i=targetWordSize-1 ; i>0 && dividend[i]==0 ; --i);
-	i = *targetWordSize - 1;
+	i = this->wordSize - 1;
 	
 	for( ; i>=0 ; --i) {
-		this->divTwoWords(r, dividend[i], divisor, &targetArray[i], &r);
+		this->divTwoWords(r, dividend[i], divisor, &result.value[i], &r);
 		// find index+1 of most significant word which is not 0
 		if(!nonZeroWordRes && i > 0) {
-			if(targetArray[i] == 0) {
+			if(result.value[i] == 0) {
 				newWordSize = i;
 			} else {
 				nonZeroWordRes = true;
@@ -1211,36 +1218,41 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *t
 	}
 	
 	
-	*targetWordSize = newWordSize;
+	result.wordSize = newWordSize;
 	return r;
+}
+
+BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor) {
+	return this->divInt(divisor, *this);
 }
 
 // -- divKnuth
 
-void BigInt::divKnuth_division(BigInt divisor, BigInt * remainder, uint m, uint n) {
-	// this = dividend, v = divisor
-	const BigInt* dividend = this;
+void BigInt::divKnuth_division(BigInt divisor, BigInt &result, BigInt& remainder, uint m, uint n) const {
+	// this: dividend
+	assert(n >= 2);
+	//assert(this != &remainder);
 	
-	//TTMATH_ASSERT( n>=2 )
+	BIG_INT_WORD_COUNT_TYPE maxWordCount = this->wordSize;
 	
-	BIG_INT_WORD_COUNT_TYPE maxWordCount = dividend->wordSize; // std::max(dividend.wordCount, divisor.wordCount); // dividend.wordCount must be >= divisor.wordCount
+	remainder = *this;
 	
 	//UInt<value_size+1> uu, vv;
 	BigInt uu(0, maxWordCount+1);
 	//BigInt vv(*this, maxWordCount+1);
 	
 	//UInt<value_size> q;
-	BigInt q(0, maxWordCount);
+	result.reserveWords(maxWordCount);
 	
 	uint d, j=m;
 	BIG_INT_WORD_TYPE u_value_size, u0, u1, u2, v1, v0;
 	
-	u_value_size = this->divKnuth_normalize(divisor, n, d);
+	u_value_size = remainder.divKnuth_normalize(divisor, n, d);
 	
-	if( j+n == this->wordSize ) {
+	if( j+n == remainder.wordSize ) {
 		u2 = u_value_size;
 	} else {
-		u2 = this->value[j+n];
+		u2 = remainder.value[j+n];
 	}
 	
 	//Div3_MakeBiggerV(v, vv);
@@ -1248,46 +1260,44 @@ void BigInt::divKnuth_division(BigInt divisor, BigInt * remainder, uint m, uint 
 	//std::copy(&divisor.value[0], (&divisor.value[0] + divisor.wordSize), vv);
 	//vv[divisor.wordSize] = 0;
 	
-	std::fill_n(q.value, maxWordCount, 0);
+	std::fill_n(result.value, maxWordCount, 0);
 	
 	while( true ) {
-		u1 = this->value[j+n-1]; // divident high
-		u0 = this->value[j+n-2]; // divident low
+		u1 = remainder.value[j+n-1]; // divident high
+		u0 = remainder.value[j+n-2]; // divident low
 		v1 = divisor.value[n-1]; // divisor  high
 		v0 = divisor.value[n-2]; // divident low
 		
 		BIG_INT_WORD_TYPE qp = this->divKnuth_calculate(u2,u1,u0, v1,v0);
 		
-		this->divKnuth_makeNewU(uu, j, n, u2);
-		this->divKnuth_multiplySubtract(uu, vv, qp);
-		this->divKnuth_copyNewU(uu, j, n);
+		remainder.divKnuth_makeNewU(uu, j, n, u2);
+		remainder.divKnuth_multiplySubtract(uu, vv, qp);
+		remainder.divKnuth_copyNewU(uu, j, n);
 		
-		q.value[j] = qp;
+		result.value[j] = qp;
 		
 		// the next loop
 		if( j-- == 0 ) {
 			break;
 		}
 		
-		u2 = this->value[j+n];
+		u2 = remainder.value[j+n];
 	}
 	
 	BIG_INT_WORD_COUNT_TYPE newWordSize;
 	// trim reminder word size
-	for (newWordSize = n; newWordSize>1 && this->value[newWordSize-1] == 0; newWordSize--);
-	this->wordSize = newWordSize;
+	for (newWordSize = n; newWordSize>1 && remainder.value[newWordSize-1] == 0; newWordSize--);
+	remainder.wordSize = newWordSize;
 	
 	// set new word size of the result
-	for (newWordSize = maxWordCount; newWordSize>1 && q.value[newWordSize-1] == 0; newWordSize--);
-	q.wordSize = newWordSize;
+	for (newWordSize = maxWordCount; newWordSize>1 && result.value[newWordSize-1] == 0; newWordSize--);
+	result.wordSize = newWordSize;
 	
-	if( remainder ) {
-		this->divKnuth_unnormalize(remainder, n, d);
-	}
+	//if( remainder ) {
+		remainder.divKnuth_unnormalize(d);
+	//}
 	
-	*this = q;
-	
-	//TTMATH_LOG("UInt::Div3_Division")
+	//*this = result;
 }
 
 void BigInt::divKnuth_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
@@ -1310,7 +1320,6 @@ void BigInt::divKnuth_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WO
 	uu.wordSize = i+1;
 }
 
-
 void BigInt::divKnuth_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
@@ -1322,7 +1331,6 @@ void BigInt::divKnuth_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG
 		this->value[i+j] = uu.value[i];
 	}
 }
-
 
 BIG_INT_WORD_TYPE BigInt::divKnuth_normalize(BigInt& divisor, uint n, uint & d) {
 	// this = dividend, v = divisor
@@ -1342,54 +1350,46 @@ BIG_INT_WORD_TYPE BigInt::divKnuth_normalize(BigInt& divisor, uint n, uint & d) 
 		res = 0;
 	}
 	
-	//TTMATH_LOG("UInt::Div3_Normalize")
-	
 	return res;
 }
 
-void BigInt::divKnuth_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE d) {
-	//for(BIG_INT_WORD_COUNT_TYPE i=n ; i<this->wordSize ; ++i) {
-	//	this->value[i] = 0;
-	//}
-	//this->wordSize = n;
-	
+void BigInt::divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d) {
 	this->rcr(d,0);
-	
-	*remainder = *this;
-	
-	//TTMATH_LOG("UInt::Div3_Unnormalize")
+	//*remainder = *this;
 }
 
 BIG_INT_WORD_TYPE BigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
 	//UInt<2> u_temp;
 	// u_temp in qp (quotient) umbenant
 	BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
-	BIG_INT_WORD_TYPE qp[2];
+	BIG_INT_WORD_TYPE qpValue[2];
+	BigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
+	
 	BIG_INT_WORD_TYPE rp, c;
 	bool next_test;
 	
 	assert( v1 != 0 );
 
 	
-	qp[1] = u2;
-	qp[0] = u1;
+	qp.value[1] = u2;
+	qp.value[0] = u1;
 	//u_temp.DivInt(v1, &rp);
-	rp = this->divInt(v1, &qp[0], &qpWordCount);
+	rp = qp.divInt(v1);
 	
 	//TTMATH_ASSERT( u_temp.table[1]==0 || u_temp.table[1]==1 )
-	assert( qp[1]==0 || qp[1]==1 );
+	assert( qp.value[1]==0 || qp.value[1]==1 );
 	
 	do {
 		bool decrease = false;
 		
-		if( qp[1] == 1 ) {
+		if( qp.value[1] == 1 ) {
 			decrease = true;
 		} else {
 			//UInt<2> temp1, temp2;
 			BIG_INT_WORD_TYPE temp1[2], temp2[2];
 			
 			//UInt<2>::MulTwoWords(u_temp.table[0], v0, temp1.table+1, temp1.table);
-			this->mulTwoWords(qp[0], v0, &temp1[1], &temp1[0]);
+			this->mulTwoWords(qp.value[0], v0, &temp1[1], &temp1[0]);
 			temp2[1] = rp;
 			temp2[0] = u0;
 			
@@ -1403,7 +1403,7 @@ BIG_INT_WORD_TYPE BigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_
 		
 		if( decrease ) {
 			//qp.SubOne();
-			this->subInt(1, 0, &qp[0], 2);
+			this->subInt(1, 0, &qp.value[0], 2);
 			
 			rp += v1;
 			
@@ -1414,7 +1414,8 @@ BIG_INT_WORD_TYPE BigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_
 	}
 	while( next_test );
 	
-	return qp[0];
+	qp.value = NULL;
+	return qpValue[0];
 }
 
 void BigInt::divKnuth_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const {
@@ -1445,7 +1446,7 @@ void BigInt::divKnuth_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT
 	}
 }
 
-void BigInt::divKnuth(const BigInt& divisor, BigInt* remainder) {
+void BigInt::divKnuth(const BigInt& divisor, BigInt &result, BigInt& remainder) const {
 	const BigInt& dividend = *this;
 	if(divisor == BigInt::ZERO) {
 		std::string msg = "BigInt devision by (BigInt)0.";
@@ -1454,25 +1455,20 @@ void BigInt::divKnuth(const BigInt& divisor, BigInt* remainder) {
 	}
 	if(dividend < divisor) {
 		// set the reminder to this value and replace this with "0";
-		//*remainder = *this; // copy values from this to remainder
-		//this->setZero();
-		remainder->value = this->value;
-		remainder->wordSize = this->wordSize;
-		remainder->wordCapacity = this->wordCapacity;
-		this->value = new BIG_INT_WORD_TYPE[1];
-		this->wordCapacity = 1;
-		this->setZero();
+		remainder = *this;
+		result.setZero();
 		return;
 	}
 	if(dividend == BigInt::ZERO) {
 		// 0/x => result = 0; remainder = 0
-		remainder->setZero();
+		remainder.setZero();
+		result.setZero();
 		return;
 	}
 	if(dividend == divisor) {
 		// x/x => result = 1; remainder = 0
-		remainder->setZero();
-		this->setOne();
+		remainder.setZero();
+		result.setOne();
 		return;
 	}
 	
@@ -1489,11 +1485,11 @@ void BigInt::divKnuth(const BigInt& divisor, BigInt* remainder) {
 	
 	if( n == 0 ) {
 		BIG_INT_WORD_TYPE r;
-		r = this->divInt( divisor.value[0], this->value, &this->wordSize );
+		r = this->divInt( divisor.value[0], result );
 		//if( remainder ) {
 			//remainder->SetZero();
-			remainder->value[0] = r;
-			remainder->wordSize = 1;
+			remainder.value[0] = r;
+			remainder.wordSize = 1;
 		//}
 		return;
 	}
@@ -1503,26 +1499,49 @@ void BigInt::divKnuth(const BigInt& divisor, BigInt* remainder) {
 	++m;
 	++n;
 	m = m - n;
-	this->divKnuth_division(divisor, remainder, m, n);
+	
+	this->divKnuth_division(divisor, result, remainder, m, n);
 }
 
-void BigInt::div(const BigInt& divisor, BigInt* remainder) {
-	this->divKnuth(divisor, remainder);
+void BigInt::div(const BigInt& divisor, BigInt &result, BigInt& remainder) const {
+	this->divKnuth(divisor, result, remainder);
 }
 
+void BigInt::div(const BigInt& divisor, BigInt& remainder) {
+	this->div(divisor, *this, remainder);
+	//BigInt result;
+	//this->div(divisor, result, *this);
+	//*this = result;
+}
 BigInt BigInt::operator/ (const BigInt& other) const {
-	BigInt result(*this); // copy this to new BigInt
-	BigInt reminder(0);
-	result.div(other, &reminder);
+	BigInt result(0, this->wordSize), reminder(0, this->wordSize);
+	this->div(other, result, reminder);
 	return result;
 }
 
 BigInt BigInt::operator% (const BigInt& other) const {
-	BigInt result(*this); // copy this to new BigInt
-	BigInt reminder(0);
-	result.div(other, &reminder);
+	BigInt result(0, this->wordSize), reminder(0, this->wordSize);
+	this->div(other, result, reminder);
 	return reminder;
 }
+/*
+BigInt BigInt::operator/ (const BigInt& other) const {
+	BigInt result(*this); // copy this to new BigInt
+	BigInt reminder(0);
+	result.div(other, reminder);
+	return result;
+}
+
+
+BigInt BigInt::operator% (const BigInt& other) const {
+	BigInt result(*this); // copy this to new BigInt
+	BigInt reminder(0);
+	result.div(other, reminder);
+	return reminder;
+}
+*/
+
+// ----- pow(), sqrt() -----
 
 BigInt BigInt::pow(BigInt pow) const {
 	//if( IsNan() )
@@ -1603,7 +1622,6 @@ BigInt BigInt::sqrt() const {
 	
 	return result;
 }
-
 
 /* ---------- comparisons ---------- */
 bool BigInt::operator< (const BigInt& other) const {

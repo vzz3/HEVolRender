@@ -494,14 +494,23 @@ namespace ppvr {
 			
 			/**
 			 * division by one unsigned word
+			 * restul = this / divisor
 			 *
 			 * returns the remainder
 			 */
-			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE *targetArray, BIG_INT_WORD_COUNT_TYPE *targetWordCount) const;
+			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, BigInt& result) const;
+			
+			/**
+			 * division by one unsigned word
+			 * this = this / divisor
+			 *
+			 * returns the remainder
+			 */
+			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
 			
 			// -- divKnuth
 			
-			void divKnuth_division(BigInt divisor, BigInt * remainder, uint m, uint n);
+			void divKnuth_division(BigInt divisor, BigInt &result, BigInt& remainder, uint m, uint n) const;
 			void divKnuth_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
 			void divKnuth_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
 			
@@ -518,7 +527,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE divKnuth_normalize(BigInt& divisor, uint n, uint & d);
 			
-			void divKnuth_unnormalize(BigInt * remainder, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_COUNT_TYPE d);
+			void divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d);
 			BIG_INT_WORD_TYPE divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const;
 			
 			/**
@@ -536,9 +545,17 @@ namespace ppvr {
 			 * Donald E. Knuth
 			 * !! give the description here (from the book)
 			 */
-			void divKnuth(const BigInt& divisor, BigInt* remainder);
+			void divKnuth(const BigInt& divisor, BigInt &result, BigInt& remainder) const;
 			
-			void div(const BigInt& divisor, BigInt* remainder);
+			/**
+			 * result = this / divisor
+			 */
+			void div(const BigInt& divisor, BigInt &result, BigInt& remainder) const;
+			
+			/**
+			 * this = this / divisor
+			 */
+			void div(const BigInt& divisor, BigInt& remainder);
 			
 		public:
 			BigInt operator/ (const BigInt& other) const;

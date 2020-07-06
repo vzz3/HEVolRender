@@ -4,16 +4,16 @@
 //#include "BigInt_wordDev8bit.h"
 
 // 8bit
-#define BIG_INT_WORD_TYPE uint8_t
-#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xF) //15u	// 2^(sizeof(BIG_INT_WORD_TYPE)*8/2) - 1
+//#define BIG_INT_WORD_TYPE uint8_t
+//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xF) //15u	// 2^(sizeof(BIG_INT_WORD_TYPE)*8/2) - 1
 
 // 16bit
 //#define BIG_INT_WORD_TYPE uint16_t
 //#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFF)
 
 // 32bit
-//#define BIG_INT_WORD_TYPE uint32_t
-//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFF)
+#define BIG_INT_WORD_TYPE uint32_t
+#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFF)
 
 // 64bit
 //#define BIG_INT_WORD_TYPE uint64_t
