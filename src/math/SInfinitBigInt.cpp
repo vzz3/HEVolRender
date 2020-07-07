@@ -245,12 +245,14 @@ void SInfinitBigInt::add(const SInfinitBigInt &other, SInfinitBigInt &result) co
 	}
 	if(this->signum < 0) {
 		// -x + +y = +y - +x
-		result = subAsPositive((BigInt)other, (BigInt)*this);
+		//result = subAsPositive((BigInt)other, (BigInt)*this);
+		subAsPositive(other, *this, result);
 		return;
 	}
 	if(other.signum < 0) {
 		// +x + -y = +x - +y
-		result = subAsPositive((BigInt)*this, (BigInt)other);
+		//result = subAsPositive((BigInt)*this, (BigInt)other);
+		subAsPositive(*this, other, result);
 		return;
 	}
 	
@@ -270,39 +272,85 @@ SInfinitBigInt SInfinitBigInt::operator+ (const SInfinitBigInt& other) const {
 	return result;
 }
 
-
-SInfinitBigInt SInfinitBigInt::operator- (const SInfinitBigInt& other) const {
-	if(this->signum == 0) {
-		return SInfinitBigInt((BigInt)other, (other.signum > 0)); // invert sign
+// ----- substraction -----
+BIG_INT_WORD_TYPE SInfinitBigInt::subInfUInt(const SInfinitBigInt& b, SInfinitBigInt& restul) const {
+	return BigInt::sub(b, 0, restul);
+}
+/*
+ SInfinitBigInt SInfinitBigInt::subAsPositive(const BigInt& a, const BigInt& b) const {
+	 if(a > b) {
+	 	return SInfinitBigInt(a - b, false);
+	 } else {
+	 	return SInfinitBigInt(b - a, true);
+	 }
+ }
+ */
+void SInfinitBigInt::subAsPositive(const SInfinitBigInt& a, const SInfinitBigInt& b, SInfinitBigInt& restul) const {
+	// more readable version but requires a comparision of the magnitudes and therfore two casts.... probably slow
+	
+	//if( (BigInt)b < (BigInt)a ) { // only compare the magnitude
+	if(static_cast<const BigInt&>(b) < static_cast<const BigInt&>(a)  ) { // only compare the magnitude (ignore the sign); static_cast<const BigInt&>(X): cast without calling the copy constructor
+		//restul = SInfinitBigInt(a - b, false);
+		a.subInfUInt(b, restul);
+		restul.signum = restul.isMagnitudeZero() ? 0 : +1;
+	} else {
+		//restul = SInfinitBigInt(b - a, true);
+		b.subInfUInt(a, restul);
+		restul.signum = restul.isMagnitudeZero() ? 0 : -1;
 	}
-	if(other.signum == 0) {
-		return *this;
+	
+}
+/*
+ void SInfinitBigInt::subAsPositive(const SInfinitBigInt& a, const SInfinitBigInt& b, SInfinitBigInt& restul) const {
+ if((BigInt)a > (BigInt)b) { // only compare the magnitude
+ restul = SInfinitBigInt(a - b, false);
+ //a.subInfUInt(b, restul);
+ //restul.signum = restul.isMagnitudeZero() ? 0 : +1;
+ } else {
+ restul = SInfinitBigInt(b - a, true);
+ //b.subInfUInt(a, restul);
+ //restul.signum = restul.isMagnitudeZero() ? 0 : -1;
+ }
+ }
+ */
+
+void SInfinitBigInt::sub(const SInfinitBigInt& other, SInfinitBigInt &result) const {
+	if(this->isZero()) {
+		result = other;
+		result.setNegate(); // invert sign
+		return;
+	}
+	if(other.isZero()) {
+		result = *this;
+		return;
 	}
 	
 	if(this->signum > 0 && other.signum > 0) {
 		// +a - +b
-		return subAsPositive((BigInt)*this, (BigInt)other);
+		//result = subAsPositive((BigInt)*this, (BigInt)other);
+		subAsPositive(*this, other, result);
+		return;
 	}
 	
 	if(this->signum < 0 && other.signum < 0) {
 		// -a - -b = -a + +b = +b - +a
-		return subAsPositive((BigInt)other, (BigInt)*this);
+		//result = subAsPositive((BigInt)other, (BigInt)*this);
+		subAsPositive(other, *this, result);
+		return;
 	}
 	
 	if(this->signum > 0 && other.signum < 0) {
 		// +a - -b = +a + +b
-		SInfinitBigInt res;
-		BigInt::add(other, res);
-		res.signum = +1;
-		return res;
+		BigInt::add(other, result);
+		result.signum = +1;
+		return;
 	}
 	
 	if(this->signum < 0 && other.signum > 0) {
 		// -a - +b = -(+a + +b)
-		SInfinitBigInt res;
-		BigInt::add(other, res);
-		res.signum = -1;
-		return res;
+		BigInt::add(other, result);
+		result.signum = -1;
+		return;
 	}
 	
 	std::string msg = "ERROR substract SInfinitBigInt unexpected case!";
@@ -310,13 +358,18 @@ SInfinitBigInt SInfinitBigInt::operator- (const SInfinitBigInt& other) const {
 	throw std::runtime_error(msg);
 }
 
-SInfinitBigInt SInfinitBigInt::subAsPositive(const BigInt& a, const BigInt& b) const {
-	if(a > b) {
-		return SInfinitBigInt(a - b, false);
-	} else {
-		return SInfinitBigInt(b - a, true);
-	}
+void SInfinitBigInt::sub(const SInfinitBigInt& other) {
+	this->sub(other, *this);
 }
+
+SInfinitBigInt SInfinitBigInt::operator- (const SInfinitBigInt& other) const {
+	SInfinitBigInt result(0, this->getWordSize());
+	this->sub(other, result);
+	return result;
+}
+
+
+
 
 SInfinitBigInt SInfinitBigInt::operator* (const SInfinitBigInt& other) const {
 	if(this->signum == 0 || other.signum == 0) {

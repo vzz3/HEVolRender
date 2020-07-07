@@ -103,12 +103,14 @@ namespace ppvr {
 			
 		// ----- substraction -----
 		private:
-			SInfinitBigInt subAsPositive(const BigInt& a, const BigInt& b) const;
+			BIG_INT_WORD_TYPE subInfUInt(const SInfinitBigInt& b, SInfinitBigInt& restul) const;
+			//SInfinitBigInt subAsPositive(const BigInt& a, const BigInt& b) const;
+			void subAsPositive(const SInfinitBigInt& a, const SInfinitBigInt& b, SInfinitBigInt& restul) const;
 		
 		protected:
 			//BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word);
-			BIG_INT_WORD_TYPE sub(const SInfinitBigInt& other, BIG_INT_WORD_TYPE carry, SInfinitBigInt &result) const;
-			BIG_INT_WORD_TYPE sub(const SInfinitBigInt& other);
+			void sub(const SInfinitBigInt& other, SInfinitBigInt &result) const;
+			void sub(const SInfinitBigInt& other);
 		
 		public:
 			SInfinitBigInt operator- (const SInfinitBigInt& other) const;

@@ -463,7 +463,7 @@ TEST_CASE( "signed infinit big integer modulor", "[SIBigint]" ) {
 	REQUIRE( (SInfinitBigInt(BigInt::fromUint64(1050505100004), false) % SInfinitBigInt(  5, true )).toInt64() ==  -1 ); // +4 mod -5 = -1
 }
 
-/*
+/**
 TEST_CASE( "signed infinit big integer pow", "[bigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( BigInt(  1).pow(BigInt(  1)).toUint64() ==   1 );
