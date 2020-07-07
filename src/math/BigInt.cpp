@@ -839,7 +839,6 @@ BIG_INT_WORD_TYPE BigInt::subInt(const BIG_INT_WORD_TYPE word) {
 	return c;
 }
 
-
 BIG_INT_WORD_TYPE BigInt::sub(const BigInt& other, BIG_INT_WORD_TYPE carry, BigInt &result) const {
 	BIG_INT_WORD_TYPE a,b,c;
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex = 0;

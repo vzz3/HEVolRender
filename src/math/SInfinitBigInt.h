@@ -7,15 +7,29 @@
 namespace ppvr {
 	namespace math {
 		class SInfinitBigInt: protected BigInt {
+			
+		// ----- statics -----
 		public:
 			friend std::ostream& operator << ( std::ostream& os, const SInfinitBigInt& value ) {
 				os << value.toStringDec();
 				return os;
 			}
 			
-			static SInfinitBigInt fromInt64(const int64_t& value);
-			static SInfinitBigInt fromString(std::string str, const BIG_INT_WORD_TYPE base);
+			static SInfinitBigInt fromInt64(const int64_t& uint64Val);
+		protected:
+			static SInfinitBigInt& fromInt64(const int64_t& uint64Val, SInfinitBigInt &target );
 			
+		public:
+			static SInfinitBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
+		protected:
+			static SInfinitBigInt& fromString(std::string str, const BIG_INT_WORD_TYPE base, SInfinitBigInt &target );
+			
+		// ----- member variables -----
+		private:
+			int_fast8_t signum;
+			
+		// ----- constructors -----
+		public:
 			SInfinitBigInt();
 			SInfinitBigInt(const BIG_INT_WORD_TYPE& value, bool negative = false);
 			SInfinitBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity, bool negative = false);
@@ -23,6 +37,8 @@ namespace ppvr {
 			SInfinitBigInt(const SInfinitBigInt& value);
 			~SInfinitBigInt();
 			
+		// ----- value export - toString / toUint64 -----
+		public:
 			/**
 			 * Converts this BigInteger to a long.
 			 * If this BigInteger is too big to fit in a unsingend long long (64bit), only the low-order 64 bits are returned.
@@ -35,18 +51,123 @@ namespace ppvr {
 			std::string toStringHex() const;
 			std::string toStringDec() const;
 			
-			// --- General purpose mathematical methods ---
+		// ----- memory managment -----
+		public:
+			/**
+			 * Copy assignment operator
+			 */
+			SInfinitBigInt& operator= (const SInfinitBigInt& other);
+			
+		// ----- bit utilities -----
+		public:
+			int bitLength() const;
+			
+		protected:
+			void setZero();
+			void setOne();
+			void setAbs();
+			void setNegate();
+			
+		private:
+			bool isMagnitudeZero() const;
+			bool isMagnitudeOne() const;
+			
+		public:
+			bool isZero() const;
+			bool isOne() const;
+			
+		// ----- shift left -----
+		protected:
+			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0, const bool resize=false);
+		public:
 			SInfinitBigInt operator<< (const uint bits) const;
+			
+		// ----- shift right -----
+		protected:
+			BIG_INT_WORD_TYPE rcr(const uint bits, const BIG_INT_WORD_TYPE c=0);
+		public:
 			SInfinitBigInt operator>> (const uint bits) const;
+			
+		// ----- addition -----
+		protected:
+			/**
+			 * this = this + word
+			 */
+			//void addInt(const BIG_INT_WORD_TYPE word);
+			
+			void add(const SInfinitBigInt &other, SInfinitBigInt &result) const;
+			void add(const SInfinitBigInt &other);
+			
+		public:
 			SInfinitBigInt operator+ (const SInfinitBigInt& other) const;
-			SInfinitBigInt operator- (const SInfinitBigInt& other) const;
+			
+		// ----- substraction -----
 		private:
 			SInfinitBigInt subAsPositive(const BigInt& a, const BigInt& b) const;
+		
+		protected:
+			//BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word);
+			BIG_INT_WORD_TYPE sub(const SInfinitBigInt& other, BIG_INT_WORD_TYPE carry, SInfinitBigInt &result) const;
+			BIG_INT_WORD_TYPE sub(const SInfinitBigInt& other);
+		
+		public:
+			SInfinitBigInt operator- (const SInfinitBigInt& other) const;
+			
+		// ----- multiplication -----
+		protected:
+			/**
+			 * multiplication: result = this * ss2
+			 */
+			//void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
+			
+			/**
+			 * result = this * b
+			 */
+			void mul(const SInfinitBigInt& b, SInfinitBigInt& result) const;
+			
+			/**
+			 * this = this * b
+			 */
+			void mul(const SInfinitBigInt& b);
+			
 		public:
 			SInfinitBigInt operator* (const SInfinitBigInt& other) const;
+			
+		// ----- division -----
+		protected:
+			/**
+			 * division by one unsigned word
+			 * restul = this / divisor
+			 *
+			 * returns the remainder
+			 */
+			//BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, BigInt& result) const;
+			
+			/**
+			 * division by one unsigned word
+			 * this = this / divisor
+			 *
+			 * returns the remainder
+			 */
+			//BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
+			
+		
+			/**
+			 * result = this / divisor
+			 */
+			void div(const SInfinitBigInt& divisor, SInfinitBigInt &result, SInfinitBigInt& remainder) const;
+			
+			/**
+			 * this = this / divisor
+			 */
+			void div(const SInfinitBigInt& divisor, SInfinitBigInt& remainder);
+			
+		public:
 			SInfinitBigInt operator/ (const SInfinitBigInt& other) const;
 			SInfinitBigInt operator% (const SInfinitBigInt& other) const;
 			
+		// ----- pow(), sqrt() -----
+		public:
 			/**
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
@@ -61,7 +182,8 @@ namespace ppvr {
 			SInfinitBigInt sqrt() const;
 			
 			
-			/* ---------- comparisons ---------- */
+		// ----- Comparison operators -----
+		public:
 			bool operator< (const SInfinitBigInt& other) const;
 			bool operator<= (const SInfinitBigInt& other) const;
 			bool operator> (const SInfinitBigInt& other) const;
@@ -69,40 +191,9 @@ namespace ppvr {
 			bool operator== (const SInfinitBigInt& other) const;
 			bool operator!= (const SInfinitBigInt& other) const;
 			
-			
-			
-			// Copy assignment operator
-			SInfinitBigInt& operator= (const SInfinitBigInt& other);
-		private:
-			int_fast8_t signum;
 		
-		public:
-			int bitLength() const;
 			
-		protected:
-			void setZero();
-			void setOne();
-			void setAbs();
-			void setNegate();
-		
-		public:
-			bool isZero() const;
-			
-			bool isOne() const;
-			
-		/* ---------- modInverse / gcd ---------- */
-		public:
-			/**
-			 * Returns a BigInteger whose value is {@code (this}<sup>-1</sup> {@code mod m)}.
-			 *
-			 * @param  m the modulus.
-			 * @return {@code this}<sup>-1</sup> {@code mod m}.
-			 * @throws ArithmeticException {@code  m} &le; 0, or this BigInteger
-			 *         has no multiplicative inverse mod m (that is, this BigInteger
-			 *         is not <i>relatively prime</i> to m).
-			 */
-			SInfinitBigInt modInverse(const SInfinitBigInt &m) const;
-			
+		// ----- modInverse / gcd -----
 		private:
 			
 			/**
@@ -122,7 +213,35 @@ namespace ppvr {
 			 */
 			SInfinitBigInt gcd(const SInfinitBigInt & a, const SInfinitBigInt & b) const;
 			
-		/* ---------- modPow ---------- */
+		public:
+			/**
+			 * Returns a BigInteger whose value is {@code (this}<sup>-1</sup> {@code mod m)}.
+			 *
+			 * @param  m the modulus.
+			 * @return {@code this}<sup>-1</sup> {@code mod m}.
+			 * @throws ArithmeticException {@code  m} &le; 0, or this BigInteger
+			 *         has no multiplicative inverse mod m (that is, this BigInteger
+			 *         is not <i>relatively prime</i> to m).
+			 */
+			SInfinitBigInt modInverse(const SInfinitBigInt &m) const;
+			
+		
+			
+		// ----- modPow -----
+		private:
+			SInfinitBigInt modPow_naiv(const SInfinitBigInt &exponent, const BigInt &modulus) const;
+			
+			/**
+			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
+			 */
+			//SInfinitBigInt modPow2(SInfinitBigInt exponent, int p) const;
+			
+			/**
+			 * Returns a BigInteger whose value is this mod(2**p).
+			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
+			 */
+			//SInfinitBigInt mod2(int p) const;
+			
 		public:
 			/**
 			 * Returns a BigInteger whose value is
@@ -138,21 +257,6 @@ namespace ppvr {
 			 * @see    #modInverse
 			 */
 			SInfinitBigInt modPow(const SInfinitBigInt &exponent, const SInfinitBigInt &m) const;
-			
-		private:
-			
-			SInfinitBigInt modPow_naiv(const SInfinitBigInt &exponent, const BigInt &modulus) const;
-			
-			/**
-			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 */
-			SInfinitBigInt modPow2(SInfinitBigInt exponent, int p) const;
-			
-			/**
-			 * Returns a BigInteger whose value is this mod(2**p).
-			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 */
-			SInfinitBigInt mod2(int p) const;
 			
 		};
 	}

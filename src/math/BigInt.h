@@ -251,6 +251,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 			
+		protected:
 			/**
 			 * moving all bits into the left side 'bits' times
 			 * return value <- this <- C
@@ -291,6 +292,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 			
+		protected:
 			/**
 			 * moving all bits into the right side 'bits' times
 			 * c -> this -> return value

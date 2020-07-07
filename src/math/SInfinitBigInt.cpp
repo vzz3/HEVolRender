@@ -4,11 +4,36 @@
 
 using namespace ppvr::math;
 
+// ----- statics -----
 
-SInfinitBigInt SInfinitBigInt::fromInt64(const int64_t& value) {
-	return SInfinitBigInt(BigInt::fromUint64(abs(value)), value < 0);
+
+SInfinitBigInt SInfinitBigInt::fromInt64(const int64_t& uint64Val) {
+	SInfinitBigInt res(0);
+	SInfinitBigInt::fromInt64(uint64Val, res);
+	return res;
 }
-SInfinitBigInt SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_TYPE base) {
+
+SInfinitBigInt& SInfinitBigInt::fromInt64(const int64_t& uint64Val, SInfinitBigInt &target ) {
+	BigInt::fromUint64(abs(uint64Val), target);
+	if(target.isMagnitudeZero()) {
+		target.signum = 0;
+	} else {
+		if(uint64Val > 0) {
+			target.signum = 1;
+		} else if(uint64Val < 0) {
+			target.signum = -1;
+		}
+	}
+	return target;
+}
+
+SInfinitBigInt SInfinitBigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) {
+	SInfinitBigInt res(0);
+	SInfinitBigInt::fromString(str, base, res);
+	return res;
+}
+
+SInfinitBigInt& SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_TYPE base, SInfinitBigInt &target ) {
 	// trim space on the left side
 	auto nonSpaceBegin = std::find_if(str.begin(), str.end(), [](int ch) {
 		return !std::isspace(ch);
@@ -16,7 +41,8 @@ SInfinitBigInt SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_TY
 	
 	if(nonSpaceBegin == str.end()) {
 		// string contains only emty chars
-		return SInfinitBigInt(0);
+		target.setZero();
+		return target;
 	}
 	
 	bool negative;
@@ -32,8 +58,20 @@ SInfinitBigInt SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_TY
 	// trim string
 	str.erase(str.begin(), nonSpaceBegin);
 	
-	return SInfinitBigInt(BigInt::fromString(str, base), negative);
+	// pars unsigned string
+	BigInt::fromString(str, base, target);
+	
+	// set sign
+	if( target.isMagnitudeZero() ) {
+		target.signum = 0;
+	} else {
+		target.signum = negative ? -1 : +1;
+	}
+	
+	return target;
 }
+
+// ----- constructors -----
 
 SInfinitBigInt::SInfinitBigInt(): SInfinitBigInt(0, false, 0) {}
 
@@ -65,6 +103,8 @@ SInfinitBigInt::~SInfinitBigInt() {
 	
 }
 
+// ----- value export - toString / toUint64 -----
+
 int64_t SInfinitBigInt::toInt64() const {
 	int64_t res = BigInt::toUint64();
 	if(this->signum < 0) {
@@ -89,6 +129,22 @@ std::string SInfinitBigInt::toStringDec() const {
 	return res;
 }
 
+// ----- memory managment -----
+
+SInfinitBigInt& SInfinitBigInt::operator= (const SInfinitBigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+	
+	BigInt::operator=(other);
+	this->signum = other.signum;
+	
+	return *this;
+}
+
+// ----- bit utilities -----
+
 int SInfinitBigInt::bitLength() const {
 	return BigInt::bitLength();
 }
@@ -111,6 +167,14 @@ void SInfinitBigInt::setNegate() {
 	this->signum = this->signum * -1;
 }
 
+bool SInfinitBigInt::isMagnitudeZero() const {
+	return BigInt::isZero();
+}
+
+bool SInfinitBigInt::isMagnitudeOne() const {
+	return BigInt::isOne();
+}
+
 bool SInfinitBigInt::isZero() const {
 	return this->signum == 0;
 }
@@ -122,41 +186,91 @@ bool SInfinitBigInt::isOne() const {
 	return BigInt::isOne();
 }
 
-/* ---------- General purpose mathematical methods ---------- */
+// ----- shift left -----
+BIG_INT_WORD_TYPE SInfinitBigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const bool resize) {
+	return BigInt::rcl(bits, c, resize);
+}
+
 SInfinitBigInt SInfinitBigInt::operator<< (const uint bits) const {
-	return SInfinitBigInt(BigInt::operator<<(bits), this->signum < 0);
+	// copy tha magnitude array 2 times
+	//return SInfinitBigInt(BigInt::operator<<(bits), this->signum < 0);
+	
+	// copy the magnitude array only once
+	SInfinitBigInt res(*this);
+	res.rcl(bits, 0, true);
+	return res;
 }
+
+// ----- shift right -----
+BIG_INT_WORD_TYPE SInfinitBigInt::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
+	return BigInt::rcr(bits, c);
+}
+
 SInfinitBigInt SInfinitBigInt::operator>> (const uint bits) const {
-	return SInfinitBigInt(BigInt::operator>>(bits), this->signum < 0);
-}
-SInfinitBigInt SInfinitBigInt::operator+ (const SInfinitBigInt& other) const {
-	if(this->signum == 0) {
-		return other;
+	// copy tha magnitude array 2 times
+	//return SInfinitBigInt(BigInt::operator>>(bits), this->signum < 0);
+	
+	// copy the magnitude array only once
+	SInfinitBigInt res(*this);
+	res.rcr(bits, 0);
+	if(res.isMagnitudeZero()) {
+		res.signum = 0;
 	}
-	if(other.signum == 0) {
-		return *this;
+	return res;
+}
+
+// ----- addition -----
+
+
+void SInfinitBigInt::add(const SInfinitBigInt &other, SInfinitBigInt &result) const {
+	if(this->isZero()) {
+		result = other;
+		return;
+	}
+	if(other.isZero()) {
+		result = *this;
+		return;
 	}
 	if(this->signum > 0 && other.signum > 0) {
 		// +x + +y = +(+x + +y)
-		return SInfinitBigInt(BigInt::operator+(other), false);
+		BigInt::add(other, result);
+		result.signum = +1;
+		return;
 	}
 	if(this->signum < 0 && other.signum < 0) {
 		// -x + -y = -(+x + +y)
-		return SInfinitBigInt(BigInt::operator+(other), true);
+		BigInt::add(other, result);
+		result.signum = -1;
+		return;
 	}
 	if(this->signum < 0) {
 		// -x + +y = +y - +x
-		return subAsPositive((BigInt)other, (BigInt)*this);
+		result = subAsPositive((BigInt)other, (BigInt)*this);
+		return;
 	}
 	if(other.signum < 0) {
 		// +x + -y = +x - +y
-		return subAsPositive((BigInt)*this, (BigInt)other);
+		result = subAsPositive((BigInt)*this, (BigInt)other);
+		return;
 	}
 	
 	std::string msg = "ERROR add SInfinitBigInt unexpected case!";
 	std::cerr << msg << std::endl;
 	throw std::runtime_error(msg);
 }
+
+void SInfinitBigInt::add(const SInfinitBigInt &other) {
+	this->add(other, *this);
+}
+
+SInfinitBigInt SInfinitBigInt::operator+ (const SInfinitBigInt& other) const {
+	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->getWordSize(), other.getWordSize());
+	SInfinitBigInt result(0, maxWordCount+1);
+	this->add(other, result);
+	return result;
+}
+
+
 SInfinitBigInt SInfinitBigInt::operator- (const SInfinitBigInt& other) const {
 	if(this->signum == 0) {
 		return SInfinitBigInt((BigInt)other, (other.signum > 0)); // invert sign
@@ -177,12 +291,18 @@ SInfinitBigInt SInfinitBigInt::operator- (const SInfinitBigInt& other) const {
 	
 	if(this->signum > 0 && other.signum < 0) {
 		// +a - -b = +a + +b
-		return SInfinitBigInt((BigInt)*this + (BigInt)other, false);
+		SInfinitBigInt res;
+		BigInt::add(other, res);
+		res.signum = +1;
+		return res;
 	}
 	
 	if(this->signum < 0 && other.signum > 0) {
 		// -a - +b = -(+a + +b)
-		return SInfinitBigInt((BigInt)*this + (BigInt)other, true);
+		SInfinitBigInt res;
+		BigInt::add(other, res);
+		res.signum = -1;
+		return res;
 	}
 	
 	std::string msg = "ERROR substract SInfinitBigInt unexpected case!";
@@ -269,8 +389,6 @@ SInfinitBigInt SInfinitBigInt::modInverse(const SInfinitBigInt & m) const {
 	if (m.isOne()) {
 		return SInfinitBigInt(0);
 	}
-	
-	
 	
 	// all the hard work will be done by gcd.
 	SInfinitBigInt u, v;
@@ -548,12 +666,12 @@ SInfinitBigInt SInfinitBigInt::modPow_naiv(const SInfinitBigInt &exponent, const
 
 /**
  * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
- */
+ * /
 SInfinitBigInt SInfinitBigInt::modPow2(SInfinitBigInt exponent, int p) const {
 	/*
 	 * Perform exponentiation using repeated squaring trick, chopping off
 	 * high order bits as indicated by modulus.
-	 */
+	 * /
 	SInfinitBigInt result(1);
 	SInfinitBigInt baseToPow2 = this->mod2(p);
 	int expOffset = 0;
@@ -581,7 +699,7 @@ SInfinitBigInt SInfinitBigInt::modPow2(SInfinitBigInt exponent, int p) const {
 /**
  * Returns a BigInteger whose value is this mod(2**p).
  * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
- */
+ * /
 SInfinitBigInt SInfinitBigInt::mod2(int p) const {
 	if (this->bitLength() <= p) {
 		return *this;
@@ -603,11 +721,9 @@ SInfinitBigInt SInfinitBigInt::mod2(int p) const {
 	 mag[0] &= (1L << (32-excessBits)) - 1;
 	 
 	 return (mag[0] == 0 ? new BigInteger(1, mag) : new BigInteger(mag, 1));
-	 */
-	
-	
+	 * /
 }
-
+*/
 
 
 /* ---------- comparisons ---------- */
@@ -659,14 +775,3 @@ bool SInfinitBigInt::operator!= (const SInfinitBigInt& other) const {
 	return (!(*this == other));
 }
 
-SInfinitBigInt& SInfinitBigInt::operator= (const SInfinitBigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-	
-	BigInt::operator=(other);
-	this->signum = other.signum;
-	
-	return *this;
-}
