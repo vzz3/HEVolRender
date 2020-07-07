@@ -773,13 +773,14 @@ void BigInt::add(const BigInt &other, BigInt &result) const {
 		carry = addTwoWords(a, b, carry, &result.value[i]);
 	}
 	
+	result.wordSize = maxWordCount; // net to be set before reserveWords() is called otherwise the new values between result.value[result.wordSize] and result.value[maxWordCount] will not be copied to the new array
 	if(carry > 0) {
 		result.reserveWords(maxWordCount+1); // reserve space for carry bit
 		
 		result.value[maxWordCount] = carry;
 		result.wordSize = maxWordCount+1;
 	} else {
-		result.wordSize = maxWordCount;
+		//result.wordSize = maxWordCount;
 	}
 }
 
