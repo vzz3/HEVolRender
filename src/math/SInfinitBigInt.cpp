@@ -71,9 +71,39 @@ SInfinitBigInt& SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_T
 	return target;
 }
 
+SInfinitBigInt SInfinitBigInt::randomNumber(const uint& sizeInBit) {
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
+	SInfinitBigInt res(0, requiredWords);
+	SInfinitBigInt::randomNumber(sizeInBit, res);
+	return res;
+}
+
+SInfinitBigInt SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound) {
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(upperBound.bitLength());
+	SInfinitBigInt res(0, requiredWords);
+	SInfinitBigInt::randomNumber(upperBound, res);
+	return res;
+}
+
+SInfinitBigInt& SInfinitBigInt::randomNumber(const uint& sizeInBit, SInfinitBigInt &target) {
+	BigInt::randomNumber(sizeInBit, target);
+	return target;
+}
+
+SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, SInfinitBigInt &target) {
+	if(upperBound.signum < 0) {
+		std::string msg = "ERROR upperBound: must be strictly greater than one";
+		//std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
+	
+	BigInt::randomNumber(upperBound, target);
+	return target;
+}
+
 // ----- constructors -----
 
-SInfinitBigInt::SInfinitBigInt(): SInfinitBigInt(0, false, 0) {}
+SInfinitBigInt::SInfinitBigInt(): SInfinitBigInt(0, 0, false) {}
 
 SInfinitBigInt::SInfinitBigInt(const BIG_INT_WORD_TYPE& value, bool negative): SInfinitBigInt(value, 0, negative) {}
 

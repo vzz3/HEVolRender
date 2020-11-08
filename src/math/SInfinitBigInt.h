@@ -24,6 +24,13 @@ namespace ppvr {
 		protected:
 			static SInfinitBigInt& fromString(std::string str, const BIG_INT_WORD_TYPE base, SInfinitBigInt &target );
 			
+		public:
+			static SInfinitBigInt randomNumber(const uint& sizeInBit);
+			static SInfinitBigInt randomNumber(const SInfinitBigInt& upperBound);
+		protected:
+			static SInfinitBigInt& randomNumber(const uint& sizeInBit, SInfinitBigInt &target);
+			static SInfinitBigInt& randomNumber(const SInfinitBigInt& upperBound, SInfinitBigInt &target);
+			
 		// ----- member variables -----
 		private:
 			int_fast8_t signum;

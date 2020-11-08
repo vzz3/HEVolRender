@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>		/* ciel */
 #include <math.h>       /* log2 */
+#include <Security/Security.h>
 
 using namespace ppvr::math;
 
@@ -102,6 +103,82 @@ BigInt& BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base,
 	}
 	
 	return target;
+}
+BigInt BigInt::randomNumber(const uint& sizeInBit) {
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
+	BigInt res(0, requiredWords);
+	BigInt::randomNumber(sizeInBit, res);
+	return res;
+}
+
+BigInt BigInt::randomNumber(const BigInt& upperBound) {
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(upperBound.bitLength());
+	BigInt res(0, requiredWords);
+	BigInt::randomNumber(upperBound, res);
+	return res;
+}
+
+BigInt& BigInt::randomNumber(const uint& sizeInBit, BigInt &target) {
+	if(sizeInBit < 1) {
+		std::string msg = "ERROR randomNumber: the sizeInBit parameter must be greater then 0 ";
+		//std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
+	
+	// reserve required words
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
+	target.setZero(); // prevent unessesery coping values that will be overwritten by random numbers anyway.
+	target.reserveWords(requiredWords);
+	
+	// calculate required
+	size_t requiredBytes = (sizeInBit + (CHAR_BIT - 1)) / CHAR_BIT;
+	size_t oversizeInBits = requiredBytes * CHAR_BIT - sizeInBit;
+	BIG_INT_WORD_TYPE oversizeMask = BIG_INT_WORD_MAX_VALUE > oversizeInBits;
+	
+	do {
+		// copy randome numbers
+		int rc = SecRandomCopyBytes(kSecRandomDefault, requiredBytes, &(target.value[0]));
+		if (rc != 0) {
+			std::string msg = "ERROR SecRandomCopyBytes: " + std::to_string(rc);
+			std::cerr << msg << std::endl;
+			throw std::runtime_error(msg);
+		}
+		
+		// set new theoretical word size
+		//target.wordSize = requiredWords;
+		
+		// set bits that are over sizeInBit to zero
+		target.value[requiredWords-1] = target.value[requiredWords-1] & oversizeMask;
+		
+		// Set new word size of the result. If SecRandomCopyBytes generates many leading zeros the newWordSize can be less then requiredWords.
+		BIG_INT_WORD_COUNT_TYPE newWordSize;
+		for (newWordSize = requiredWords; newWordSize>1 && target.value[newWordSize-1] == 0; newWordSize--);
+		target.wordSize = newWordSize;
+		
+	} while (target.isZero());
+	
+	return target;
+}
+
+BigInt& BigInt::randomNumber(const BigInt& upperBound, BigInt &target) {
+	if(upperBound.isZero()) {
+		std::string msg = "ERROR upperBound: must be strictly greater than one";
+		//std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
+	
+	uint bits = upperBound.bitLength();
+	do {
+		BigInt::randomNumber(bits, target);
+		// make sure r <= upperBound (modulus)
+	} while (target >= upperBound);
+	return target;
+}
+
+
+
+inline BIG_INT_WORD_COUNT_TYPE BigInt::requiredWords(const uint& sizeInBit) {
+	return (sizeInBit + (BIG_INT_BITS_PER_WORD - 1)) / BIG_INT_BITS_PER_WORD;
 }
 
 // ----- constructors -----

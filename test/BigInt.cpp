@@ -1349,3 +1349,99 @@ TEST_CASE( "big integer bitLength", "[bigint]" ) {
 
 }
 
+TEST_CASE( "big integer randomNumber", "[bigint]" ) {
+	
+	REQUIRE_THROWS (BigInt::randomNumber(0));
+	
+	// randomNumber must return 1 or more
+	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
+	
+	// check max bit length
+	// 1 Byte
+	REQUIRE( BigInt::randomNumber(  1).bitLength() <=   1 );
+	REQUIRE( BigInt::randomNumber(  2).bitLength() <=   2 );
+	REQUIRE( BigInt::randomNumber(  3).bitLength() <=   3 );
+	REQUIRE( BigInt::randomNumber(  4).bitLength() <=   4 );
+	REQUIRE( BigInt::randomNumber(  5).bitLength() <=   5 );
+	REQUIRE( BigInt::randomNumber(  6).bitLength() <=   6 );
+	REQUIRE( BigInt::randomNumber(  7).bitLength() <=   7 );
+	REQUIRE( BigInt::randomNumber(  8).bitLength() <=   8 );
+	
+	// 2 Byte
+	REQUIRE( BigInt::randomNumber(  9).bitLength() <=   9 );
+	REQUIRE( BigInt::randomNumber( 10).bitLength() <=  10 );
+	REQUIRE( BigInt::randomNumber( 11).bitLength() <=  11 );
+	REQUIRE( BigInt::randomNumber( 12).bitLength() <=  12 );
+	REQUIRE( BigInt::randomNumber( 13).bitLength() <=  13 );
+	REQUIRE( BigInt::randomNumber( 14).bitLength() <=  14 );
+	REQUIRE( BigInt::randomNumber( 15).bitLength() <=  15 );
+	REQUIRE( BigInt::randomNumber( 16).bitLength() <=  16 );
+	
+	// 3 Byte
+	REQUIRE( BigInt::randomNumber( 17).bitLength() <=  17 );
+	REQUIRE( BigInt::randomNumber( 18).bitLength() <=  18 );
+	REQUIRE( BigInt::randomNumber( 19).bitLength() <=  19 );
+	REQUIRE( BigInt::randomNumber( 20).bitLength() <=  19 );
+	REQUIRE( BigInt::randomNumber( 21).bitLength() <=  19 );
+	REQUIRE( BigInt::randomNumber( 22).bitLength() <=  22 );
+	REQUIRE( BigInt::randomNumber( 23).bitLength() <=  23 );
+	REQUIRE( BigInt::randomNumber( 24).bitLength() <=  24 );
+	
+	
+	// 4 Byte
+	REQUIRE( BigInt::randomNumber( 25).bitLength() <=  25 );
+	REQUIRE( BigInt::randomNumber( 26).bitLength() <=  26 );
+	REQUIRE( BigInt::randomNumber( 27).bitLength() <=  27 );
+	REQUIRE( BigInt::randomNumber( 28).bitLength() <=  28 );
+	REQUIRE( BigInt::randomNumber( 29).bitLength() <=  29 );
+	REQUIRE( BigInt::randomNumber( 30).bitLength() <=  30 );
+	REQUIRE( BigInt::randomNumber( 31).bitLength() <=  31 );
+	REQUIRE( BigInt::randomNumber( 32).bitLength() <=  32 );
+	
+	// 8 Bytes
+	REQUIRE( BigInt::randomNumber( 60).bitLength() <=  60 );
+	REQUIRE( BigInt::randomNumber( 61).bitLength() <=  61 );
+	REQUIRE( BigInt::randomNumber( 62).bitLength() <=  62 );
+	REQUIRE( BigInt::randomNumber( 63).bitLength() <=  63 );
+	REQUIRE( BigInt::randomNumber( 64).bitLength() <=  64 );
+	
+	// 9 Byte
+	REQUIRE( BigInt::randomNumber( 65).bitLength() <=  65 );
+	REQUIRE( BigInt::randomNumber( 66).bitLength() <=  66 );
+	REQUIRE( BigInt::randomNumber( 67).bitLength() <=  67 );
+	
+	// 16 Byte
+	REQUIRE( BigInt::randomNumber(126).bitLength() <= 126 );
+	REQUIRE( BigInt::randomNumber(127).bitLength() <= 127 );
+	REQUIRE( BigInt::randomNumber(128).bitLength() <= 128 );
+	
+	// 17 Byte
+	REQUIRE( BigInt::randomNumber(129).bitLength() <= 129 );
+	REQUIRE( BigInt::randomNumber(130).bitLength() <= 130 );
+	REQUIRE( BigInt::randomNumber(131).bitLength() <= 131 );
+	REQUIRE( BigInt::randomNumber(132).bitLength() <= 132 );
+	REQUIRE( BigInt::randomNumber(133).bitLength() <= 133 );
+	REQUIRE( BigInt::randomNumber(134).bitLength() <= 134 );
+	REQUIRE( BigInt::randomNumber(135).bitLength() <= 135 );
+	REQUIRE( BigInt::randomNumber(136).bitLength() <= 136 );
+	
+	
+	REQUIRE( BigInt::randomNumber(1023).bitLength() <= 1023 );
+	REQUIRE( BigInt::randomNumber(1024).bitLength() <= 1024 );
+	REQUIRE( BigInt::randomNumber(1025).bitLength() <= 1025 );
+	
+	REQUIRE( BigInt::randomNumber(2047).bitLength() <= 2047 );
+	REQUIRE( BigInt::randomNumber(2048).bitLength() <= 2048 );
+	REQUIRE( BigInt::randomNumber(2049).bitLength() <= 2049 );
+}

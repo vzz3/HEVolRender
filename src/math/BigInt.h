@@ -32,6 +32,16 @@ namespace ppvr {
 		protected:
 			static BigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, BigInt &target );
 			
+		// ----- statics rendome -----
+		public:
+			static BigInt randomNumber(const uint& sizeInBit);
+			static BigInt randomNumber(const BigInt& upperBound);
+		protected:
+			static BigInt& randomNumber(const uint& sizeInBit, BigInt &target);
+			static BigInt& randomNumber(const BigInt& upperBound, BigInt &target);
+		protected:
+			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
+			
 		// ----- member variables -----
 		private:
 			BIG_INT_WORD_COUNT_TYPE wordSize = 0; // count of used words (wordCount)
