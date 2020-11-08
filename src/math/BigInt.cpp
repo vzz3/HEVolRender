@@ -1,21 +1,25 @@
 
-#include "BigInt.h"
+#include "BigInt.hpp"
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include <cmath>		/* ciel */
 #include <math.h>       /* log2 */
-#include <Security/Security.h>
+//#include <Security/Security.h>
+
+
 
 using namespace ppvr::math;
 
 // ----- statics -----
 
-BigInt BigInt::ZERO(0);
-BigInt BigInt::ONE(1);
-BigInt BigInt::TWO(2);
-BigInt BigInt::TEN(10);
+const BigInt BigInt::SMALL_PRIME_PRODUCT = BigInt::fromUint64(3L*5*7*11*13*17*19*23*29*31*37*41);
+
+const BigInt BigInt::ZERO(0);
+const BigInt BigInt::ONE(1);
+const BigInt BigInt::TWO(2);
+const BigInt BigInt::TEN(10);
 
 BigInt BigInt::fromUint64(const uint64_t& uint64Val) {
 	BigInt res(0);
@@ -104,6 +108,22 @@ BigInt& BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base,
 	
 	return target;
 }
+
+std::random_device BigInt::rdev{};
+BigInt::RandomGenerator BigInt::randEngine{rdev};
+
+inline void BigInt::randomFill(void * buf, std::size_t count) {
+	static constexpr std::size_t word_size = sizeof(typename BigInt::RandomGenerator::result_type);
+	unsigned char* p = (unsigned char*)buf;
+	unsigned char* limit = p + count;
+	while (p < limit) {
+		auto word = BigInt::randEngine();
+		auto n = std::min(static_cast<std::size_t>(limit - p), word_size);
+		std::memcpy(p, &word, n);
+		p += n;
+	}
+}
+
 BigInt BigInt::randomNumber(const uint& sizeInBit) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
 	BigInt res(0, requiredWords);
@@ -132,17 +152,20 @@ BigInt& BigInt::randomNumber(const uint& sizeInBit, BigInt &target) {
 	
 	// calculate required
 	size_t requiredBytes = (sizeInBit + (CHAR_BIT - 1)) / CHAR_BIT;
-	size_t oversizeInBits = requiredBytes * CHAR_BIT - sizeInBit;
-	BIG_INT_WORD_TYPE oversizeMask = BIG_INT_WORD_MAX_VALUE > oversizeInBits;
+	size_t oversizeInBits = requiredWords * BIG_INT_BITS_PER_WORD - sizeInBit;
+	BIG_INT_WORD_TYPE oversizeMask = BIG_INT_WORD_MAX_VALUE >> oversizeInBits;
 	
 	do {
 		// copy randome numbers
+		/*
 		int rc = SecRandomCopyBytes(kSecRandomDefault, requiredBytes, &(target.value[0]));
 		if (rc != 0) {
 			std::string msg = "ERROR SecRandomCopyBytes: " + std::to_string(rc);
 			std::cerr << msg << std::endl;
 			throw std::runtime_error(msg);
 		}
+		*/
+		BigInt::randomFill(&(target.value[0]), requiredBytes);
 		
 		// set new theoretical word size
 		//target.wordSize = requiredWords;
@@ -175,6 +198,78 @@ BigInt& BigInt::randomNumber(const BigInt& upperBound, BigInt &target) {
 	return target;
 }
 
+/*
+BigInt BigInt::probablePrime(const uint& bitLength) {
+	if (bitLength < 2) {
+		std::string msg = "ERROR probablePrime: bitLength < 2";
+		//std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
+	
+	return (bitLength < SMALL_PRIME_THRESHOLD ?
+			smallPrime(bitLength, DEFAULT_PRIME_CERTAINTY) :
+			largePrime(bitLength, DEFAULT_PRIME_CERTAINTY)
+		);
+}
+
+BigInt BigInt::smallPrime(const uint& bitLength, const uint& certainty) {
+	uint magLen = (bitLength + 31) >> 5;
+	uint temp[magLen];
+	uint highBit = 1 << ((bitLength+31) & 0x1f);  // High bit of high int
+	uint highMask = (highBit << 1) - 1;  // Bits to keep in high int
+	
+	while (true) {
+		// Construct a candidate
+		for (int i=0; i < magLen; i++) {
+			temp[i] = rnd.nextInt();
+		}
+		temp[0] = (temp[0] & highMask) | highBit;  // Ensure exact length
+		if (bitLength > 2)
+		temp[magLen-1] |= 1;  // Make odd if bitlen > 2
+		
+		BigInteger p = new BigInteger(temp, 1);
+		
+		// Do cheap "pre-test" if applicable
+		if (bitLength > 6) {
+			long r = p.remainder(SMALL_PRIME_PRODUCT).longValue();
+			if ((r%3==0)  || (r%5==0)  || (r%7==0)  || (r%11==0) ||
+				(r%13==0) || (r%17==0) || (r%19==0) || (r%23==0) ||
+				(r%29==0) || (r%31==0) || (r%37==0) || (r%41==0))
+			continue; // Candidate is composite; try another
+		}
+		
+		// All candidates of bitLength 2 and 3 are prime by this point
+		if (bitLength < 4)
+		return p;
+		
+		// Do expensive test if we survive pre-test (or it's inapplicable)
+		if (p.primeToCertainty(certainty, rnd))
+		return p;
+	}
+}
+
+BigInt BigInt::largePrime(const uint&  bitLength, const uint& certainty) {
+	BigInteger p;
+	p = new BigInteger(bitLength, rnd).setBit(bitLength-1);
+	p.mag[p.mag.length-1] &= 0xfffffffe;
+	
+	// Use a sieve length likely to contain the next prime number
+	int searchLen = getPrimeSearchLen(bitLength);
+	BitSieve searchSieve = new BitSieve(p, searchLen);
+	BigInteger candidate = searchSieve.retrieve(p, certainty, rnd);
+	
+	while ((candidate == null) || (candidate.bitLength() != bitLength)) {
+		p = p.add(BigInteger.valueOf(2*searchLen));
+		if (p.bitLength() != bitLength)
+		p = new BigInteger(bitLength, rnd).setBit(bitLength-1);
+		p.mag[p.mag.length-1] &= 0xfffffffe;
+		searchSieve = new BitSieve(p, searchLen);
+		candidate = searchSieve.retrieve(p, certainty, rnd);
+	}
+	return candidate;
+}
+
+*/
 
 
 inline BIG_INT_WORD_COUNT_TYPE BigInt::requiredWords(const uint& sizeInBit) {

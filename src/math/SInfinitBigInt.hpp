@@ -1,5 +1,5 @@
 #pragma once
-#include "BigInt.h"
+#include "BigInt.hpp"
 #include <string>
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)

@@ -1,7 +1,7 @@
 // main
 #include <iostream>
 #include <string>
-#include "../src/math/BigInt.h"
+#include "../src/math/BigInt.hpp"
 #include <chrono>
 
 using namespace ppvr;
@@ -42,6 +42,11 @@ int main (int argc, char *argv[]) {
 	auto endTime = std::chrono::high_resolution_clock::now();
 	auto duration = endTime - startTime;
 	std::cout << "duration " << (duration / std::chrono::milliseconds(1)) << "ms\n";
+	
+	// RandomNumber Test
+	for(int i = 0; i<100; i++) {
+		std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
+	}
 	
 	return 0;
 }

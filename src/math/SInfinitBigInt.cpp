@@ -1,5 +1,5 @@
 
-#include "SInfinitBigInt.h"
+#include "SInfinitBigInt.hpp"
 #include <iostream>
 
 using namespace ppvr::math;

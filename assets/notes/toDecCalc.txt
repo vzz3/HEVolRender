@@ -32,3 +32,13 @@ ERROR reminder 4 (instead of 8) result h0 13 00 19 96 f6 43
 0x 01 21 fa 00 ad 77 d7 42 22	/   1 000 000 000 000 000 000 = 0x                         14 = 20
 0x 01 21 fa 00 ad 77 d7 42 22	/  10 000 000 000 000 000 000 = 0x                          2 = 2
 0x 01 21 fa 00 ad 77 d7 42 22	/ 100 000 000 000 000 000 000 = 0x                          0 = 0
+
+
+ERROR:
+r = 0x06
+dividend[i] = 0xa5
+divisor = 0x8e
+this->divTwoWords(r, dividend[i], divisor, &targetArray[i], &r);
+targetArray[i] = 0x0d
+r = 0xED
+targetWordSize = 1

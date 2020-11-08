@@ -5,6 +5,14 @@
 
 #include "BigInt_wordDev.h"
 
+#include "../../include/isaac-engine/isaac.h"
+#include <random>
+/*
+namespace utils {
+	template<std::size_t Alpha = 8>
+	class isaac64;
+}
+*/
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 
 namespace ppvr {
@@ -18,10 +26,10 @@ namespace ppvr {
 				return os;
 			}
 			
-			static BigInt ZERO;
-			static BigInt ONE;
-			static BigInt TWO;
-			static BigInt TEN;
+			static const BigInt ZERO;
+			static const BigInt ONE;
+			static const BigInt TWO;
+			static const BigInt TEN;
 			
 			static BigInt fromUint64(const uint64_t& uint64Val);
 		protected:
@@ -33,12 +41,77 @@ namespace ppvr {
 			static BigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, BigInt &target );
 			
 		// ----- statics rendome -----
+		private:
+			static std::random_device rdev;
+			
+			// Alpha should (generally) either be 8 for crypto use, or 4 for non-crypto use.
+			// If not provided, it defaults to 8
+			static constexpr std::size_t isaacAlpha = 8;
+			
+			typedef utils::isaac64<isaacAlpha> RandomGenerator;
+			
+			// Alpha determines the size (in elements of result_type) of the
+			// internal state, and the size of the initial state for seeding.
+			static RandomGenerator randEngine;
+			
+			static void randomFill(void * buf, std::size_t count);
+			
 		public:
+			
 			static BigInt randomNumber(const uint& sizeInBit);
 			static BigInt randomNumber(const BigInt& upperBound);
 		protected:
 			static BigInt& randomNumber(const uint& sizeInBit, BigInt &target);
 			static BigInt& randomNumber(const BigInt& upperBound, BigInt &target);
+			
+		private:
+			// Minimum size in bits that the requested prime number has
+			// before we use the large prime number generating algorithms.
+			// The cutoff of 95 was chosen empirically for best performance.
+			static const uint SMALL_PRIME_THRESHOLD = 95;
+			
+			// Certainty required to meet the spec of probablePrime
+			static const uint DEFAULT_PRIME_CERTAINTY = 100;
+			
+			static const BigInt SMALL_PRIME_PRODUCT;
+			
+		public:
+			
+			/**
+			 * Returns a positive BigInteger that is probably prime, with the
+			 * specified bitLength. The probability that a BigInteger returned
+			 * by this method is composite does not exceed 2<sup>-100</sup>.
+			 *
+			 * @param  bitLength bitLength of the returned BigInteger.
+			 * @param  rnd source of random bits used to select candidates to be
+			 *         tested for primality.
+			 * @return a BigInteger of {@code bitLength} bits that is probably prime
+			 * @throws ArithmeticException {@code bitLength < 2} or {@code bitLength} is too large.
+			 * @see    #bitLength()
+			 * @since 1.4
+			 */
+			static BigInt probablePrime(const uint& bitLength);
+			
+		private:
+			/**
+			 * Find a random number of the specified bitLength that is probably prime.
+			 * This method is used for smaller primes, its performance degrades on
+			 * larger bitlengths.
+			 *
+			 * This method assumes bitLength > 1.
+			 */
+			static BigInt smallPrime(const uint& bitLength, const uint& certainty);
+			
+			
+		private:
+			/**
+			 * Find a random number of the specified bitLength that is probably prime.
+			 * This method is more appropriate for larger bitlengths since it uses
+			 * a sieve to eliminate most composites before using a more expensive
+			 * test.
+			 */
+			static BigInt largePrime(const uint& bitLength, const uint& certainty);
+			
 		protected:
 			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
 			

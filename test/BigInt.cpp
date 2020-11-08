@@ -1,5 +1,5 @@
 #include "../include/catch2/catch.hpp"
-#include "../src/math/BigInt.h"
+#include "../src/math/BigInt.hpp"
 
 #define LONG_TESTS 0
 
@@ -1392,12 +1392,11 @@ TEST_CASE( "big integer randomNumber", "[bigint]" ) {
 	REQUIRE( BigInt::randomNumber( 17).bitLength() <=  17 );
 	REQUIRE( BigInt::randomNumber( 18).bitLength() <=  18 );
 	REQUIRE( BigInt::randomNumber( 19).bitLength() <=  19 );
-	REQUIRE( BigInt::randomNumber( 20).bitLength() <=  19 );
-	REQUIRE( BigInt::randomNumber( 21).bitLength() <=  19 );
+	REQUIRE( BigInt::randomNumber( 20).bitLength() <=  20 );
+	REQUIRE( BigInt::randomNumber( 21).bitLength() <=  21 );
 	REQUIRE( BigInt::randomNumber( 22).bitLength() <=  22 );
 	REQUIRE( BigInt::randomNumber( 23).bitLength() <=  23 );
 	REQUIRE( BigInt::randomNumber( 24).bitLength() <=  24 );
-	
 	
 	// 4 Byte
 	REQUIRE( BigInt::randomNumber( 25).bitLength() <=  25 );

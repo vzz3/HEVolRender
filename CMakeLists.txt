@@ -48,10 +48,10 @@ file(GLOB TEST_FILES
 
 # add the executable
 add_executable(ppvr ${SRC_FILES} "${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp")
-add_framework(Security ppvr)
+#add_framework(Security ppvr)
 
 add_executable(ppvr-test ${SRC_FILES} ${TEST_FILES})
-add_framework(Security ppvr-test)
+#add_framework(Security ppvr-test)
 
 # for Xcode file tree
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})

@@ -1,5 +1,5 @@
 #include "../include/catch2/catch.hpp"
-#include "../src/math/SInfinitBigInt.h"
+#include "../src/math/SInfinitBigInt.hpp"
 
 #define LONG_TESTS 0
 
