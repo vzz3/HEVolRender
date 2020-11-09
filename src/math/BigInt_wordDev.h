@@ -23,3 +23,15 @@
 #define BIG_INT_WORD_MAX_VALUE ((BIG_INT_WORD_TYPE)(-1ll))
 #define BIG_INT_BITS_PER_WORD (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT)
 #define BIG_INT_WORD_HIGHEST_BIT ((BIG_INT_WORD_TYPE)(1ull << (BIG_INT_BITS_PER_WORD - 1)))
+
+
+
+// --- Prime numbers generation ---
+
+// Minimum size in bits that the requested prime number has
+// before we use the large prime number generating algorithms.
+// The cutoff of 95 was chosen empirically for best performance.
+#define BIG_INT_SMALL_PRIME_THRESHOLD 95
+
+// Certainty required to meet the spec of probablePrime
+#define BIG_INT_DEFAULT_PRIME_CERTAINTY 100

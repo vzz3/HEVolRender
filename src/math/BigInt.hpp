@@ -64,54 +64,6 @@ namespace ppvr {
 			static BigInt& randomNumber(const uint& sizeInBit, BigInt &target);
 			static BigInt& randomNumber(const BigInt& upperBound, BigInt &target);
 			
-		private:
-			// Minimum size in bits that the requested prime number has
-			// before we use the large prime number generating algorithms.
-			// The cutoff of 95 was chosen empirically for best performance.
-			static const uint SMALL_PRIME_THRESHOLD = 95;
-			
-			// Certainty required to meet the spec of probablePrime
-			static const uint DEFAULT_PRIME_CERTAINTY = 100;
-			
-			static const BigInt SMALL_PRIME_PRODUCT;
-			
-		public:
-			
-			/**
-			 * Returns a positive BigInteger that is probably prime, with the
-			 * specified bitLength. The probability that a BigInteger returned
-			 * by this method is composite does not exceed 2<sup>-100</sup>.
-			 *
-			 * @param  bitLength bitLength of the returned BigInteger.
-			 * @param  rnd source of random bits used to select candidates to be
-			 *         tested for primality.
-			 * @return a BigInteger of {@code bitLength} bits that is probably prime
-			 * @throws ArithmeticException {@code bitLength < 2} or {@code bitLength} is too large.
-			 * @see    #bitLength()
-			 * @since 1.4
-			 */
-			static BigInt probablePrime(const uint& bitLength);
-			
-		private:
-			/**
-			 * Find a random number of the specified bitLength that is probably prime.
-			 * This method is used for smaller primes, its performance degrades on
-			 * larger bitlengths.
-			 *
-			 * This method assumes bitLength > 1.
-			 */
-			static BigInt smallPrime(const uint& bitLength, const uint& certainty);
-			
-			
-		private:
-			/**
-			 * Find a random number of the specified bitLength that is probably prime.
-			 * This method is more appropriate for larger bitlengths since it uses
-			 * a sieve to eliminate most composites before using a more expensive
-			 * test.
-			 */
-			static BigInt largePrime(const uint& bitLength, const uint& certainty);
-			
 		protected:
 			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
 			
@@ -175,6 +127,43 @@ namespace ppvr {
 			void setZero();
 			void setOne();
 			
+			/**
+			 * Sets the designated bit in this BigInt.
+			 * (Computes {@code (this | (1<<n))}.)
+			 *
+			 * @param  n index of bit to set.
+			 */
+			void setBit(const uint n);
+			
+			/**
+			 * Clear the designated bit in this BigInt.
+			 * (Computes {@code (this & ~(1<<n))}.)
+			 *
+			 * @param  n index of bit to clear.
+			 * @return {@code this & ~(1<<n)}
+			 */
+			void clearBit(int n);
+			
+		public:
+			/**
+			 * Returns a BigInteger whose value is equivalent to this BigInteger
+			 * with the designated bit set.  (Computes {@code (this | (1<<n))}.)
+			 *
+			 * @param  n index of bit to set.
+			 * @return {@code this | (1<<n)}
+			 */
+			BigInt withBit(const uint n);
+				
+			/**
+			 * Returns a BigInteger whose value is equivalent to this BigInteger
+			 * with the designated bit cleared.
+			 * (Computes {@code (this & ~(1<<n))}.)
+			 *
+			 * @param  n index of bit to clear.
+			 * @return {@code this & ~(1<<n)}
+			 */
+			BigInt withoutBit(int n);
+		
 		public:
 			bool isZero() const;
 			bool isOne() const;
@@ -236,6 +225,20 @@ namespace ppvr {
 		protected:
 			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
 				return this->wordSize;
+			}
+			
+			/**
+			 * Decreases the word count to newMaxWordSize.
+			 * If the word newMaxWordSize-1 is 0 then set the wordSize to newMaxWordSize-1.
+			 * If this is also 0 the set it to newMaxWordSize-2, and so on.
+			 * The param newMaxWordSize need to be <= this->wordCapacity
+			 *
+			 * @param newMaxWordSize new maximal word count
+			 */
+			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize);
+			
+			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
+				return this->value[0];
 			}
 			
 		private:

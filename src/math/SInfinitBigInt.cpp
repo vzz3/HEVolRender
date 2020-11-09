@@ -6,6 +6,35 @@ using namespace ppvr::math;
 
 // ----- statics -----
 
+const SInfinitBigInt SInfinitBigInt::SmallPrimeProduct = SInfinitBigInt::fromUint64(3L*5*7*11*13*17*19*23*29*31*37*41);
+
+// Pre generated primes
+const SInfinitBigInt SInfinitBigInt::FirstPrimes[] = {
+	SInfinitBigInt::fromInt64(  2), SInfinitBigInt::fromInt64(  3), SInfinitBigInt::fromInt64(  5),
+	SInfinitBigInt::fromInt64(  7), SInfinitBigInt::fromInt64( 11), SInfinitBigInt::fromInt64( 13),
+	SInfinitBigInt::fromInt64( 17), SInfinitBigInt::fromInt64( 19), SInfinitBigInt::fromInt64( 23),
+	SInfinitBigInt::fromInt64( 29), SInfinitBigInt::fromInt64( 31), SInfinitBigInt::fromInt64( 37),
+	SInfinitBigInt::fromInt64( 41), SInfinitBigInt::fromInt64( 43), SInfinitBigInt::fromInt64( 47),
+	SInfinitBigInt::fromInt64( 53), SInfinitBigInt::fromInt64( 59), SInfinitBigInt::fromInt64( 61),
+	SInfinitBigInt::fromInt64( 67), SInfinitBigInt::fromInt64( 71), SInfinitBigInt::fromInt64( 73),
+	SInfinitBigInt::fromInt64( 79), SInfinitBigInt::fromInt64( 83), SInfinitBigInt::fromInt64( 89),
+	SInfinitBigInt::fromInt64( 97), SInfinitBigInt::fromInt64(101), SInfinitBigInt::fromInt64(103),
+	SInfinitBigInt::fromInt64(107), SInfinitBigInt::fromInt64(109), SInfinitBigInt::fromInt64(113),
+	SInfinitBigInt::fromInt64(127), SInfinitBigInt::fromInt64(131), SInfinitBigInt::fromInt64(137),
+	SInfinitBigInt::fromInt64(139), SInfinitBigInt::fromInt64(149), SInfinitBigInt::fromInt64(151),
+	SInfinitBigInt::fromInt64(157), SInfinitBigInt::fromInt64(163), SInfinitBigInt::fromInt64(167),
+	SInfinitBigInt::fromInt64(173), SInfinitBigInt::fromInt64(179), SInfinitBigInt::fromInt64(181),
+	SInfinitBigInt::fromInt64(191), SInfinitBigInt::fromInt64(193), SInfinitBigInt::fromInt64(197),
+	SInfinitBigInt::fromInt64(199), SInfinitBigInt::fromInt64(211), SInfinitBigInt::fromInt64(223),
+	SInfinitBigInt::fromInt64(227), SInfinitBigInt::fromInt64(229), SInfinitBigInt::fromInt64(233),
+	SInfinitBigInt::fromInt64(239), SInfinitBigInt::fromInt64(241), SInfinitBigInt::fromInt64(251),
+	SInfinitBigInt::fromInt64(257), SInfinitBigInt::fromInt64(263), SInfinitBigInt::fromInt64(269),
+	SInfinitBigInt::fromInt64(271), SInfinitBigInt::fromInt64(277), SInfinitBigInt::fromInt64(281),
+	SInfinitBigInt::fromInt64(283), SInfinitBigInt::fromInt64(293), SInfinitBigInt::fromInt64(307),
+	SInfinitBigInt::fromInt64(311), SInfinitBigInt::fromInt64(313), SInfinitBigInt::fromInt64(317),
+	SInfinitBigInt::fromInt64(331), SInfinitBigInt::fromInt64(337), SInfinitBigInt::fromInt64(347),
+	SInfinitBigInt::fromInt64(349)
+};
 
 SInfinitBigInt SInfinitBigInt::fromInt64(const int64_t& uint64Val) {
 	SInfinitBigInt res(0);
@@ -87,6 +116,11 @@ SInfinitBigInt SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound) {
 
 SInfinitBigInt& SInfinitBigInt::randomNumber(const uint& sizeInBit, SInfinitBigInt &target) {
 	BigInt::randomNumber(sizeInBit, target);
+	if(target.isMagnitudeZero()) {
+		target.signum = 0;
+	} else {
+		target.signum = 1;
+	}
 	return target;
 }
 
@@ -98,8 +132,337 @@ SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, S
 	}
 	
 	BigInt::randomNumber(upperBound, target);
+	if(target.isMagnitudeZero()) {
+		target.signum = 0;
+	} else {
+		target.signum = 1;
+	}
 	return target;
 }
+
+
+
+SInfinitBigInt SInfinitBigInt::probablePrime(const uint& bitLength) {
+	if (bitLength < 2) {
+		std::string msg = "ERROR probablePrime: bitLength < 2";
+		//std::cerr << msg << std::endl;
+		throw std::runtime_error(msg);
+	}
+	
+	return (bitLength < BIG_INT_SMALL_PRIME_THRESHOLD ?
+			smallPrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY) :
+			largePrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY)
+			);
+}
+
+SInfinitBigInt SInfinitBigInt::smallPrime(const uint& bitLength, const uint& certainty) {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	
+	/*
+	 uint magLen = (bitLength + 31) >> 5;
+	 uint temp[magLen];
+	 uint highBit = 1 << ((bitLength+31) & 0x1f);  // High bit of high int
+	 uint highMask = (highBit << 1) - 1;  // Bits to keep in high int
+	 
+	 while (true) {
+	 // Construct a candidate
+	 for (int i=0; i < magLen; i++) {
+	 temp[i] = rnd.nextInt();
+	 }
+	 temp[0] = (temp[0] & highMask) | highBit;  // Ensure exact length
+	 if (bitLength > 2)
+	 temp[magLen-1] |= 1;  // Make odd if bitlen > 2
+	 
+	 BigInteger p = new BigInteger(temp, 1);
+	 
+	 // Do cheap "pre-test" if applicable
+	 if (bitLength > 6) {
+	 long r = p.remainder(SMALL_PRIME_PRODUCT).longValue();
+	 if ((r%3==0)  || (r%5==0)  || (r%7==0)  || (r%11==0) ||
+	 (r%13==0) || (r%17==0) || (r%19==0) || (r%23==0) ||
+	 (r%29==0) || (r%31==0) || (r%37==0) || (r%41==0))
+	 continue; // Candidate is composite; try another
+	 }
+	 
+	 // All candidates of bitLength 2 and 3 are prime by this point
+	 if (bitLength < 4)
+	 return p;
+	 
+	 // Do expensive test if we survive pre-test (or it's inapplicable)
+	 if (p.primeToCertainty(certainty, rnd))
+	 return p;
+	 }
+	 */
+	
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(bitLength);
+	SInfinitBigInt p(0, requiredWords);
+	
+	while (true) {
+		SInfinitBigInt::randomNumber(bitLength, p);
+		p.setBit(bitLength-1); // Ensure exact length
+		
+		if (bitLength > 2) {
+			p.setBit(0); //p.value[0] |= 1;  // Make odd if bitlen > 2
+		}
+		
+		// Do cheap "pre-test" if applicable
+		if (bitLength > 6) {
+			int64_t r = (p % SInfinitBigInt::SmallPrimeProduct).toUint64();
+			if ((r%3==0)  || (r%5==0)  || (r%7==0)  || (r%11==0) ||
+				(r%13==0) || (r%17==0) || (r%19==0) || (r%23==0) ||
+				(r%29==0) || (r%31==0) || (r%37==0) || (r%41==0))
+			continue; // Candidate is composite; try another
+		}
+		
+		// All candidates of bitLength 2 and 3 are prime by this point
+		if (bitLength < 4) {
+			return p;
+		}
+		
+		// Do expensive test if we survive pre-test (or it's inapplicable)
+		if (p.primeToCertainty(certainty)) {
+			return p;
+		}
+	}
+}
+
+SInfinitBigInt SInfinitBigInt::largePrime(const uint& bitLength, const uint& certainty) {
+	// A search with a BitSieve is  faster. (The java BigInt class uses such a surch algorithem.)
+	// However, a test for random numers should do it for the moment (it is simpler to implement).
+	// https://stackoverflow.com/questions/13665443/generate-random-prime-number-in-c-c-between-2-limits
+	// https://crypto.stackexchange.com/questions/1812/how-to-better-generate-large-primes-sieving-and-then-random-picking-or-random-p
+	 
+	// Algorithm and comments adapted from https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
+	SInfinitBigInt primeCandidate(0, requiredWords(bitLength));
+	while(true) {
+		SInfinitBigInt::lowLevelPrime(bitLength, primeCandidate);
+		if (primeCandidate.primeToCertainty(certainty)) {
+			return primeCandidate;
+		}
+	}
+}
+
+void SInfinitBigInt::lowLevelPrime(const uint& bitLength, SInfinitBigInt &target) {
+	// Algorithm and comments adapted from https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
+	// Generate a prime candidate divisible by first primes
+	bool isLowLevelPrime(false);
+	while(!isLowLevelPrime) {
+		// Obtain a random number
+		SInfinitBigInt::randomNumber(bitLength, target);
+	
+		// Test divisibility by pre-generated primes
+		isLowLevelPrime = true;
+		for(SInfinitBigInt divisor : SInfinitBigInt::FirstPrimes) {
+			if ((target % divisor).isZero() && divisor.pow(2) <= target) {
+				isLowLevelPrime = false;
+				break; // early exit
+			}
+		}
+	}
+}
+ 
+bool SInfinitBigInt::primeToCertainty(const uint certainty) {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	
+	uint rounds = 0;
+	uint n = (std::min(certainty, uint(-1ll)-1)+1)/2;
+	
+	// The relationship between the certainty and the number of rounds
+	// we perform is given in the draft standard ANSI X9.80, "PRIME
+	// NUMBER GENERATION, PRIMALITY TESTING, AND PRIMALITY CERTIFICATES".
+	uint sizeInBits = this->bitLength();
+	if (sizeInBits < 100) {
+		rounds = 50;
+		rounds = n < rounds ? n : rounds;
+		return passesMillerRabin(rounds);
+	}
+	
+	if (sizeInBits < 256) {
+		rounds = 27;
+	} else if (sizeInBits < 512) {
+		rounds = 15;
+	} else if (sizeInBits < 768) {
+		rounds = 8;
+	} else if (sizeInBits < 1024) {
+		rounds = 4;
+	} else {
+		rounds = 2;
+	}
+	rounds = n < rounds ? n : rounds;
+	
+	return passesMillerRabin(rounds) && passesLucasLehmer();
+}
+
+bool SInfinitBigInt::passesLucasLehmer() {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	
+	SInfinitBigInt thisPlusOne= *this + BigInt::ONE;
+	
+	// Step 1
+	int d = 5;
+	while (jacobiSymbol(d, *this) != -1) {
+		// 5, -7, 9, -11, ...
+		d = (d < 0) ? std::abs(d)+2 : -(d+2);
+	}
+	
+	// Step 2
+	SInfinitBigInt u = lucasLehmerSequence(d, thisPlusOne, *this);
+	
+	// Step 3
+	return (u % *this).isZero();
+}
+
+int SInfinitBigInt::jacobiSymbol(int16_t p, const SInfinitBigInt& n) {
+	if (p == 0) {
+		return 0;
+	}
+	
+	// Algorithm and comments adapted from Colin Plumb's C library.
+	// https://github.com/wernerd/ZRTPCPP/blob/master/bnlib/jacobi.c
+	
+	int j = 1;
+	BIG_INT_WORD_TYPE u = n.getLeastSignificantWord();
+	
+	// Make p positive
+	if (p < 0) {
+		p = -p;
+		int n8 = u & 7;
+		if ((n8 == 3) || (n8 == 7))
+		j = -j; // 3 (011) or 7 (111) mod 8
+	}
+	
+	// Get rid of factors of 2 in p
+	while ((p & 3) == 0) {
+		p >>= 2;
+	}
+	if ((p & 1) == 0) {
+		p >>= 1;
+		if (((u ^ (u>>1)) & 2) != 0) {
+			j = -j; // 3 (011) or 5 (101) mod 8
+		}
+	}
+	if (p == 1) {
+		return j;
+	}
+	// Then, apply quadratic reciprocity
+	if ((p & u & 2) != 0) {   // p = u = 3 (mod 4)?
+		j = -j;
+	}
+	// And reduce u mod p
+	//u = n.mod(BigInteger.valueOf(p)).intValue();
+	u = (n % SInfinitBigInt(p)).getLeastSignificantWord(); // getLeastSignificantWord() is save because p must fit into BIG_INT_WORD_TYPE and therfore the reminder of X/p must fit into BIG_INT_WORD_TYPE.
+	
+	// Now compute Jacobi(u,p), u < p
+	while (u != 0) {
+		while ((u & 3) == 0) {
+			u >>= 2;
+		}
+		if ((u & 1) == 0) {
+			u >>= 1;
+			if (((p ^ (p>>1)) & 2) != 0) {
+				j = -j;     // 3 (011) or 5 (101) mod 8
+			}
+		}
+		if (u == 1) {
+			return j;
+		}
+		// Now both u and p are odd, so use quadratic reciprocity
+		assert (u < p);
+		BIG_INT_WORD_TYPE t = u; u = p; p = t;
+		if ((u & p & 2) != 0) { // u = p = 3 (mod 4)?
+			j = -j;
+		}
+		// Now u >= p, so it can be reduced
+		u %= p;
+	}
+	return 0;
+}
+
+SInfinitBigInt SInfinitBigInt::lucasLehmerSequence(int z, const SInfinitBigInt& k, const SInfinitBigInt& n) {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	
+	SInfinitBigInt d = SInfinitBigInt::fromInt64(z);
+	SInfinitBigInt u = ONE; SInfinitBigInt u2;
+	SInfinitBigInt v = ONE; SInfinitBigInt v2;
+	
+	for (int i=k.bitLength()-2; i >= 0; i--) {
+		u2 = (u * v) % n;
+		
+		v2 = (v.pow(2) + (d * u.pow(2))) % n;
+		if (v2.testBit(0))
+		v2 = v2 - n;
+		
+		v2 = v2 >> 1;
+		
+		u = u2; v = v2;
+		if (k.testBit(i)) {
+			u2 = (u + v) % n;
+			if (u2.testBit(0)) {
+				u2 = u2 - n;
+			}
+			
+			u2 = u2 >> 1;
+			v2 = ( v + (d * u)) % n;
+			if (v2.testBit(0)) {
+				v2 = v2 - n;
+			}
+			v2 = v2 >> 1;
+			
+			u = u2; v = v2;
+		}
+	}
+	return u;
+}
+
+bool SInfinitBigInt::passesMillerRabin(int iterations) {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	
+	// Find a and m such that m is odd and this == 1 + 2**a * m
+	SInfinitBigInt thisMinusOne = *this - BigInt::ONE;
+	SInfinitBigInt m = thisMinusOne;
+	int a = m.findLowestSetBit();
+	m = m >> a;
+	
+	// Do the tests
+	//if (rnd == null) {
+	//	rnd = ThreadLocalRandom.current();
+	//}
+	for (int i=0; i < iterations; i++) {
+		// Generate a uniform random on (1, this)
+		SInfinitBigInt b(0, this->getWordSize());
+		do {
+			SInfinitBigInt::randomNumber(this->bitLength(), b);
+		} while (b <= SInfinitBigInt::ONE || b >= *this);
+		
+		int j = 0;
+		SInfinitBigInt z = b.modPow(m, *this);
+		while (!((j == 0 && z.isOne()) || z == thisMinusOne)) {
+			if ((j > 0 && z.isOne()) || ++j == a) {
+				return false;
+			}
+			z = z.modPow(TWO, *this);
+		}
+	}
+	return true;
+}
+
+bool SInfinitBigInt::isProbablePrime(const uint certainty) {
+	// Algorithm and comments adapted from Java java.math.BigInteger
+	if (certainty <= 0) {
+		return true;
+	}
+	SInfinitBigInt w(*this); w.setAbs(); // TODO Speed: is this copy of the magnitud realy required? is it ok to set and reset just the signum?
+	if (w == TWO) {
+		return true;
+	}
+	if (!w.testBit(0) || w.isOne()) {
+		return false;
+	}
+	
+	return w.primeToCertainty(certainty);
+}
+
+
 
 // ----- constructors -----
 
@@ -660,7 +1023,7 @@ SInfinitBigInt SInfinitBigInt::modPow(const SInfinitBigInt &exponent, const SInf
 	if(m.isOdd()) { // odd modulus
 		result = base.oddModPow(exponent, m);
 	} else {
-		/*
+		/ *
 		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
 		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
 		 * use Chinese Remainder Theorem to combine results.
@@ -739,7 +1102,7 @@ SInfinitBigInt SInfinitBigInt::modPow_naiv(const SInfinitBigInt &exponent, const
  * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
  * /
 SInfinitBigInt SInfinitBigInt::modPow2(SInfinitBigInt exponent, int p) const {
-	/*
+	/ *
 	 * Perform exponentiation using repeated squaring trick, chopping off
 	 * high order bits as indicated by modulus.
 	 * /
@@ -767,7 +1130,7 @@ SInfinitBigInt SInfinitBigInt::modPow2(SInfinitBigInt exponent, int p) const {
 	return result;
 }
 
-/**
+/ **
  * Returns a BigInteger whose value is this mod(2**p).
  * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
  * /
@@ -781,7 +1144,7 @@ SInfinitBigInt SInfinitBigInt::mod2(int p) const {
 	return *this - q;
 	
 	// TODO performance! can be done by bitshifting and masking only!
-	/*
+	/ *
 	 // Copy remaining ints of mag
 	 int numInts = (p + 31) >>> 5;
 	 int[] mag = new int[numInts];

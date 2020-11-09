@@ -1444,3 +1444,28 @@ TEST_CASE( "big integer randomNumber", "[bigint]" ) {
 	REQUIRE( BigInt::randomNumber(2048).bitLength() <= 2048 );
 	REQUIRE( BigInt::randomNumber(2049).bitLength() <= 2049 );
 }
+
+TEST_CASE( "big integer setBit", "[bigint]" ) {
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(0) == BigInt::fromString("00000001", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(1) == BigInt::fromString("00000010", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(2) == BigInt::fromString("00000100", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(3) == BigInt::fromString("00001000", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(4) == BigInt::fromString("00010000", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(5) == BigInt::fromString("00100000", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(6) == BigInt::fromString("01000000", 2) );
+	REQUIRE( BigInt::fromString("00000000", 2).withBit(7) == BigInt::fromString("10000000", 2) );
+	
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(0) == BigInt::fromString("10101011", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(1) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(2) == BigInt::fromString("10101110", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(3) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(4) == BigInt::fromString("10111010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(5) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(6) == BigInt::fromString("11101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withBit(7) == BigInt::fromString("10101010", 2) );
+	
+	REQUIRE( BigInt::fromString("    77 66 55 44 33 22 11 00", 16).withBit( 65) == BigInt::fromString("                         01  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(  7) == BigInt::fromString("                         88  77 66 55 44 33 22 11 80", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(129) == BigInt::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+}
+

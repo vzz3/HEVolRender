@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "../src/math/BigInt.hpp"
+#include "../src/math/SInfinitBigInt.hpp"
 #include <chrono>
 
 using namespace ppvr;
@@ -45,8 +46,11 @@ int main (int argc, char *argv[]) {
 	
 	// RandomNumber Test
 	for(int i = 0; i<100; i++) {
-		std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
+		//std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
+		std::cout << "probablePrime: " << ppvr::math::SInfinitBigInt::probablePrime(1024).toStringDec() << " \n";
 	}
+	
+	
 	
 	return 0;
 }

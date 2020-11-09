@@ -31,6 +31,120 @@ namespace ppvr {
 			static SInfinitBigInt& randomNumber(const uint& sizeInBit, SInfinitBigInt &target);
 			static SInfinitBigInt& randomNumber(const SInfinitBigInt& upperBound, SInfinitBigInt &target);
 			
+		private:
+			
+			static const SInfinitBigInt SmallPrimeProduct;
+			
+			static const SInfinitBigInt FirstPrimes[];
+			
+		public:
+			/*
+			 https://crypto.stackexchange.com/questions/1970/how-are-primes-generated-for-rsa
+			 https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
+			 */
+			
+			/**
+			 * Returns a positive BigInteger that is probably prime, with the
+			 * specified bitLength. The probability that a BigInteger returned
+			 * by this method is composite does not exceed 2<sup>-100</sup>.
+			 *
+			 * @param  bitLength bitLength of the returned BigInteger.
+			 * @param  rnd source of random bits used to select candidates to be
+			 *         tested for primality.
+			 * @return a BigInteger of {@code bitLength} bits that is probably prime
+			 * @throws ArithmeticException {@code bitLength < 2} or {@code bitLength} is too large.
+			 * @see    #bitLength()
+			 * @since 1.4
+			 */
+			static SInfinitBigInt probablePrime(const uint& bitLength);
+			
+		private:
+			/**
+			 * Find a random number of the specified bitLength that is probably prime.
+			 * This method is used for smaller primes, its performance degrades on
+			 * larger bitlengths.
+			 *
+			 * This method assumes bitLength > 1.
+			 */
+			static SInfinitBigInt smallPrime(const uint& bitLength, const uint& certainty);
+			
+			
+			/**
+			 * Find a random number of the specified bitLength that is probably prime.
+			 * This method is more appropriate for larger bitlengths since it uses
+			 * a sieve to eliminate most composites before using a more expensive
+			 * test.
+			 */
+			static SInfinitBigInt largePrime(const uint& bitLength, const uint& certainty);
+			
+			/**
+			 * This step is a a low level primality test which requires the pre-calculation of the first few hundred primes (using Sieve of Eratosthenes).
+			 * The prime candidate is divided by the pre-generated primes to check for divisibility. If the prime candidate is perfectly divisible by any of these pre-generated primes, the test fails and a new prime candidate must be picked and tested. This is repeated as long as a value which is coprime to all the primes in our generated primes list is found
+			 */
+			static void lowLevelPrime(const uint& bitLength, SInfinitBigInt &target);
+			
+			//static int getPrimeSearchLen(int bitLength);
+			
+			/**
+			 * Returns {@code true} if this BigInteger is probably prime,
+			 * {@code false} if it's definitely composite.
+			 *
+			 * This method assumes bitLength > 2.
+			 *
+			 * @param  certainty a measure of the uncertainty that the caller is
+			 *         willing to tolerate: if the call returns {@code true}
+			 *         the probability that this BigInteger is prime exceeds
+			 *         {@code (1 - 1/2<sup>certainty</sup>)}.  The execution time of
+			 *         this method is proportional to the value of this parameter.
+			 * @return {@code true} if this BigInteger is probably prime,
+			 *         {@code false} if it's definitely composite.
+			 */
+			bool primeToCertainty(const uint certainty);
+			
+			/**
+			 * Returns true if this BigInteger is a Lucas-Lehmer probable prime.
+			 *
+			 * The following assumptions are made:
+			 * This BigInteger is a positive, odd number.
+			 */
+			bool passesLucasLehmer();
+			
+			/**
+			 * Computes Jacobi(p,n).
+			 * Assumes n positive, odd, n>=3.
+			 */
+			static int jacobiSymbol(int16_t p, const SInfinitBigInt& n); // TODO replace int16_t with int
+			
+			static SInfinitBigInt lucasLehmerSequence(int z, const SInfinitBigInt& k, const SInfinitBigInt& n);
+			
+			/**
+			 * Returns true iff this BigInteger passes the specified number of
+			 * Miller-Rabin tests. This test is taken from the DSA spec (NIST FIPS
+			 * 186-2).
+			 *
+			 * The following assumptions are made:
+			 * This BigInteger is a positive, odd number greater than 2.
+			 * iterations<=50.
+			 */
+			bool passesMillerRabin(int iterations);
+			
+		public:
+			/**
+			 * Returns {@code true} if this BigInteger is probably prime,
+			 * {@code false} if it's definitely composite.  If
+			 * {@code certainty} is &le; 0, {@code true} is
+			 * returned.
+			 *
+			 * @param  certainty a measure of the uncertainty that the caller is
+			 *         willing to tolerate: if the call returns {@code true}
+			 *         the probability that this BigInteger is prime exceeds
+			 *         (1 - 1/2<sup>{@code certainty}</sup>).  The execution time of
+			 *         this method is proportional to the value of this parameter.
+			 * @return {@code true} if this BigInteger is probably prime,
+			 *         {@code false} if it's definitely composite.
+			 */
+			bool isProbablePrime(const uint certainty);
+			
 		// ----- member variables -----
 		private:
 			int_fast8_t signum;
