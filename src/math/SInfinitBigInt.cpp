@@ -816,7 +816,7 @@ SInfinitBigInt SInfinitBigInt::sqrt() const {
 SInfinitBigInt SInfinitBigInt::modInverse(const SInfinitBigInt & m) const {
 	if (m.isZero()) {
 		std::string msg = "ERROR BigInt: modulus not positive!";
-		std::cerr << msg << std::endl;
+		//std::cerr << msg << std::endl;
 		throw std::runtime_error(msg);
 	}
 	
@@ -852,6 +852,7 @@ SInfinitBigInt SInfinitBigInt::gcdExtended(const SInfinitBigInt &a, const SInfin
 	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
 	
 	// Implementing the Extended Euclidean Algorithm with Unsigned Inputs
+	// https://jeffhurchalla.com/2018/10/09/analysis-of-bounds-in-the-extended-euclidean-algorithm/
 	// https://jeffhurchalla.com/2018/10/13/implementing-the-extended-euclidean-algorithm-with-unsigned-inputs/
 	
 	int_fast8_t signumA = a.signum;
