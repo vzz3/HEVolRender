@@ -371,27 +371,27 @@ bool BigInt::isZero() const {
 }
 
 void BigInt::setBit(const uint n) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(n);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(n+1);
 	this->reserveWordsAndInitUnused(requiredWords);
 	
 	uint restBits   = n % BIG_INT_BITS_PER_WORD;
 	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
 	
-	this->value[allWords] |= (1 << restBits);
+	this->value[allWords] |= (BIG_INT_WORD_TYPE(1) << restBits);
 	
 	this->wordSize = std::max(this->wordSize, allWords + 1);
 }
 
-void BigInt::clearBit(int n) {
+void BigInt::clearBit(const uint n) {
 	uint oldBitLength = this->bitLength();
 	if(n <= oldBitLength) {
 		uint restBits   = n % BIG_INT_BITS_PER_WORD;
 		uint allWords 	= n / BIG_INT_BITS_PER_WORD;
 		
-		this->value[allWords] &= ~(1 << restBits);
+		this->value[allWords] &= ~(BIG_INT_WORD_TYPE(1) << restBits);
 		
 		// if the higest bit was cleard, the word count could have changed
-		if(n == oldBitLength) {
+		if(n+1 == oldBitLength) {
 			this->trimWordSize(this->wordSize);
 		}
 	}
@@ -403,7 +403,7 @@ BigInt BigInt::withBit(const uint n) {
 	return res;
 }
 
-BigInt BigInt::withoutBit(int n) {
+BigInt BigInt::withoutBit(const uint n) {
 	BigInt res(*this);
 	res.clearBit(n);
 	return res;

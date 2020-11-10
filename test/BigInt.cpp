@@ -1350,99 +1350,100 @@ TEST_CASE( "big integer bitLength", "[bigint]" ) {
 }
 
 TEST_CASE( "big integer randomNumber", "[bigint]" ) {
+	ppvr::math::Random rnd{};
 	
-	REQUIRE_THROWS (BigInt::randomNumber(0));
+	REQUIRE_THROWS (BigInt::randomNumber(0, rnd));
 	
 	// randomNumber must return 1 or more
-	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  3) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  2) >= BigInt(1) );
-	REQUIRE( BigInt::randomNumber(  1) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  3, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  2, rnd) >= BigInt(1) );
+	REQUIRE( BigInt::randomNumber(  1, rnd) >= BigInt(1) );
 	
 	// check max bit length
 	// 1 Byte
-	REQUIRE( BigInt::randomNumber(  1).bitLength() <=   1 );
-	REQUIRE( BigInt::randomNumber(  2).bitLength() <=   2 );
-	REQUIRE( BigInt::randomNumber(  3).bitLength() <=   3 );
-	REQUIRE( BigInt::randomNumber(  4).bitLength() <=   4 );
-	REQUIRE( BigInt::randomNumber(  5).bitLength() <=   5 );
-	REQUIRE( BigInt::randomNumber(  6).bitLength() <=   6 );
-	REQUIRE( BigInt::randomNumber(  7).bitLength() <=   7 );
-	REQUIRE( BigInt::randomNumber(  8).bitLength() <=   8 );
+	REQUIRE( BigInt::randomNumber(  1, rnd).bitLength() <=   1 );
+	REQUIRE( BigInt::randomNumber(  2, rnd).bitLength() <=   2 );
+	REQUIRE( BigInt::randomNumber(  3, rnd).bitLength() <=   3 );
+	REQUIRE( BigInt::randomNumber(  4, rnd).bitLength() <=   4 );
+	REQUIRE( BigInt::randomNumber(  5, rnd).bitLength() <=   5 );
+	REQUIRE( BigInt::randomNumber(  6, rnd).bitLength() <=   6 );
+	REQUIRE( BigInt::randomNumber(  7, rnd).bitLength() <=   7 );
+	REQUIRE( BigInt::randomNumber(  8, rnd).bitLength() <=   8 );
 	
 	// 2 Byte
-	REQUIRE( BigInt::randomNumber(  9).bitLength() <=   9 );
-	REQUIRE( BigInt::randomNumber( 10).bitLength() <=  10 );
-	REQUIRE( BigInt::randomNumber( 11).bitLength() <=  11 );
-	REQUIRE( BigInt::randomNumber( 12).bitLength() <=  12 );
-	REQUIRE( BigInt::randomNumber( 13).bitLength() <=  13 );
-	REQUIRE( BigInt::randomNumber( 14).bitLength() <=  14 );
-	REQUIRE( BigInt::randomNumber( 15).bitLength() <=  15 );
-	REQUIRE( BigInt::randomNumber( 16).bitLength() <=  16 );
+	REQUIRE( BigInt::randomNumber(  9, rnd).bitLength() <=   9 );
+	REQUIRE( BigInt::randomNumber( 10, rnd).bitLength() <=  10 );
+	REQUIRE( BigInt::randomNumber( 11, rnd).bitLength() <=  11 );
+	REQUIRE( BigInt::randomNumber( 12, rnd).bitLength() <=  12 );
+	REQUIRE( BigInt::randomNumber( 13, rnd).bitLength() <=  13 );
+	REQUIRE( BigInt::randomNumber( 14, rnd).bitLength() <=  14 );
+	REQUIRE( BigInt::randomNumber( 15, rnd).bitLength() <=  15 );
+	REQUIRE( BigInt::randomNumber( 16, rnd).bitLength() <=  16 );
 	
 	// 3 Byte
-	REQUIRE( BigInt::randomNumber( 17).bitLength() <=  17 );
-	REQUIRE( BigInt::randomNumber( 18).bitLength() <=  18 );
-	REQUIRE( BigInt::randomNumber( 19).bitLength() <=  19 );
-	REQUIRE( BigInt::randomNumber( 20).bitLength() <=  20 );
-	REQUIRE( BigInt::randomNumber( 21).bitLength() <=  21 );
-	REQUIRE( BigInt::randomNumber( 22).bitLength() <=  22 );
-	REQUIRE( BigInt::randomNumber( 23).bitLength() <=  23 );
-	REQUIRE( BigInt::randomNumber( 24).bitLength() <=  24 );
+	REQUIRE( BigInt::randomNumber( 17, rnd).bitLength() <=  17 );
+	REQUIRE( BigInt::randomNumber( 18, rnd).bitLength() <=  18 );
+	REQUIRE( BigInt::randomNumber( 19, rnd).bitLength() <=  19 );
+	REQUIRE( BigInt::randomNumber( 20, rnd).bitLength() <=  20 );
+	REQUIRE( BigInt::randomNumber( 21, rnd).bitLength() <=  21 );
+	REQUIRE( BigInt::randomNumber( 22, rnd).bitLength() <=  22 );
+	REQUIRE( BigInt::randomNumber( 23, rnd).bitLength() <=  23 );
+	REQUIRE( BigInt::randomNumber( 24, rnd).bitLength() <=  24 );
 	
 	// 4 Byte
-	REQUIRE( BigInt::randomNumber( 25).bitLength() <=  25 );
-	REQUIRE( BigInt::randomNumber( 26).bitLength() <=  26 );
-	REQUIRE( BigInt::randomNumber( 27).bitLength() <=  27 );
-	REQUIRE( BigInt::randomNumber( 28).bitLength() <=  28 );
-	REQUIRE( BigInt::randomNumber( 29).bitLength() <=  29 );
-	REQUIRE( BigInt::randomNumber( 30).bitLength() <=  30 );
-	REQUIRE( BigInt::randomNumber( 31).bitLength() <=  31 );
-	REQUIRE( BigInt::randomNumber( 32).bitLength() <=  32 );
+	REQUIRE( BigInt::randomNumber( 25, rnd).bitLength() <=  25 );
+	REQUIRE( BigInt::randomNumber( 26, rnd).bitLength() <=  26 );
+	REQUIRE( BigInt::randomNumber( 27, rnd).bitLength() <=  27 );
+	REQUIRE( BigInt::randomNumber( 28, rnd).bitLength() <=  28 );
+	REQUIRE( BigInt::randomNumber( 29, rnd).bitLength() <=  29 );
+	REQUIRE( BigInt::randomNumber( 30, rnd).bitLength() <=  30 );
+	REQUIRE( BigInt::randomNumber( 31, rnd).bitLength() <=  31 );
+	REQUIRE( BigInt::randomNumber( 32, rnd).bitLength() <=  32 );
 	
 	// 8 Bytes
-	REQUIRE( BigInt::randomNumber( 60).bitLength() <=  60 );
-	REQUIRE( BigInt::randomNumber( 61).bitLength() <=  61 );
-	REQUIRE( BigInt::randomNumber( 62).bitLength() <=  62 );
-	REQUIRE( BigInt::randomNumber( 63).bitLength() <=  63 );
-	REQUIRE( BigInt::randomNumber( 64).bitLength() <=  64 );
+	REQUIRE( BigInt::randomNumber( 60, rnd).bitLength() <=  60 );
+	REQUIRE( BigInt::randomNumber( 61, rnd).bitLength() <=  61 );
+	REQUIRE( BigInt::randomNumber( 62, rnd).bitLength() <=  62 );
+	REQUIRE( BigInt::randomNumber( 63, rnd).bitLength() <=  63 );
+	REQUIRE( BigInt::randomNumber( 64, rnd).bitLength() <=  64 );
 	
 	// 9 Byte
-	REQUIRE( BigInt::randomNumber( 65).bitLength() <=  65 );
-	REQUIRE( BigInt::randomNumber( 66).bitLength() <=  66 );
-	REQUIRE( BigInt::randomNumber( 67).bitLength() <=  67 );
+	REQUIRE( BigInt::randomNumber( 65, rnd).bitLength() <=  65 );
+	REQUIRE( BigInt::randomNumber( 66, rnd).bitLength() <=  66 );
+	REQUIRE( BigInt::randomNumber( 67, rnd).bitLength() <=  67 );
 	
 	// 16 Byte
-	REQUIRE( BigInt::randomNumber(126).bitLength() <= 126 );
-	REQUIRE( BigInt::randomNumber(127).bitLength() <= 127 );
-	REQUIRE( BigInt::randomNumber(128).bitLength() <= 128 );
+	REQUIRE( BigInt::randomNumber(126, rnd).bitLength() <= 126 );
+	REQUIRE( BigInt::randomNumber(127, rnd).bitLength() <= 127 );
+	REQUIRE( BigInt::randomNumber(128, rnd).bitLength() <= 128 );
 	
 	// 17 Byte
-	REQUIRE( BigInt::randomNumber(129).bitLength() <= 129 );
-	REQUIRE( BigInt::randomNumber(130).bitLength() <= 130 );
-	REQUIRE( BigInt::randomNumber(131).bitLength() <= 131 );
-	REQUIRE( BigInt::randomNumber(132).bitLength() <= 132 );
-	REQUIRE( BigInt::randomNumber(133).bitLength() <= 133 );
-	REQUIRE( BigInt::randomNumber(134).bitLength() <= 134 );
-	REQUIRE( BigInt::randomNumber(135).bitLength() <= 135 );
-	REQUIRE( BigInt::randomNumber(136).bitLength() <= 136 );
+	REQUIRE( BigInt::randomNumber(129, rnd).bitLength() <= 129 );
+	REQUIRE( BigInt::randomNumber(130, rnd).bitLength() <= 130 );
+	REQUIRE( BigInt::randomNumber(131, rnd).bitLength() <= 131 );
+	REQUIRE( BigInt::randomNumber(132, rnd).bitLength() <= 132 );
+	REQUIRE( BigInt::randomNumber(133, rnd).bitLength() <= 133 );
+	REQUIRE( BigInt::randomNumber(134, rnd).bitLength() <= 134 );
+	REQUIRE( BigInt::randomNumber(135, rnd).bitLength() <= 135 );
+	REQUIRE( BigInt::randomNumber(136, rnd).bitLength() <= 136 );
 	
 	
-	REQUIRE( BigInt::randomNumber(1023).bitLength() <= 1023 );
-	REQUIRE( BigInt::randomNumber(1024).bitLength() <= 1024 );
-	REQUIRE( BigInt::randomNumber(1025).bitLength() <= 1025 );
+	REQUIRE( BigInt::randomNumber(1023, rnd).bitLength() <= 1023 );
+	REQUIRE( BigInt::randomNumber(1024, rnd).bitLength() <= 1024 );
+	REQUIRE( BigInt::randomNumber(1025, rnd).bitLength() <= 1025 );
 	
-	REQUIRE( BigInt::randomNumber(2047).bitLength() <= 2047 );
-	REQUIRE( BigInt::randomNumber(2048).bitLength() <= 2048 );
-	REQUIRE( BigInt::randomNumber(2049).bitLength() <= 2049 );
+	REQUIRE( BigInt::randomNumber(2047, rnd).bitLength() <= 2047 );
+	REQUIRE( BigInt::randomNumber(2048, rnd).bitLength() <= 2048 );
+	REQUIRE( BigInt::randomNumber(2049, rnd).bitLength() <= 2049 );
 }
 
 TEST_CASE( "big integer setBit", "[bigint]" ) {
@@ -1464,8 +1465,51 @@ TEST_CASE( "big integer setBit", "[bigint]" ) {
 	REQUIRE( BigInt::fromString("10101010", 2).withBit(6) == BigInt::fromString("11101010", 2) );
 	REQUIRE( BigInt::fromString("10101010", 2).withBit(7) == BigInt::fromString("10101010", 2) );
 	
-	REQUIRE( BigInt::fromString("    77 66 55 44 33 22 11 00", 16).withBit( 65) == BigInt::fromString("                         01  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("    77 66 55 44 33 22 11 00", 16).withBit( 64) == BigInt::fromString("                         01  77 66 55 44 33 22 11 00", 16) );
 	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(  7) == BigInt::fromString("                         88  77 66 55 44 33 22 11 80", 16) );
-	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(129) == BigInt::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(127) == BigInt::fromString("00  80 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(128) == BigInt::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(129) == BigInt::fromString("02  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(130) == BigInt::fromString("04  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(131) == BigInt::fromString("08  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(132) == BigInt::fromString("10  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(191) == BigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(192) == BigInt::fromString("01  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(193) == BigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+}
+
+TEST_CASE( "big integer clearBit", "[bigint]" ) {
+	REQUIRE( BigInt::fromString("00000001", 2).withoutBit(0) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("00000010", 2).withoutBit(1) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("00000100", 2).withoutBit(2) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("00001000", 2).withoutBit(3) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("00010000", 2).withoutBit(4) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("00100000", 2).withoutBit(5) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("01000000", 2).withoutBit(6) == BigInt::fromString("00000000", 2) );
+	REQUIRE( BigInt::fromString("10000000", 2).withoutBit(7) == BigInt::fromString("00000000", 2) );
+	
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(0) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(1) == BigInt::fromString("10101000", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(2) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(3) == BigInt::fromString("10100010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(4) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(5) == BigInt::fromString("10001010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(6) == BigInt::fromString("10101010", 2) );
+	REQUIRE( BigInt::fromString("10101010", 2).withoutBit(7) == BigInt::fromString("00101010", 2) );
+	
+	REQUIRE( BigInt::fromString("                         01  77 66 55 44 33 22 11 00", 16).withoutBit( 64) == BigInt::fromString("    77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("                         88  77 66 55 44 33 22 11 80", 16).withoutBit(  7) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("00  80 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(127) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(128) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("02  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(129) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("04  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(130) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("08  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(131) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("10  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(132) == BigInt::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	
+	REQUIRE( BigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(191) == BigInt::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("01  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == BigInt::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(193) == BigInt::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( BigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == BigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
 }
 

@@ -142,7 +142,7 @@ namespace ppvr {
 			 * @param  n index of bit to clear.
 			 * @return {@code this & ~(1<<n)}
 			 */
-			void clearBit(int n);
+			void clearBit(const uint n);
 			
 		public:
 			/**
@@ -162,7 +162,7 @@ namespace ppvr {
 			 * @param  n index of bit to clear.
 			 * @return {@code this & ~(1<<n)}
 			 */
-			BigInt withoutBit(int n);
+			BigInt withoutBit(const uint n);
 		
 		public:
 			bool isZero() const;
