@@ -45,9 +45,10 @@ int main (int argc, char *argv[]) {
 	std::cout << "duration " << (duration / std::chrono::milliseconds(1)) << "ms\n";
 	
 	// RandomNumber Test
+	ppvr::math::Random& rnd = ppvr::math::Random::getForLocalThread();
 	for(int i = 0; i<100; i++) {
 		//std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
-		std::cout << "probablePrime: " << ppvr::math::SInfinitBigInt::probablePrime(1024).toStringDec() << " \n";
+		std::cout << "probablePrime: " << ppvr::math::SInfinitBigInt::probablePrime(1024, rnd).toStringDec() << " \n";
 	}
 	
 	

@@ -100,22 +100,22 @@ SInfinitBigInt& SInfinitBigInt::fromString(std::string str, const BIG_INT_WORD_T
 	return target;
 }
 
-SInfinitBigInt SInfinitBigInt::randomNumber(const uint& sizeInBit) {
+SInfinitBigInt SInfinitBigInt::randomNumber(const uint& sizeInBit, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
 	SInfinitBigInt res(0, requiredWords);
-	SInfinitBigInt::randomNumber(sizeInBit, res);
+	SInfinitBigInt::randomNumber(sizeInBit, rnd, res);
 	return res;
 }
 
-SInfinitBigInt SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound) {
+SInfinitBigInt SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(upperBound.bitLength());
 	SInfinitBigInt res(0, requiredWords);
-	SInfinitBigInt::randomNumber(upperBound, res);
+	SInfinitBigInt::randomNumber(upperBound, rnd, res);
 	return res;
 }
 
-SInfinitBigInt& SInfinitBigInt::randomNumber(const uint& sizeInBit, SInfinitBigInt &target) {
-	BigInt::randomNumber(sizeInBit, target);
+SInfinitBigInt& SInfinitBigInt::randomNumber(const uint& sizeInBit, Random& rnd, SInfinitBigInt &target) {
+	BigInt::randomNumber(sizeInBit, rnd, target);
 	if(target.isMagnitudeZero()) {
 		target.signum = 0;
 	} else {
@@ -124,14 +124,14 @@ SInfinitBigInt& SInfinitBigInt::randomNumber(const uint& sizeInBit, SInfinitBigI
 	return target;
 }
 
-SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, SInfinitBigInt &target) {
+SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, Random& rnd, SInfinitBigInt &target) {
 	if(upperBound.signum < 0) {
 		std::string msg = "ERROR upperBound: must be strictly greater than one";
 		//std::cerr << msg << std::endl;
 		throw std::runtime_error(msg);
 	}
 	
-	BigInt::randomNumber(upperBound, target);
+	BigInt::randomNumber(upperBound, rnd, target);
 	if(target.isMagnitudeZero()) {
 		target.signum = 0;
 	} else {
@@ -142,7 +142,7 @@ SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, S
 
 
 
-SInfinitBigInt SInfinitBigInt::probablePrime(const uint& bitLength) {
+SInfinitBigInt SInfinitBigInt::probablePrime(const uint& bitLength, Random& rnd) {
 	if (bitLength < 2) {
 		std::string msg = "ERROR probablePrime: bitLength < 2";
 		//std::cerr << msg << std::endl;
@@ -150,12 +150,12 @@ SInfinitBigInt SInfinitBigInt::probablePrime(const uint& bitLength) {
 	}
 	
 	return (bitLength < BIG_INT_SMALL_PRIME_THRESHOLD ?
-			smallPrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY) :
-			largePrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY)
+			smallPrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY, rnd) :
+			largePrime(bitLength, BIG_INT_DEFAULT_PRIME_CERTAINTY, rnd)
 			);
 }
 
-SInfinitBigInt SInfinitBigInt::smallPrime(const uint& bitLength, const uint& certainty) {
+SInfinitBigInt SInfinitBigInt::smallPrime(const uint& bitLength, const uint& certainty, Random& rnd) {
 	// Algorithm and comments adapted from Java java.math.BigInteger
 	
 	/*
@@ -198,7 +198,7 @@ SInfinitBigInt SInfinitBigInt::smallPrime(const uint& bitLength, const uint& cer
 	SInfinitBigInt p(0, requiredWords);
 	
 	while (true) {
-		SInfinitBigInt::randomNumber(bitLength, p);
+		SInfinitBigInt::randomNumber(bitLength, rnd, p);
 		p.setBit(bitLength-1); // Ensure exact length
 		
 		if (bitLength > 2) {
@@ -220,13 +220,13 @@ SInfinitBigInt SInfinitBigInt::smallPrime(const uint& bitLength, const uint& cer
 		}
 		
 		// Do expensive test if we survive pre-test (or it's inapplicable)
-		if (p.primeToCertainty(certainty)) {
+		if (p.primeToCertainty(certainty, rnd)) {
 			return p;
 		}
 	}
 }
 
-SInfinitBigInt SInfinitBigInt::largePrime(const uint& bitLength, const uint& certainty) {
+SInfinitBigInt SInfinitBigInt::largePrime(const uint& bitLength, const uint& certainty, Random& rnd) {
 	// A search with a BitSieve is  faster. (The java BigInt class uses such a surch algorithem.)
 	// However, a test for random numers should do it for the moment (it is simpler to implement).
 	// https://stackoverflow.com/questions/13665443/generate-random-prime-number-in-c-c-between-2-limits
@@ -235,20 +235,20 @@ SInfinitBigInt SInfinitBigInt::largePrime(const uint& bitLength, const uint& cer
 	// Algorithm and comments adapted from https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
 	SInfinitBigInt primeCandidate(0, requiredWords(bitLength));
 	while(true) {
-		SInfinitBigInt::lowLevelPrime(bitLength, primeCandidate);
-		if (primeCandidate.primeToCertainty(certainty)) {
+		SInfinitBigInt::lowLevelPrime(bitLength, rnd, primeCandidate);
+		if (primeCandidate.primeToCertainty(certainty, rnd)) {
 			return primeCandidate;
 		}
 	}
 }
 
-void SInfinitBigInt::lowLevelPrime(const uint& bitLength, SInfinitBigInt &target) {
+void SInfinitBigInt::lowLevelPrime(const uint& bitLength, Random& rnd, SInfinitBigInt &target) {
 	// Algorithm and comments adapted from https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
 	// Generate a prime candidate divisible by first primes
 	bool isLowLevelPrime(false);
 	while(!isLowLevelPrime) {
 		// Obtain a random number
-		SInfinitBigInt::randomNumber(bitLength, target);
+		SInfinitBigInt::randomNumber(bitLength, rnd, target);
 	
 		// Test divisibility by pre-generated primes
 		isLowLevelPrime = true;
@@ -261,7 +261,7 @@ void SInfinitBigInt::lowLevelPrime(const uint& bitLength, SInfinitBigInt &target
 	}
 }
  
-bool SInfinitBigInt::primeToCertainty(const uint certainty) {
+bool SInfinitBigInt::primeToCertainty(const uint certainty, Random& rnd) {
 	// Algorithm and comments adapted from Java java.math.BigInteger
 	
 	uint rounds = 0;
@@ -274,7 +274,7 @@ bool SInfinitBigInt::primeToCertainty(const uint certainty) {
 	if (sizeInBits < 100) {
 		rounds = 50;
 		rounds = n < rounds ? n : rounds;
-		return passesMillerRabin(rounds);
+		return passesMillerRabin(rounds, rnd);
 	}
 	
 	if (sizeInBits < 256) {
@@ -290,7 +290,7 @@ bool SInfinitBigInt::primeToCertainty(const uint certainty) {
 	}
 	rounds = n < rounds ? n : rounds;
 	
-	return passesMillerRabin(rounds) && passesLucasLehmer();
+	return passesMillerRabin(rounds, rnd) && passesLucasLehmer();
 }
 
 bool SInfinitBigInt::passesLucasLehmer() {
@@ -414,7 +414,7 @@ SInfinitBigInt SInfinitBigInt::lucasLehmerSequence(int z, const SInfinitBigInt& 
 	return u;
 }
 
-bool SInfinitBigInt::passesMillerRabin(int iterations) {
+bool SInfinitBigInt::passesMillerRabin(int iterations, Random& rnd) {
 	// Algorithm and comments adapted from Java java.math.BigInteger
 	
 	// Find a and m such that m is odd and this == 1 + 2**a * m
@@ -431,7 +431,7 @@ bool SInfinitBigInt::passesMillerRabin(int iterations) {
 		// Generate a uniform random on (1, this)
 		SInfinitBigInt b(0, this->getWordSize());
 		do {
-			SInfinitBigInt::randomNumber(this->bitLength(), b);
+			SInfinitBigInt::randomNumber(this->bitLength(), rnd, b);
 		} while (b <= SInfinitBigInt::ONE || b >= *this);
 		
 		int j = 0;
@@ -446,7 +446,7 @@ bool SInfinitBigInt::passesMillerRabin(int iterations) {
 	return true;
 }
 
-bool SInfinitBigInt::isProbablePrime(const uint certainty) {
+bool SInfinitBigInt::isProbablePrime(const uint certainty, Random& rnd) {
 	// Algorithm and comments adapted from Java java.math.BigInteger
 	if (certainty <= 0) {
 		return true;
@@ -459,7 +459,7 @@ bool SInfinitBigInt::isProbablePrime(const uint certainty) {
 		return false;
 	}
 	
-	return w.primeToCertainty(certainty);
+	return w.primeToCertainty(certainty, rnd);
 }
 
 

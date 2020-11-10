@@ -25,11 +25,11 @@ namespace ppvr {
 			static SInfinitBigInt& fromString(std::string str, const BIG_INT_WORD_TYPE base, SInfinitBigInt &target );
 			
 		public:
-			static SInfinitBigInt randomNumber(const uint& sizeInBit);
-			static SInfinitBigInt randomNumber(const SInfinitBigInt& upperBound);
+			static SInfinitBigInt randomNumber(const uint& sizeInBit, Random& rnd);
+			static SInfinitBigInt randomNumber(const SInfinitBigInt& upperBound, Random& rnd);
 		protected:
-			static SInfinitBigInt& randomNumber(const uint& sizeInBit, SInfinitBigInt &target);
-			static SInfinitBigInt& randomNumber(const SInfinitBigInt& upperBound, SInfinitBigInt &target);
+			static SInfinitBigInt& randomNumber(const uint& sizeInBit, Random& rnd, SInfinitBigInt &target);
+			static SInfinitBigInt& randomNumber(const SInfinitBigInt& upperBound, Random& rnd, SInfinitBigInt &target);
 			
 		private:
 			
@@ -56,7 +56,7 @@ namespace ppvr {
 			 * @see    #bitLength()
 			 * @since 1.4
 			 */
-			static SInfinitBigInt probablePrime(const uint& bitLength);
+			static SInfinitBigInt probablePrime(const uint& bitLength, Random& rnd);
 			
 		private:
 			/**
@@ -66,7 +66,7 @@ namespace ppvr {
 			 *
 			 * This method assumes bitLength > 1.
 			 */
-			static SInfinitBigInt smallPrime(const uint& bitLength, const uint& certainty);
+			static SInfinitBigInt smallPrime(const uint& bitLength, const uint& certainty, Random& rnd);
 			
 			
 			/**
@@ -75,13 +75,13 @@ namespace ppvr {
 			 * a sieve to eliminate most composites before using a more expensive
 			 * test.
 			 */
-			static SInfinitBigInt largePrime(const uint& bitLength, const uint& certainty);
+			static SInfinitBigInt largePrime(const uint& bitLength, const uint& certainty, Random& rnd);
 			
 			/**
 			 * This step is a a low level primality test which requires the pre-calculation of the first few hundred primes (using Sieve of Eratosthenes).
 			 * The prime candidate is divided by the pre-generated primes to check for divisibility. If the prime candidate is perfectly divisible by any of these pre-generated primes, the test fails and a new prime candidate must be picked and tested. This is repeated as long as a value which is coprime to all the primes in our generated primes list is found
 			 */
-			static void lowLevelPrime(const uint& bitLength, SInfinitBigInt &target);
+			static void lowLevelPrime(const uint& bitLength, Random& rnd, SInfinitBigInt &target);
 			
 			//static int getPrimeSearchLen(int bitLength);
 			
@@ -99,7 +99,7 @@ namespace ppvr {
 			 * @return {@code true} if this BigInteger is probably prime,
 			 *         {@code false} if it's definitely composite.
 			 */
-			bool primeToCertainty(const uint certainty);
+			bool primeToCertainty(const uint certainty, Random& rnd);
 			
 			/**
 			 * Returns true if this BigInteger is a Lucas-Lehmer probable prime.
@@ -126,7 +126,7 @@ namespace ppvr {
 			 * This BigInteger is a positive, odd number greater than 2.
 			 * iterations<=50.
 			 */
-			bool passesMillerRabin(int iterations);
+			bool passesMillerRabin(int iterations, Random& rnd);
 			
 		public:
 			/**
@@ -143,7 +143,7 @@ namespace ppvr {
 			 * @return {@code true} if this BigInteger is probably prime,
 			 *         {@code false} if it's definitely composite.
 			 */
-			bool isProbablePrime(const uint certainty);
+			bool isProbablePrime(const uint certainty, Random& rnd);
 			
 		// ----- member variables -----
 		private:

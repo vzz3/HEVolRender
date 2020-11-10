@@ -109,36 +109,21 @@ BigInt& BigInt::fromString(const std::string& str, const BIG_INT_WORD_TYPE base,
 
 // ----- statics rendome -----
 
-std::random_device BigInt::rdev{};
-BigInt::RandomGenerator BigInt::randEngine{rdev};
-
-inline void BigInt::randomFill(void * buf, std::size_t count) {
-	static constexpr std::size_t word_size = sizeof(typename BigInt::RandomGenerator::result_type);
-	unsigned char* p = (unsigned char*)buf;
-	unsigned char* limit = p + count;
-	while (p < limit) {
-		auto word = BigInt::randEngine();
-		auto n = std::min(static_cast<std::size_t>(limit - p), word_size);
-		std::memcpy(p, &word, n);
-		p += n;
-	}
-}
-
-BigInt BigInt::randomNumber(const uint& sizeInBit) {
+BigInt BigInt::randomNumber(const uint& sizeInBit, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(sizeInBit);
 	BigInt res(0, requiredWords);
-	BigInt::randomNumber(sizeInBit, res);
+	BigInt::randomNumber(sizeInBit, rnd, res);
 	return res;
 }
 
-BigInt BigInt::randomNumber(const BigInt& upperBound) {
+BigInt BigInt::randomNumber(const BigInt& upperBound, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BigInt::requiredWords(upperBound.bitLength());
 	BigInt res(0, requiredWords);
-	BigInt::randomNumber(upperBound, res);
+	BigInt::randomNumber(upperBound, rnd, res);
 	return res;
 }
 
-BigInt& BigInt::randomNumber(const uint& sizeInBit, BigInt &target) {
+BigInt& BigInt::randomNumber(const uint& sizeInBit, Random& rnd, BigInt &target) {
 	if(sizeInBit < 1) {
 		std::string msg = "ERROR randomNumber: the sizeInBit parameter must be greater then 0 ";
 		//std::cerr << msg << std::endl;
@@ -165,7 +150,7 @@ BigInt& BigInt::randomNumber(const uint& sizeInBit, BigInt &target) {
 			throw std::runtime_error(msg);
 		}
 		*/
-		BigInt::randomFill(&(target.value[0]), requiredBytes);
+		rnd.randomFill(&(target.value[0]), requiredBytes);
 		
 		// set new theoretical word size
 		//target.wordSize = requiredWords;
@@ -184,7 +169,7 @@ BigInt& BigInt::randomNumber(const uint& sizeInBit, BigInt &target) {
 	return target;
 }
 
-BigInt& BigInt::randomNumber(const BigInt& upperBound, BigInt &target) {
+BigInt& BigInt::randomNumber(const BigInt& upperBound, Random& rnd, BigInt &target) {
 	if(upperBound.isZero()) {
 		std::string msg = "ERROR upperBound: must be strictly greater than one";
 		//std::cerr << msg << std::endl;
@@ -193,7 +178,7 @@ BigInt& BigInt::randomNumber(const BigInt& upperBound, BigInt &target) {
 	
 	uint bits = upperBound.bitLength();
 	do {
-		BigInt::randomNumber(bits, target);
+		BigInt::randomNumber(bits, rnd, target);
 		// make sure r <= upperBound (modulus)
 	} while (target >= upperBound);
 	return target;

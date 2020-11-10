@@ -5,8 +5,7 @@
 
 #include "BigInt_wordDev.h"
 
-#include "../../include/isaac-engine/isaac.h"
-#include <random>
+#include "Random.hpp"
 /*
 namespace utils {
 	template<std::size_t Alpha = 8>
@@ -41,6 +40,7 @@ namespace ppvr {
 			static BigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, BigInt &target );
 			
 		// ----- statics rendome -----
+			/*
 		private:
 			static std::random_device rdev;
 			
@@ -55,14 +55,14 @@ namespace ppvr {
 			static RandomGenerator randEngine;
 			
 			static void randomFill(void * buf, std::size_t count);
-			
+			*/
 		public:
 			
-			static BigInt randomNumber(const uint& sizeInBit);
-			static BigInt randomNumber(const BigInt& upperBound);
+			static BigInt randomNumber(const uint& sizeInBit, Random& rnd);
+			static BigInt randomNumber(const BigInt& upperBound, Random& rnd);
 		protected:
-			static BigInt& randomNumber(const uint& sizeInBit, BigInt &target);
-			static BigInt& randomNumber(const BigInt& upperBound, BigInt &target);
+			static BigInt& randomNumber(const uint& sizeInBit, Random& rnd, BigInt &target);
+			static BigInt& randomNumber(const BigInt& upperBound, Random& rnd, BigInt &target);
 			
 		protected:
 			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
