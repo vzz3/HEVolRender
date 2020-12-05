@@ -6,6 +6,15 @@
 #include "BigInt_wordDev.h"
 
 #include "Random.hpp"
+
+/*
+ UFixBigInt:		Unsigned Fixed     width Big Integer (only stack memory)
+ SArbBigInt:		Signed   Fixed     width Big Integer (only stack memory)
+ UArbBigInt:		Unsigned Arbitrary width Big Integer (required heap memory)
+ SArbBigInt:		Signed   Arbitrary width Big Integer (required heap memory)
+ 
+ */
+
 /*
 namespace utils {
 	template<std::size_t Alpha = 8>

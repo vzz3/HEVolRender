@@ -8,7 +8,7 @@ SecureKey SecureKey::create(uint modulusBitLength) {
 	if (modulusBitLength < 8 || modulusBitLength % 8 != 0) {
 		std::string msg = "modulusLength must be a multiple of 8";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	// Find two primes p and q whose multiple has the same number of bits

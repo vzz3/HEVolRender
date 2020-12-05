@@ -127,7 +127,7 @@ BigInt& BigInt::randomNumber(const uint& sizeInBit, Random& rnd, BigInt &target)
 	if(sizeInBit < 1) {
 		std::string msg = "ERROR randomNumber: the sizeInBit parameter must be greater then 0 ";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	// reserve required words
@@ -173,7 +173,7 @@ BigInt& BigInt::randomNumber(const BigInt& upperBound, Random& rnd, BigInt &targ
 	if(upperBound.isZero()) {
 		std::string msg = "ERROR upperBound: must be strictly greater than one";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	uint bits = upperBound.bitLength();
@@ -1001,7 +1001,7 @@ BigInt BigInt::operator- (const BigInt& other) const {
 	if(other > *this) {
 		std::string msg = "ERROR substract BigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
 		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	BigInt result(0,this->wordSize);
 	this->sub(other, 0, result);
@@ -1348,7 +1348,7 @@ BIG_INT_WORD_TYPE BigInt::divInt(BIG_INT_WORD_TYPE divisor, BigInt& result) cons
 	if(divisor == 0) {
 		std::string msg = "BigInt devision by (uint)0.";
 		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	if( divisor == 1 ) {
@@ -1625,7 +1625,7 @@ void BigInt::divKnuth(const BigInt& divisor, BigInt &result, BigInt& remainder) 
 	if(divisor == BigInt::ZERO) {
 		std::string msg = "BigInt devision by (BigInt)0.";
 		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	if(dividend < divisor) {
 		// set the reminder to this value and replace this with "0";
@@ -1726,7 +1726,7 @@ BigInt BigInt::pow(BigInt pow) const {
 			// we don't define zero^zero
 			std::string msg = "BigInt zero^zero is not defined.";
 			std::cerr << msg << std::endl;
-			throw std::runtime_error(msg);
+			throw std::invalid_argument(msg);
 		}
 		
 		// 0^(+something) is zero

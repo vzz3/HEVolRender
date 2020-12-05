@@ -230,10 +230,17 @@ TEST_CASE( "signed infinit big integer comparisons", "[SIBigint]" ) {
 	REQUIRE( SInfinitBigInt(BigInt::ZERO, false) == SInfinitBigInt(BigInt::ZERO, true) );
 	REQUIRE( SInfinitBigInt(BigInt::ONE, false) != SInfinitBigInt(BigInt::ONE, true) );
 	
-	REQUIRE( SInfinitBigInt(1, false) > SInfinitBigInt(1, true) );
-	REQUIRE( SInfinitBigInt(1, false) >= SInfinitBigInt(1, true) );
-	REQUIRE( SInfinitBigInt(1, true) < SInfinitBigInt(1, false) );
-	REQUIRE( SInfinitBigInt(1, true) <= SInfinitBigInt(1, false) );
+	REQUIRE( SInfinitBigInt(1, false) >  SInfinitBigInt(1, true ) );
+	REQUIRE( SInfinitBigInt(1, false) >= SInfinitBigInt(1, true ) );
+	REQUIRE( SInfinitBigInt(1, true ) <  SInfinitBigInt(1, false) );
+	REQUIRE( SInfinitBigInt(1, true ) <= SInfinitBigInt(1, false) );
+	
+	REQUIRE( SInfinitBigInt(1, true) >  SInfinitBigInt(2, true) ); // -1 >  -2
+	REQUIRE( SInfinitBigInt(1, true) >= SInfinitBigInt(2, true) ); // -1 >= -2
+	REQUIRE( SInfinitBigInt(2, true) >= SInfinitBigInt(2, true) ); // -2 >= -2
+	REQUIRE( SInfinitBigInt(2, true) <  SInfinitBigInt(1, true) ); // -2 <  -1
+	REQUIRE( SInfinitBigInt(2, true) <= SInfinitBigInt(1, true) ); // -2 <= -1
+	REQUIRE( SInfinitBigInt(2, true) <= SInfinitBigInt(2, true) ); // -2 <= -2
 	
 	REQUIRE( SInfinitBigInt(1, false) > SInfinitBigInt(BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), true) );
 	REQUIRE( SInfinitBigInt(1, false) >= SInfinitBigInt(BigInt::fromString("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), true) );

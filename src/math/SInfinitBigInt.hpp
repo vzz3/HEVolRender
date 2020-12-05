@@ -6,6 +6,9 @@
 
 namespace ppvr {
 	namespace math {
+		/**
+		 * Signed Arbitrary (Arb) length Big Integer class (length is not limited, not fixed-width(Fix) )
+		 */
 		class SInfinitBigInt: protected BigInt {
 			
 		// ----- statics -----
@@ -15,9 +18,9 @@ namespace ppvr {
 				return os;
 			}
 			
-			static SInfinitBigInt fromInt64(const int64_t& uint64Val);
+			static SInfinitBigInt fromInt64(const int64_t& int64Val);
 		protected:
-			static SInfinitBigInt& fromInt64(const int64_t& uint64Val, SInfinitBigInt &target );
+			static SInfinitBigInt& fromInt64(const int64_t& int64Val, SInfinitBigInt &target );
 			
 		public:
 			static SInfinitBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
@@ -149,6 +152,11 @@ namespace ppvr {
 		private:
 			int_fast8_t signum;
 			
+		public:
+			int_fast8_t getSignum() const {
+				return this->signum;
+			}
+			
 		// ----- constructors -----
 		public:
 			SInfinitBigInt();
@@ -196,6 +204,21 @@ namespace ppvr {
 		public:
 			bool isZero() const;
 			bool isOne() const;
+			
+			/**
+			 * Returns a BigInteger whose value is the absolute value of this
+			 * BigInteger.
+			 *
+			 * @return {@code abs(this)}
+			 */
+			SInfinitBigInt abs() const;
+			
+			/**
+			 * Returns a BigInteger whose value is {@code (-this)}.
+			 *
+			 * @return {@code -this}
+			 */
+			SInfinitBigInt negate() const;
 			
 		// ----- shift left -----
 		protected:

@@ -14,14 +14,15 @@ print
 
 DONE:
 *) copied every text I have to the DA
-*) finishe implementation of an infinit (variabl) length Signed Big Int Class (add, sub, mul, div, mod, pow, sqrt, modPow, shiftLeft, shiftRight, sdetBit, clearBit, and many more utility methods)
+*) finish implementation of an infinite (variable) length Signed Big Int Class (add, sub, mul, div, mod, pow, sqrt, modPow, shiftLeft, shiftRight, sdetBit, clearBit, and many more utility methods)
 *) modInverse / extended Euclidean Algorithm (gcd)
-*) implement fast psydo random number generator that should be save from a security standpoint that can generat int with a specific bit length
-*) implement a large prime number generator that can create 1024 bit long primes within some secounds. This is far from world record, but should be fine for the moment.
-*) Based on those classe I implement Paillier key create, encrypt, decrypt, add and mul methods.
+*) implement fast pseudo random number generator that should be save from a security standpoint that can generate int with a specific bit length
+*) implement a large prime number generator that can create 1024 bit long primes within some seconds. This is far from world record, but should be fine for the moment.
+*) Based on those classes I implement Paillier key create, encrypt, decrypt, add and multiplay methods.
 *) more than 1500 unit test
 
 TODO:
 *) Paillier Floating Point Classes
-*) Fixed Len BigInt Classes that can bee implementet 1:1 in a GPU shader
+*) Fixed Length BigInt Classes that can bee implemented 1:1 in a GPU shader
+*) Vulcan shader preprocessor that can to something like C++ templates?
 *) Are there any limits for the size of a shader????

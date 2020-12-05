@@ -36,20 +36,20 @@ const SInfinitBigInt SInfinitBigInt::FirstPrimes[] = {
 	SInfinitBigInt::fromInt64(349)
 };
 
-SInfinitBigInt SInfinitBigInt::fromInt64(const int64_t& uint64Val) {
+SInfinitBigInt SInfinitBigInt::fromInt64(const int64_t& int64Val) {
 	SInfinitBigInt res(0);
-	SInfinitBigInt::fromInt64(uint64Val, res);
+	SInfinitBigInt::fromInt64(int64Val, res);
 	return res;
 }
 
-SInfinitBigInt& SInfinitBigInt::fromInt64(const int64_t& uint64Val, SInfinitBigInt &target ) {
-	BigInt::fromUint64(abs(uint64Val), target);
+SInfinitBigInt& SInfinitBigInt::fromInt64(const int64_t& int64Val, SInfinitBigInt &target ) {
+	BigInt::fromUint64(std::abs(int64Val), target);
 	if(target.isMagnitudeZero()) {
 		target.signum = 0;
 	} else {
-		if(uint64Val > 0) {
+		if(int64Val > 0) {
 			target.signum = 1;
-		} else if(uint64Val < 0) {
+		} else if(int64Val < 0) {
 			target.signum = -1;
 		}
 	}
@@ -128,7 +128,7 @@ SInfinitBigInt& SInfinitBigInt::randomNumber(const SInfinitBigInt& upperBound, R
 	if(upperBound.signum < 0) {
 		std::string msg = "ERROR upperBound: must be strictly greater than one";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	BigInt::randomNumber(upperBound, rnd, target);
@@ -146,7 +146,7 @@ SInfinitBigInt SInfinitBigInt::probablePrime(const uint& bitLength, Random& rnd)
 	if (bitLength < 2) {
 		std::string msg = "ERROR probablePrime: bitLength < 2";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	return (bitLength < BIG_INT_SMALL_PRIME_THRESHOLD ?
@@ -579,6 +579,18 @@ bool SInfinitBigInt::isOne() const {
 	return BigInt::isOne();
 }
 
+SInfinitBigInt SInfinitBigInt::abs() const {
+	SInfinitBigInt res(*this);
+	res.setAbs();
+	return res;
+}
+
+SInfinitBigInt SInfinitBigInt::negate() const {
+	SInfinitBigInt res(*this);
+	res.setNegate();
+	return res;
+}
+
 // ----- shift left -----
 BIG_INT_WORD_TYPE SInfinitBigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const bool resize) {
 	return BigInt::rcl(bits, c, resize);
@@ -797,7 +809,7 @@ SInfinitBigInt SInfinitBigInt::sqrt() const {
 		//throw new ArithmeticException("BigInteger: modulus not positive");
 		std::string msg = "ERROR SInfinitBigInt: can not claculate sqrt from negative number (no imaginary suport)!";
 		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	return SInfinitBigInt(BigInt::sqrt(), false);
@@ -817,7 +829,7 @@ SInfinitBigInt SInfinitBigInt::modInverse(const SInfinitBigInt & m) const {
 	if (m.isZero()) {
 		std::string msg = "ERROR BigInt: modulus not positive!";
 		//std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	if (m.isOne()) {
@@ -982,7 +994,7 @@ SInfinitBigInt SInfinitBigInt::modPow(const SInfinitBigInt &exponent, const SInf
 		//throw new ArithmeticException("BigInteger: modulus not positive");
 		std::string msg = "ERROR SInfinitBigInt: modulus not positive!";
 		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
+		throw std::invalid_argument(msg);
 	}
 	
 	// Trivial cases: exponent = 0
@@ -1171,7 +1183,11 @@ bool SInfinitBigInt::operator< (const SInfinitBigInt& other) const {
 		return false;
 	}
 	
-	return BigInt::operator<(other);
+	if(this->signum < 0) {
+		return !(BigInt::operator<=(other));
+	} else {
+		return BigInt::operator<(other);
+	}
 }
 
 bool SInfinitBigInt::operator<= (const SInfinitBigInt& other) const {
