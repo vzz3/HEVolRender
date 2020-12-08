@@ -47,11 +47,10 @@ namespace ppvr {
 				const SInfinitBigInt & getGenerator() const {
 					return _generator;
 				}
-				
-				const SInfinitBigInt & getModulusSquared() const {
+				*/
+				const SInfinitBigInt& getModulusSquared() const {
 					return _modulusSquared;
 				}
-				*/
 				
 				
 				/**
@@ -141,6 +140,7 @@ namespace ppvr {
 				*/
 				
 				bool operator== (const PublicKey& other) const;
+				bool operator!= (const PublicKey& other) const;
 				
 			};
 		}

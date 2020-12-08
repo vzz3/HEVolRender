@@ -20,6 +20,14 @@ namespace ppvr {
 				//DecodeException( const logic_error& other ) noexcept: std::logic_error(other) {}
 				
 			};
+			
+			struct PaillierKeyMismatchException: public std::logic_error {
+				PaillierKeyMismatchException( const std::string& what_arg ): std::logic_error(what_arg) {}
+				PaillierKeyMismatchException( const char* what_arg ): std::logic_error(what_arg) {}
+				PaillierKeyMismatchException( const logic_error& other ): std::logic_error(other) {}
+				//DecodeException( const logic_error& other ) noexcept: std::logic_error(other) {}
+				
+			};
 		}
 	}
 }

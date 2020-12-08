@@ -10,7 +10,7 @@ using namespace ppvr::paillier::math;
 
 // https://github.com/data61/python-paillier/blob/master/phe/encoding.py
 
-EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedEncoding, const int_fast32_t yPrecision, const int_fast32_t yBase)
+EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedEncoding, const int_fast32_t yPrecision, const uint_fast32_t yBase)
 	: pk(yPK)
 	, signedEncoding(ySignedEncoding)
 	, precision(yPrecision)
@@ -162,7 +162,7 @@ SInfinitBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) con
 
 SInfinitBigInt EncodingScheme::decodeBigInt(const EncodedNumber& yEncoded) const {
 	SInfinitBigInt significand = getSignificand(yEncoded);
-	return significand * SInfinitBigInt::fromInt64(base).pow(yEncoded.exponent);
+	return significand * SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(yEncoded.exponent));
 }
 
 double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
@@ -235,6 +235,10 @@ int64_t EncodingScheme::decodeInt64(const EncodedNumber& yEncoded) const {
 		throw new DecodeException("Decoded value cannot be represented as long.");
 	}
 	return decoded.toInt64();
+}
+
+SInfinitBigInt EncodingScheme::getRescalingFactor(const int32_t expDiff) const {
+	return SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(expDiff));
 }
 
 bool EncodingScheme::operator== (const EncodingScheme& other) const {

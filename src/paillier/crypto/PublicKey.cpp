@@ -56,3 +56,7 @@ bool PublicKey::operator== (const PublicKey& other) const {
 	return this == &other || modulus == other.modulus;
 }
 
+bool PublicKey::operator!= (const PublicKey& other) const {
+	return !(this->operator==(other));
+}
+

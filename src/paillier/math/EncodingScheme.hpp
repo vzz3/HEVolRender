@@ -30,7 +30,7 @@ namespace ppvr {
 				/**
 				 * The base used to compute encoding.
 				 */
-				const int_fast32_t base;
+				const uint_fast32_t base;
 				
 				/**
 				 * The result of log<sub>2</sub>base.
@@ -67,13 +67,19 @@ namespace ppvr {
 				
 			public:
 				/**
-				 * Constructs an encoded floating point number number.
+				 * Constructs a floating point encoding sheme
 				 *
-				 * @param value of the encoded number must be a non-negative integer less than the modulus of the public key.
-				 * @param exponent of the encoded number.
+				 * @param yPK
+				 * @param ySignedEncoding
+				 * @param yPrecision
+				 * @param yBase
 				 */
-				EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedEncoding, const int_fast32_t yPrecision, const int_fast32_t yBase);
+				EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedEncoding, const int_fast32_t yPrecision, const uint_fast32_t yBase);
 				~EncodingScheme();
+				
+				const crypto::PublicKey getPublicKey() const {
+					return pk;
+				}
 				
 				/**
 				 * Checks whether this EncodingScheme supports signed numbers.
@@ -95,7 +101,7 @@ namespace ppvr {
 					return !signedEncoding;
 				}
 				
-				int_fast32_t getBase() const {
+				uint_fast32_t getBase() const {
 					return base;
 				}
 				
@@ -234,6 +240,17 @@ namespace ppvr {
 				 * @throws DecodeException if the {@code encoded} cannot be decoded.
 				 */
 				int64_t decodeInt64(const EncodedNumber& yEncoded) const;
+				
+				/**
+				 * Returns the rescaling factor to re-encode an {@code EncodedNumber} using the same {@code base}
+				 * but with a different {@code exponent}. The rescaling factor is computed as <code>base</code><sup>expDiff</sup>.
+				 *
+				 * @param expDiff the exponent to for the new rescaling factor.
+				 * @return the rescaling factor.
+				 */
+				SInfinitBigInt getRescalingFactor(const int32_t expDiff) const;
+				
+				
 				
 				bool operator== (const EncodingScheme& other) const;
 				

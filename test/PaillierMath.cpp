@@ -1,6 +1,7 @@
 #include "../include/catch2/catch.hpp"
 #include "../src/paillier/crypto/SecureKey.hpp"
 #include "../src/paillier/math/EncodingScheme.hpp"
+#include "../src/paillier/math/PaillierContext.hpp"
 
 #include <iostream>
 
@@ -10,6 +11,8 @@ using ppvr::paillier::crypto::SecureKey;
 using ppvr::paillier::crypto::PublicKey;
 using ppvr::paillier::math::EncodingScheme;
 using ppvr::paillier::math::EncodedNumber;
+using ppvr::paillier::math::EncryptedNumber;
+using ppvr::paillier::math::PaillierContext;
 using ppvr::math::SInfinitBigInt;
 
 struct {
@@ -99,7 +102,16 @@ TEST_CASE( "paillier FP encode integer", "[paillierMath]" ) {
 	REQUIRE( t5s.mantissa == ( sk.publicKey.modulus - SInfinitBigInt::fromInt64(186574268)) );
 	REQUIRE( t5s.exponent == 0);
 	
+	// test mantissa optimization
+	EncodedNumber t10s = esS.encode(SInfinitBigInt::fromString("987654321000", 10));
+	REQUIRE( t10s.mantissa == SInfinitBigInt::fromString("987654321", 10) );
+	REQUIRE( t10s.exponent == 3);
 	
+	EncodedNumber t11s = esS.encode(345010000);
+	REQUIRE( t11s.mantissa == SInfinitBigInt::fromInt64(34501) );
+	REQUIRE( t11s.exponent == 4);
+	
+	// test big things
 	SInfinitBigInt nineByteVal = SInfinitBigInt::fromString("-99 88 77 66 55 44 33 22 11", 16); // 9 Bytes
 	REQUIRE(nineByteVal.bitLength() * 3 < modulusLen); // Make shure pow(3) is posible without overflow. If this test fails the test parameters are wrong (modulus to smal)!
 	EncodedNumber t6s = esS.encode(nineByteVal);
@@ -113,6 +125,8 @@ TEST_CASE( "paillier FP encode integer", "[paillierMath]" ) {
 	EncodedNumber t8s = esS.encode(nineByteVal.pow(3));
 	REQUIRE( t8s.mantissa == ( sk.publicKey.modulus + nineByteVal.pow(3)) );
 	REQUIRE( t8s.exponent == 0);
+	
+	
 	
 	// Test overflows for signed and unsigned encodings
 	REQUIRE_NOTHROW( esU.encode(SInfinitBigInt::fromString("1", 2) << (modulusLen-1)) );
@@ -174,7 +188,6 @@ TEST_CASE( "paillier FP encode float", "[paillierMath]" ) {
 	EncodedNumber t8u = esU.encode(123.456, 0.001);
 	REQUIRE( t8u.mantissa == SInfinitBigInt::fromInt64(123456));
 	REQUIRE( t8u.exponent == -3);
-	
 	
 	// signed encoding
 	EncodingScheme esS(sk.publicKey, true,  precision, 10);
@@ -356,4 +369,279 @@ TEST_CASE( "paillier FP decode float", "[paillierMath]" ) {
 	REQUIRE( esSbas10.decodeDouble( EncodedNumber(esSbas10.encode(t2bigInt).mantissa, -31) ) == (std::stod(t2bigInt.toStringDec())) / std::pow(10, 31) ); // => 147.2229330324
 	//REQUIRE( esSbas10.decodeDouble( EncodedNumber(esSbas10.encode(t2bigInt).mantissa, -32) ) == (std::stod(t2bigInt.toStringDec())) / std::pow(10, 32) ); // => 14.7222933032 ??????? is not equal????
 	//REQUIRE( esSbas10.decodeDouble( EncodedNumber(esSbas10.encode(t2bigInt).mantissa, -33) ) == (std::stod(t2bigInt.toStringDec())) / std::pow(10, 33) ); // => 1.4722293303 ??????? is not equal????
+}
+
+TEST_CASE( "paillier FP paillier context encrypt/decrypt", "[paillierMath]" ) {
+	const size_t modulusLen = TestFixtures.sk256modulusLen;
+	const size_t precision = TestFixtures.sk256modulusLen;
+	const SecureKey sk = TestFixtures.sk256;
+	
+	const PaillierContext pcS(sk.publicKey, true, precision, 10);
+	//const EncodingScheme& esS = pcS.encoder;
+	
+	
+	EncodedNumber sEN1 = pcS.encode(3458);
+	EncryptedNumber sEN1c1 = pcS.encrypt(sEN1, false);
+	EncryptedNumber sEN1c2 = pcS.encrypt(sEN1, false);
+	EncryptedNumber sEN1co1 = pcS.encrypt(sEN1, true);
+	EncryptedNumber sEN1co2 = pcS.encrypt(sEN1, true);
+	REQUIRE( sEN1c1.exponent == 0 );
+	REQUIRE( sEN1c2.exponent == 0 );
+	REQUIRE( sEN1co1.exponent == 0 );
+	REQUIRE( sEN1co1.exponent == 0 );
+	REQUIRE( sEN1c1.ciphertext == sEN1c2.ciphertext );
+	REQUIRE( sEN1c1.ciphertext != sEN1co1.ciphertext );
+	REQUIRE( sEN1c1.ciphertext != sEN1co2.ciphertext );
+	REQUIRE( sEN1c2.ciphertext != sEN1co1.ciphertext );
+	REQUIRE( sEN1c2.ciphertext != sEN1co2.ciphertext );
+	REQUIRE( pcS.decrypt(sk, sEN1c1) == sEN1);
+	REQUIRE( pcS.decrypt(sk, sEN1c2) == sEN1);
+	REQUIRE( pcS.decrypt(sk, sEN1co2) == sEN1);
+	REQUIRE( pcS.decrypt(sk, sEN1co2) == sEN1);
+	
+	SInfinitBigInt sArbInt1 = SInfinitBigInt::fromString("-345464564126928411397", 10);
+	EncryptedNumber sArbInt1c1 = pcS.encrypt(sArbInt1, false);
+	EncryptedNumber sArbInt1c2 = pcS.encrypt(sArbInt1, false);
+	EncryptedNumber sArbInt1co1 = pcS.encrypt(sArbInt1, true);
+	EncryptedNumber sArbInt1co2 = pcS.encrypt(sArbInt1, true);
+	REQUIRE( sArbInt1c1.exponent == 0 );
+	REQUIRE( sArbInt1c2.exponent == 0 );
+	REQUIRE( sArbInt1co1.exponent == 0 );
+	REQUIRE( sArbInt1co1.exponent == 0 );
+	REQUIRE( sArbInt1c1.ciphertext == sArbInt1c2.ciphertext );
+	REQUIRE( sArbInt1c1.ciphertext != sArbInt1co1.ciphertext );
+	REQUIRE( sArbInt1c1.ciphertext != sArbInt1co2.ciphertext );
+	REQUIRE( sArbInt1c2.ciphertext != sArbInt1co1.ciphertext );
+	REQUIRE( sArbInt1c2.ciphertext != sArbInt1co2.ciphertext );
+	REQUIRE( pcS.decodeBigInt( pcS.decrypt(sk, sArbInt1c1) ) == sArbInt1);
+	REQUIRE( pcS.decodeBigInt( pcS.decrypt(sk, sArbInt1c2) ) == sArbInt1);
+	REQUIRE( pcS.decodeBigInt( pcS.decrypt(sk, sArbInt1co1) ) == sArbInt1);
+	REQUIRE( pcS.decodeBigInt( pcS.decrypt(sk, sArbInt1co2) ) == sArbInt1);
+	
+	int64_t sInt1 = -3454645641269284113;
+	EncryptedNumber sInt1c1 = pcS.encrypt(sInt1, false);
+	EncryptedNumber sInt1c2 = pcS.encrypt(sInt1, false);
+	EncryptedNumber sInt1co1 = pcS.encrypt(sInt1, true);
+	EncryptedNumber sInt1co2 = pcS.encrypt(sInt1, true);
+	REQUIRE( sInt1c1.exponent == 0 );
+	REQUIRE( sInt1c2.exponent == 0 );
+	REQUIRE( sInt1co1.exponent == 0 );
+	REQUIRE( sInt1co1.exponent == 0 );
+	REQUIRE( sInt1c1.ciphertext == sInt1c2.ciphertext );
+	REQUIRE( sInt1c1.ciphertext != sInt1co1.ciphertext );
+	REQUIRE( sInt1c1.ciphertext != sInt1co2.ciphertext );
+	REQUIRE( sInt1c2.ciphertext != sInt1co1.ciphertext );
+	REQUIRE( sInt1c2.ciphertext != sInt1co2.ciphertext );
+	REQUIRE( pcS.decodeInt64( pcS.decrypt(sk, sInt1c1) ) == sInt1);
+	REQUIRE( pcS.decodeInt64( pcS.decrypt(sk, sInt1c2) ) == sInt1);
+	REQUIRE( pcS.decodeInt64( pcS.decrypt(sk, sInt1co1) ) == sInt1);
+	REQUIRE( pcS.decodeInt64( pcS.decrypt(sk, sInt1co2) ) == sInt1);
+	
+	double double1 = -3637.123;
+	int32_t exp1 = -2;
+	double precision1 = std::pow(10.0, exp1);
+	double double1res = -3637.12;
+	EncryptedNumber double1c1 = pcS.encrypt(double1, precision1, false);
+	EncryptedNumber double1c2 = pcS.encrypt(double1, precision1, false);
+	EncryptedNumber double1co1 = pcS.encrypt(double1, precision1, true);
+	EncryptedNumber double1co2 = pcS.encrypt(double1, precision1, true);
+	REQUIRE( double1c1.exponent == exp1 );
+	REQUIRE( double1c2.exponent == exp1 );
+	REQUIRE( double1co1.exponent == exp1 );
+	REQUIRE( double1co1.exponent == exp1 );
+	REQUIRE( double1c1.ciphertext == double1c2.ciphertext );
+	REQUIRE( double1c1.ciphertext != double1co1.ciphertext );
+	REQUIRE( double1c1.ciphertext != double1co2.ciphertext );
+	REQUIRE( double1c2.ciphertext != double1co1.ciphertext );
+	REQUIRE( double1c2.ciphertext != double1co2.ciphertext );
+	REQUIRE( pcS.decodeDouble( pcS.decrypt(sk, double1c1) ) == double1res);
+	REQUIRE( pcS.decodeDouble( pcS.decrypt(sk, double1c2) ) == double1res);
+	REQUIRE( pcS.decodeDouble( pcS.decrypt(sk, double1co1) ) == double1res);
+	REQUIRE( pcS.decodeDouble( pcS.decrypt(sk, double1co2) ) == double1res);
+}
+
+TEST_CASE( "paillier FP paillier context add", "[paillierMath]" ) {
+	const size_t modulusLen = TestFixtures.sk256modulusLen;
+	const size_t precision = TestFixtures.sk256modulusLen;
+	const SecureKey sk = TestFixtures.sk256;
+	
+	const PaillierContext pcS(sk.publicKey, true, precision, 10);
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(0), pcS.encrypt(0)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(0), pcS.encrypt(1)) )) == 1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1), pcS.encrypt(0)) )) == 1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1), pcS.encrypt(1)) )) == 2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(-1), pcS.encrypt(1)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1), pcS.encrypt(-1)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(-2), pcS.encrypt(-1)) )) == -3 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(-2), pcS.encrypt(1)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1), pcS.encrypt(-2)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1284680 ), pcS.encrypt(98765432   )) )) == 1284680  + 98765432    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(12846800), pcS.encrypt(98765432   )) )) == 12846800 + 98765432    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1284680 ), pcS.encrypt(98765432000)) )) == 1284680  + 98765432000 );
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1 , true), pcS.encrypt(2, true)) )) == 3 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1 , true), pcS.encrypt(-2, true)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.add(pcS.encrypt(1284680 , true), pcS.encrypt(98765432000, true)) )) == 1284680  + 98765432000 );
+	
+	
+	// encrypted + encrypted
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.01 , false), pcS.encrypt( 0.234, 0.01 , false)) )) == 1.350 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.01 , false), pcS.encrypt( 0.234, 0.001, false)) )) == 1.354 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.001, false), pcS.encrypt( 0.234, 0.01 , false)) )) == 1.353 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 1    , true ), pcS.encrypt( 0.234, 0.01 , true )) )) == 1.23  );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 4.673, 0.001, true ), pcS.encrypt(-9.731, 0.001, true )) )) == 4.673 - 9.731   );
+	
+	// encrypted + encoded
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.01 )) )) == 1.350 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.001)) )) == 1.354 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.001, false), pcS.encode( 0.234, 0.01 )) )) == 1.353 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 1    , true ), pcS.encode( 0.234, 0.01 )) )) == 1.23  );
+	REQUIRE( (double(uint64_t(pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encrypt( 1.123, 0.1  , false), pcS.encode( 0.100, 0.001)) )) * 10000.0)))/10000.0 == 1.2   ); // test canShift optimzation of PaillierContext::add(): 100 >>_10 2 = 1
+	
+	// encoded + encrypted
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.01 , false)) )) == 1.350 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.001, false)) )) == 1.354 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encode( 1.123, 0.001), pcS.encrypt( 0.234, 0.01 , false)) )) == 1.353 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encode( 1.123, 1    ), pcS.encrypt( 0.234, 0.01 , true )) )) == 1.23 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.add(pcS.encode( 1.120, 0.001 ),pcS.encrypt( 0.234, 0.01 , true )) )) == 1.35   ); // test canShift optimzation PaillierContext::add(): 1120 >>_10 1 = 112
+	
+	// encoded + encoded
+	REQUIRE( pcS.decodeDouble(                 pcS.add(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.01 ))       ) == 1.350 );
+	REQUIRE( pcS.decodeDouble(                 pcS.add(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.001))       ) == 1.354 );
+	REQUIRE( pcS.decodeDouble(                 pcS.add(pcS.encode( 1.123, 0.001), pcS.encode( 0.234, 0.01 ))       ) == 1.353 );
+	REQUIRE( pcS.decodeDouble(                 pcS.add(pcS.encode( 1.123, 1    ), pcS.encode( 0.234, 0.01 ))       ) == 1.23  );
+}
+
+TEST_CASE( "paillier FP paillier context additiveInverse", "[paillierMath]" ) {
+	const size_t modulusLen = TestFixtures.sk256modulusLen;
+	const size_t precision = TestFixtures.sk256modulusLen;
+	const SecureKey sk = TestFixtures.sk256;
+	
+	const PaillierContext pcS(sk.publicKey, true, precision, 10);
+	
+	// plaintext
+	REQUIRE( pcS.decodeInt64(                   pcS.additiveInverse(pcS.encode(0))                   ) == 0 );
+	REQUIRE( pcS.decodeInt64(                   pcS.additiveInverse(pcS.encode(1))                   ) == -1 );
+	REQUIRE( pcS.decodeInt64(                   pcS.additiveInverse(pcS.encode(-1))                  ) == 1 );
+	REQUIRE( pcS.decodeInt64(                   pcS.additiveInverse(pcS.encode(-9856))               ) == 9856 );
+	REQUIRE( pcS.decodeInt64(                   pcS.additiveInverse(pcS.encode(89304670))            ) == -89304670 );
+	
+	REQUIRE( pcS.decodeDouble(                  pcS.additiveInverse(pcS.encode(0.0, 0.001))          ) == 0.0 );
+	REQUIRE( pcS.decodeDouble(                  pcS.additiveInverse(pcS.encode(1249.6439, 0.001))    ) == -1249.6430 );
+	REQUIRE( pcS.decodeDouble(                  pcS.additiveInverse(pcS.encode(-234.560, 0.001))     ) == 234.560 );
+	
+	// encrypted
+	REQUIRE( pcS.decodeInt64(  pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(0))                ) ) == 0 );
+	REQUIRE( pcS.decodeInt64(  pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(1))                ) ) == -1 );
+	REQUIRE( pcS.decodeInt64(  pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(-1))               ) ) == 1 );
+	REQUIRE( pcS.decodeInt64(  pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(349875656347))     ) ) == -349875656347 );
+	REQUIRE( pcS.decodeInt64(  pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(-951580))          ) ) == 951580 );
+	
+	REQUIRE( pcS.decodeDouble( pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(0.0, 0.001))       ) ) == 0.0 );
+	REQUIRE( pcS.decodeDouble( pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(1249.6439, 0.001)) ) ) == -1249.6430 );
+	REQUIRE( pcS.decodeDouble( pcS.decrypt( sk, pcS.additiveInverse(pcS.encrypt(-234.560, 0.001))  ) ) == 234.560 );
+}
+
+TEST_CASE( "paillier FP paillier context subtract", "[paillierMath]" ) {
+	const size_t modulusLen = TestFixtures.sk256modulusLen;
+	const size_t precision = TestFixtures.sk256modulusLen;
+	const SecureKey sk = TestFixtures.sk256;
+	
+	const PaillierContext pcS(sk.publicKey, true, precision, 10);
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(0), pcS.encrypt(0)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(0), pcS.encrypt(1)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1), pcS.encrypt(0)) )) == 1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1), pcS.encrypt(1)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(-1), pcS.encrypt(1)) )) == -2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1), pcS.encrypt(-1)) )) == 2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(-2), pcS.encrypt(-1)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(-2), pcS.encrypt(1)) )) == -3 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1), pcS.encrypt(-2)) )) == 3 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1284680 ), pcS.encrypt(98765432   )) )) == 1284680  - 98765432    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(12846800), pcS.encrypt(98765432   )) )) == 12846800 - 98765432    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1284680 ), pcS.encrypt(98765432000)) )) == 1284680  - 98765432000 );
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1 , true), pcS.encrypt(2, true)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1 , true), pcS.encrypt(-2, true)) )) == 3 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.subtract(pcS.encrypt(1284680 , true), pcS.encrypt(98765432000, true)) )) == 1284680  - 98765432000 );
+	
+	
+	// encrypted + encrypted
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.01 , false), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.890 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.01 , false), pcS.encrypt( 0.234, 0.001, false)) )) == 0.886 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.001, false), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.893 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 1    , true ), pcS.encrypt( 0.234, 0.01 , true )) )) == 0.770 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 4.673, 0.001, true ), pcS.encrypt(-9.731, 0.001, true )) )) == 4.673 + 9.731   );
+	
+	// encrypted + encoded
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.01 )) )) == 0.890 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.001)) )) == 0.886 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.001, false), pcS.encode( 0.234, 0.01 )) )) == 0.893 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 1    , true ), pcS.encode( 0.234, 0.01 )) )) == 0.770 );
+	REQUIRE( (double(uint64_t(pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encrypt( 1.123, 0.1  , false), pcS.encode( 0.100, 0.001)) )) * 10000.0)))/10000.0 == 1.0   ); // test canShift optimzation of PaillierContext::add(): 100 >>_10 2 = 1
+	
+	// encoded + encrypted
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.890 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.001, false)) )) == 0.886 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encode( 1.123, 0.001), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.893 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encode( 1.123, 1    ), pcS.encrypt( 0.234, 0.01 , true )) )) == 0.770 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.subtract(pcS.encode( 1.120, 0.001 ),pcS.encrypt( 0.234, 0.01 , true )) )) == 0.890 ); // test canShift optimzation PaillierContext::add(): 1120 >>_10 1 = 112
+	
+	// encoded + encoded
+	REQUIRE( pcS.decodeDouble(                 pcS.subtract(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.01 ))       ) == 0.890 );
+	REQUIRE( pcS.decodeDouble(                 pcS.subtract(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.001))       ) == 0.886 );
+	REQUIRE( pcS.decodeDouble(                 pcS.subtract(pcS.encode( 1.123, 0.001), pcS.encode( 0.234, 0.01 ))       ) == 0.893 );
+	REQUIRE( pcS.decodeDouble(                 pcS.subtract(pcS.encode( 1.123, 1    ), pcS.encode( 0.234, 0.01 ))       ) == 0.770 );
+}
+
+TEST_CASE( "paillier FP paillier context multiply", "[paillierMath]" ) {
+	const size_t modulusLen = TestFixtures.sk256modulusLen;
+	const size_t precision = TestFixtures.sk256modulusLen;
+	const SecureKey sk = TestFixtures.sk256;
+	
+	const PaillierContext pcS(sk.publicKey, true, precision, 10);
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(0), pcS.encode(0)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(0), pcS.encode(1)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1), pcS.encode(0)) )) == 0 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1), pcS.encode(1)) )) == 1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(-1), pcS.encode(1)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1), pcS.encode(-1)) )) == -1 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(-2), pcS.encode(-1)) )) == 2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(-2), pcS.encode(1)) )) == -2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1), pcS.encode(-2)) )) == -2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(18680 ), pcS.encode(975432)) )) == 18680ll  * 975432ll    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(12846800), pcS.encode(98765432)) )) == 12846800ll * 98765432ll    );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(18680 ), pcS.encode(976000)) )) == 18680ll  * 976000ll );
+	
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1 , true), pcS.encode(2)) )) == 2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1 , true), pcS.encode(-2)) )) == -2 );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(1284680 , true), pcS.encode(98765432000)) )) == 1284680ll * 98765432000ll );
+	REQUIRE( pcS.decodeInt64(pcS.decrypt( sk, pcS.multiply(pcS.encrypt(-1284680 , true), pcS.encode(98765432000)) )) == -1284680ll * 98765432000ll );
+	
+	
+	// encrypted + encoded
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.01 )) )) == 0.2576 );
+	REQUIRE( (double(int64_t( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 1.123, 0.01 , false), pcS.encode( 0.234, 0.001)) )) *1000000.0)))/1000000.0 == 0.26208 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 1.123, 0.001, false), pcS.encode( 0.234, 0.01 )) )) == 0.25829 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 1.123, 1    , true ), pcS.encode( 0.234, 0.01 )) )) == 0.23 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 4.673, 0.001, true ), pcS.encode(-9.731, 0.001)) )) == 4.673 * -9.731   );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encrypt( 467.3, 0.001, true ), pcS.encode(-0.0731, 0.0001)) )) == 467.3 * -0.0731   );
+	
+	// encoded + encrypted
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.2576 );
+	REQUIRE( (double(int64_t( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 1.123, 0.01 ), pcS.encrypt( 0.234, 0.001, false)) )) *1000000.0)))/1000000.0 == 0.26208 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 1.123, 0.001), pcS.encrypt( 0.234, 0.01 , false)) )) == 0.25829 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 1.123, 1    ), pcS.encrypt( 0.234, 0.01 , true )) )) == 0.23 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 1.120, 0.001 ),pcS.encrypt( 0.234, 0.01 , true )) )) == 0.2576 ); // test canShift optimzation PaillierContext::add(): 1120 >>_10 1 = 112
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 467.3, 0.001 ), pcS.encrypt(-0.0731, 0.0001, true)) )) == 467.3 * -0.0731   );
+	
+	// encoded + encoded
+	REQUIRE( pcS.decodeDouble(                 pcS.multiply(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.01 ))       ) == 0.2576 );
+	REQUIRE( (double(int64_t( pcS.decodeDouble(pcS.multiply(pcS.encode( 1.123, 0.01 ), pcS.encode( 0.234, 0.001))       ) *1000000.0)))/1000000.0 == 0.26208 );
+	REQUIRE( pcS.decodeDouble(                 pcS.multiply(pcS.encode( 1.123, 0.001), pcS.encode( 0.234, 0.01 ))       ) == 0.25829 );
+	REQUIRE( pcS.decodeDouble(                 pcS.multiply(pcS.encode( 1.123, 1    ), pcS.encode( 0.234, 0.01 ))       ) == 0.23 );
+	REQUIRE( pcS.decodeDouble(pcS.decrypt( sk, pcS.multiply(pcS.encode( 467.3, 0.001), pcS.encrypt(-0.0731, 0.0001, true)) )) == 467.3 * -0.0731   );
 }

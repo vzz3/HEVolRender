@@ -9,7 +9,7 @@
 
 /*
  UFixBigInt:		Unsigned Fixed     width Big Integer (only stack memory)
- SArbBigInt:		Signed   Fixed     width Big Integer (only stack memory)
+ SFixBigInt:		Signed   Fixed     width Big Integer (only stack memory)
  UArbBigInt:		Unsigned Arbitrary width Big Integer (required heap memory)
  SArbBigInt:		Signed   Arbitrary width Big Integer (required heap memory)
  
