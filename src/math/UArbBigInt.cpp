@@ -7,6 +7,7 @@
 #include <cmath>		/* ciel */
 #include <math.h>       /* log2 */
 //#include <Security/Security.h>
+#include "BigIntUtil.hpp"
 
 
 
@@ -35,7 +36,7 @@ UArbBigInt& UArbBigInt::fromUint64(const uint64_t& uint64Val, UArbBigInt &target
 	// because shifing an unsigned 64bit variable by 64 bit to the right is not 0
 	// example of the problem:
 	// 		uint64_t int_2e63_test = 0x8000000000000000;	// 2^63 => b(10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
-	//		uint64_t test_128 = int_2e63_test >> (8 * 7);	// expexted: 128 => b(10000000) OK!
+	//		uint64_t test_128 = int_2e63_test >> (8 * 7);	// expected: 128 => b(10000000) OK!
 	//		uint64_t test_0 = int_2e63_test >> (8 * 8);		// expected: 0	actual result: 2^63 => b(10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000)
 	for(; (uint64Val >> (requiredWords * BIG_INT_BITS_PER_WORD)) > 0 && requiredWords < wordsFor64Bit; requiredWords++);
 
@@ -428,36 +429,6 @@ bool UArbBigInt::testBit(uint n) const {
 	return ((this->value[allWords] >> restBits) & 1);
 }
 
-int UArbBigInt::findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const {
-	if( word == 0 ) {
-		return -1;
-	}
-
-	int bit = BIG_INT_BITS_PER_WORD - 1;
-
-	while( (word & BIG_INT_WORD_HIGHEST_BIT) == 0 ) {
-		word = word << 1;
-		--bit;
-	}
-
-	return bit;
-}
-
-int UArbBigInt::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const {
-	if( word == 0 ) {
-		return -1;
-	}
-
-	int bit = 0;
-
-	while( (word & 1) == 0 ) {
-		word = word >> 1;
-		bit++;
-	}
-
-	return bit;
-}
-
 int UArbBigInt::findHighestSetBit() const {
 	if(this->isZero()) {
 		return -1;
@@ -466,7 +437,7 @@ int UArbBigInt::findHighestSetBit() const {
 	int wordIndex = this->wordSize-1;
 
 	BIG_INT_WORD_TYPE word = this->value[wordIndex];
-	int bit = this->findHighestSetBitInWord(word);
+	int bit = BigIntUtil::findHighestSetBitInWord(word);
 
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
@@ -480,7 +451,7 @@ int UArbBigInt::findLowestSetBit() const {
 	for(wordIndex=0; wordIndex < this->wordSize && this->value[wordIndex] == 0; wordIndex++);
 
 	BIG_INT_WORD_TYPE word = this->value[wordIndex];
-	int bit = this->findLowestSetBitInWord(word);
+	int bit = BigIntUtil::findLowestSetBitInWord(word);
 
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
@@ -492,78 +463,6 @@ inline void UArbBigInt::trimWordSize(BIG_INT_WORD_COUNT_TYPE newMaxWordSize) {
 	BIG_INT_WORD_COUNT_TYPE newWordSize;// = std::min(newMaxWordSize, this->wordCapacity); disable this min check for performance resons
 	for (newWordSize = newMaxWordSize; newWordSize>1 && this->value[newWordSize-1] == 0; newWordSize--);
 	this->wordSize = newWordSize;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::setLowFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res =
-		// set low bits to 0 and keep the high bits
-		this->getHighAsHighBits(target)
-		|
-		// set high bits to 0 and keep the low bits
-		this->getLowAsLowBits(src)
-	;
-
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::setLowFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res =
-		// set low bits to 0 and keep the high bits
-		//(target & BIG_INT_WORD_HIGH_BIT_MASK)
-		this->getHighAsHighBits(target)
-		|
-		// move the high bits of src to the low bits
-		//(src >> (BIG_INT_BITS_PER_WORD/2))
-		this->getHighAsLowBits(src)
-	;
-
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::setHighFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res =
-		// set high bits to 0 and keep the low bits
-		this->getLowAsLowBits(target)
-		|
-		// set low bits to 0 and keep the high bits
-		this->getHighAsHighBits(src)
-	;
-
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::setHighFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res =
-		// set high bits to 0 and keep the low bits
-		//(target & BIG_INT_WORD_LOW_BIT_MASK)
-		this->getLowAsLowBits(target)
-		|
-		// move the low bits of src to the high bits
-		//(src << (BIG_INT_BITS_PER_WORD/2))
-		this->getLowAsHighBits(src)
-	;
-
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::getHighAsHighBits(const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_HIGH_BIT_MASK);
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::getHighAsLowBits(const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res = (src >> (BIG_INT_BITS_PER_WORD/2));
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::getLowAsLowBits(const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res = (src & BIG_INT_WORD_LOW_BIT_MASK);
-	return res;
-}
-
-inline BIG_INT_WORD_TYPE UArbBigInt::getLowAsHighBits(const BIG_INT_WORD_TYPE src) const {
-	BIG_INT_WORD_TYPE res = (src << (BIG_INT_BITS_PER_WORD/2));
-	return res;
 }
 
 // ----- shift left -----
@@ -633,7 +532,7 @@ BIG_INT_WORD_TYPE UArbBigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, co
 		// calculate required word size
 		BIG_INT_WORD_TYPE curLasWordIndex = this->wordSize - 1;
 		uint newTotalBits = (curLasWordIndex) * BIG_INT_BITS_PER_WORD // currently total bits used
-			+ this->findHighestSetBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingSetBitInWord() returns -1 the "this->wordSize" is already wrong!)
+			+ BigIntUtil::findHighestSetBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingSetBitInWord() returns -1 the "this->wordSize" is already wrong!)
 			+ bits;
 		uint newWordCount = newTotalBits / BIG_INT_BITS_PER_WORD;
 		if(newTotalBits % BIG_INT_BITS_PER_WORD > 0) {
@@ -802,88 +701,9 @@ UArbBigInt UArbBigInt::operator>> (const uint bits) const {
 
 // ----- addition -----
 
-BIG_INT_WORD_TYPE UArbBigInt::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) const {
-	BIG_INT_WORD_TYPE temp;
-	if( carry == 0 ) {
-		temp = a + b;
-		if( temp < a ) {
-			carry = 1;
-		}
-	} else {
-		carry = 1;
-		temp  = a + b + carry;
-		if( temp > a ) { // !(temp<=a)
-			carry = 0;
-		}
-	}
-	*result = temp;
-	return carry;
-}
-
-BIG_INT_WORD_TYPE UArbBigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
-	assert( index < (targetWordCount - 1) ); // TODO
-
-	BIG_INT_WORD_TYPE c;
-
-	c = addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
-	c = addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
-
-	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c ; ++i) { // TODO
-		c = addTwoWords(targetArray[i], 0, c, &targetArray[i]);
-	}
-	return c;
-}
-
-/*
-void UArbBigInt::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index) {
-	//assert( index < (targetWordCount - 1) ); // TODO
-	this->reserveWords(index+2);
-
-	BIG_INT_WORD_TYPE c;
-
-	c = addTwoWords((index   < this->wordSize ? this->value[index  ] : 0),   wordLow, 0, &this->value[index  ]);
-	c = addTwoWords((index+1 < this->wordSize ? this->value[index+1] : 0),  wordHigh, c, &this->value[index+1]);
-
-	if(this->wordSize < index+2) {
-		// increas word size if required
-		if(this->value[index+1] != 0) {
-			this->wordSize = index+2;
-		} else if (this->value[index] != 0) {
-			this->wordSize = index+1;
-		}
-	} else {
-		// propagate carry to more significant words
-		for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < this->wordSize && c ; ++i) { // TODO
-			c = addTwoWords(this->value[i], 0, c, &this->value[i]);
-		}
-	}
-
-	// add carry to new word
-	if(c != 0) {
-		BIG_INT_WORD_COUNT_TYPE newWordSize = this->wordSize+1;
-		this->reserveWords(newWordSize);
-		this->value[this->wordSize] = c;
-		this->wordSize = newWordSize;
-	}
-}
-*/
-
-BIG_INT_WORD_TYPE UArbBigInt::addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
-	assert( index < targetWordCount );
-
-	BIG_INT_WORD_TYPE c;
-	c = addTwoWords(targetArray[index], word, 0, &targetArray[index]);
-
-	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c ; ++i) {
-		c = addTwoWords(targetArray[i], 0, c, &targetArray[i]);
-	}
-
-	return c;
-}
-
 void UArbBigInt::addInt(const BIG_INT_WORD_TYPE word) {
 
-	BIG_INT_WORD_TYPE c = this->addInt(word, 0, this->value, this->wordSize);
+	BIG_INT_WORD_TYPE c = BigIntUtil::addInt(word, 0, this->value, this->wordSize);
 
 	// increate the word count in order to add the last carry
 	if(c != 0) {
@@ -905,7 +725,7 @@ void UArbBigInt::add(const UArbBigInt &other, UArbBigInt &result) const {
 		a = this->wordSize > i ? this->value[i] : 0;
 		b = other.wordSize > i ? other.value[i] : 0;
 
-		carry = addTwoWords(a, b, carry, &result.value[i]);
+		carry = BigIntUtil::addTwoWords(a, b, carry, &result.value[i]);
 	}
 
 	result.wordSize = maxWordCount; // net to be set before reserveWords() is called otherwise the new values between result.value[result.wordSize] and result.value[maxWordCount] will not be copied to the new array
@@ -932,40 +752,8 @@ UArbBigInt UArbBigInt::operator+ (const UArbBigInt& other) const {
 
 // ----- substraction -----
 
-BIG_INT_WORD_TYPE UArbBigInt::subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) const {
-	if( carry == 0 ) {
-		*result = a - b;
-
-		if( a < b ) {
-			carry = 1;
-		}
-	} else {
-		carry   = 1;
-		*result = a - b - carry;
-
-		if( a > b ) { // !(a <= b )
-			carry = 0;
-		}
-	}
-
-	return carry;
-}
-
-BIG_INT_WORD_TYPE UArbBigInt::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const {
-	assert( index < targetWordCount );
-
-	BIG_INT_WORD_TYPE c;
-	c = subTwoWords(targetArray[index], word, 0, &targetArray[index]);
-
-	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c ; ++i) {
-		c = subTwoWords(targetArray[i], 0, c, &targetArray[i]);
-	}
-
-	return c;
-}
-
 BIG_INT_WORD_TYPE UArbBigInt::subInt(const BIG_INT_WORD_TYPE word) {
-	BIG_INT_WORD_TYPE c = this->subInt(word, 0, this->value, this->wordSize);
+	BIG_INT_WORD_TYPE c = BigIntUtil::subInt(word, 0, this->value, this->wordSize);
 
 	// reduce word size if a word was truncated
 	if(this->value[this->wordSize-1] == 0) {
@@ -983,7 +771,7 @@ BIG_INT_WORD_TYPE UArbBigInt::sub(const UArbBigInt& other, BIG_INT_WORD_TYPE car
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<this->wordSize; i++) {
 		b = other.wordSize > i ? other.value[i] : 0;
 
-		carry = subTwoWords(this->value[i], b, carry, &result.value[i]);
+		carry = BigIntUtil::subTwoWords(this->value[i], b, carry, &result.value[i]);
 		if(result.value[i] > 0) {
 			usedWordIndex = i;
 		}
@@ -1010,58 +798,7 @@ UArbBigInt UArbBigInt::operator- (const UArbBigInt& other) const {
 
 // ----- multiplication -----
 
-void UArbBigInt::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) const {
-	/*
-		expect BIG_INT_WORD_TYPE to be a 64 bits variable:
-		we don't have a native type which has 128 bits
-		then we're splitting 'a' and 'b' to 4 parts (high and low halves)
-		and using 4 multiplications (with additions and carry correctness)
-	 */
 
-	BIG_INT_WORD_TYPE aLow = this->getLowAsLowBits(a); 		// aLow = a.low;
-	BIG_INT_WORD_TYPE bLow = this->getLowAsLowBits(b); 		// aLow = b.low;
-	BIG_INT_WORD_TYPE aHigh = this->getHighAsLowBits(a); 	// aHigh = a.high;
-	BIG_INT_WORD_TYPE bHigh = this->getHighAsLowBits(b); 	// bHigh = b.high;
-
-	BIG_INT_WORD_TYPE res_high1, res_high2;
-	BIG_INT_WORD_TYPE res_low1, res_low2;
-
-	/*
-		the multiplication is as follows (schoolbook algorithm with O(n^2) ):
-
-										 32 bits          32 bits
-
-										 +--------------------------------+
-										 |     a.high     |     a.low     |
-										 +--------------------------------+
-										 |     b.high     |     b.low     |
-		+--------------------------------+--------------------------------+
-		|            res_high1           |            res_low1            |
-		+--------------------------------+--------------------------------+
-		|            res_high2           |            res_low2            |
-		+--------------------------------+--------------------------------+
-
-		64 bits                          64 bits
-	*/
-
-
-	BIG_INT_WORD_TYPE temp;
-
-	res_low1  = bLow * aLow; 										// res_low1 = b.low * a.low
-	temp 	  = this->getHighAsLowBits(res_low1) + bLow * aHigh;	// temp = res_low1.high + b.low * a.high
-	res_low1  = this->setHighFromLowBits(res_low1, temp); 			// res_low1.high = temp.low
-	res_high1 = this->setLowFromHighBits(res_high1, temp); 			// res_high1.low = temp.high
-	res_high1 = this->getLowAsLowBits(res_high1); 					// res_high1.high = 0
-
-	res_low2  = this->getHighAsHighBits(res_low2); 					// res_low2.low = 0
-	temp	  = bHigh * aLow; 										// b.high * a.low
-	res_low2  = this->setHighFromLowBits(res_low2, temp); 			// res_low2.high = temp.low
-
-	res_high2 = bHigh * aHigh + this->getHighAsLowBits(temp); 		// res_high2 = b.high * a.high + temp.high
-
-	BIG_INT_WORD_TYPE c = this->addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
-						  this->addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
-}
 
 void UArbBigInt::mulInt(BIG_INT_WORD_TYPE ss2, UArbBigInt& result) const {
 	if( ss2 == 0 ) {
@@ -1096,8 +833,8 @@ void UArbBigInt::mulInt(BIG_INT_WORD_TYPE ss2, UArbBigInt& result) const {
 
 	// performe the multiplication
 	for(BIG_INT_WORD_COUNT_TYPE x1=x1start ; x1<x1size ; ++x1) {
-		this->mulTwoWords(this->value[x1], ss2, &r2, &r1 );
-		this->addTwoInts(r2, r1, x1, result.value, result.wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
+		BigIntUtil::mulTwoWords(this->value[x1], ss2, &r2, &r1 );
+		BigIntUtil::addTwoInts(r2, r1, x1, result.value, result.wordCapacity); // this->wordCapacity is > u.wordSize => there can not be a carry bit!
 	}
 
 	// check if the most significant word is > 0 and increase the wordSize if it is.
@@ -1142,8 +879,8 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 	{
 		for(uint bI=bStart ; bI<bSize ; ++bI)
 		{
-			mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
-			addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
+			BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
+			BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
 			// here will never be a carry
 		}
 	}
@@ -1173,174 +910,6 @@ UArbBigInt UArbBigInt::operator* (const UArbBigInt& other) const {
 
 // ----- division -----
 
-// -- divTwoWords
-
-void UArbBigInt::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder) const {
-	// c = divisor
-	// (a < c ) for the result to be one word
-	assert( divisor != 0 && a < divisor );
-
-	if( a == 0 ) {
-		*result    = b / divisor;
-		if(remainder != NULL) {
-			*remainder = b % divisor;
-		}
-	} else {
-		if( this->getHighAsLowBits(divisor) == 0 ) {
-			// higher half of 'divisor' is zero
-			// then higher half of 'a' is zero too (look at the asserts at the beginning - 'a' is smaller than 'divisor')
-			BIG_INT_WORD_TYPE res, temp1, temp2;
-
-			temp1 = this->getLowAsHighBits(a); // this->setHighFromLowBits(temp1, a); 	// temp1.high 	= a.low
-			temp1 = this->setLowFromHighBits(temp1, b); 								// temp1.low 	= b.high
-			res = this->setHighFromLowBits(res, (temp1 / divisor)); 					// res_.high 	= (temp1.u / c).low
-			temp2 = this->setHighFromLowBits(temp2, (temp1 % divisor)); 				// temp2.high 	= (temp1.u % c).low
-			temp2 = this->setLowFromLowBits(temp2, b); 									// temp2.low 	= b.low
-			res = this->setLowFromLowBits(res, (temp2 / divisor)); 						// res_.low 	= (temp2.u / c).low
-			*result = res;
-
-			if(remainder != NULL) {
-				*remainder = temp2 % divisor;
-			}
-		} else {
-			this->divTwoWordsKnuth(a, b, divisor,  result,  remainder);
-		}
-	}
-}
-
-// -- divTwoWordsKnuth
-
-void UArbBigInt::divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder ) const {
-	// a is not zero
-	// c.high is not zero
-
-	BIG_INT_WORD_TYPE u, q, u3;
-	BIG_INT_WORD_TYPE temp_qLow, temp_qHigh;
-
-	// normalizing
-	BIG_INT_WORD_TYPE d = this->divTwoWordsKnuth_normalize(a, b, c);
-
-	u = a;
-
-	u3 = this->getHighAsLowBits(b); // u3 = b.high
-	q = this->setHighFromLowBits(q, this->divTwoWordsKnuth_calculate(u, u3, c)); // q.high = this->divTwoWordsCalculate(u, u3, c)
-
-	temp_qHigh = this->getHighAsLowBits(q);
-	this->divTwoWordsKnuth_multiplySubtract(u, u3, temp_qHigh, c); // this->divTwoWordsMultiplySubtract(u, u3, q.high, c)
-	q = this->setHighFromLowBits(q, temp_qHigh);
-
-	u = this->setHighFromLowBits(u, u); // u.high = u.low
-	u = this->setLowFromLowBits(u, u3); // u.low = u3
-	u3 = this->getLowAsLowBits(b); // u3 = b.low
-	q = this->setLowFromLowBits(q, this->divTwoWordsKnuth_calculate(u, u3, c)); // q.low = this->divTwoWordsCalculate(u, u3, c)
-
-	temp_qLow = this->getLowAsLowBits(q);
-	this->divTwoWordsKnuth_multiplySubtract(u, u3, temp_qLow, c); // this->divTwoWordsMultiplySubtract(u_, u3, q_.u_.low, c_);
-	q = this->setLowFromLowBits(q, temp_qLow);
-
-	*result = q;
-
-	if(remainder != NULL) {
-		// unnormalizing for the remainder
-		u = this->getLowAsHighBits(u); // this->setHighFromLowBits(u, u); // u.high = u.low
-		u = this->setLowFromLowBits(u, u3); // u.low = u3;
-		*remainder = this->divTwoWordsKnuth_unnormalize(u, d);
-	}
-}
-
-BIG_INT_WORD_TYPE UArbBigInt::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) const {
-	uint d = 0;
-
-	for( ; (c & BIG_INT_WORD_HIGHEST_BIT) == 0 ; ++d ) {
-		c = c << 1;
-
-		BIG_INT_WORD_TYPE bc = b & BIG_INT_WORD_HIGHEST_BIT; // carry from 'b'
-
-		b = b << 1;
-		a = a << 1; // carry bits from 'a' are simply skipped
-
-		if( bc ) {
-			a = a | 1;
-		}
-	}
-
-	return d;
-}
-
-BIG_INT_WORD_TYPE UArbBigInt::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) const {
-	if( d == 0 ) {
-		return u;
-	}
-
-	u = u >> d;
-
-	return u;
-}
-
-unsigned int UArbBigInt::divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const {
-	bool nextTest;
-	BIG_INT_WORD_TYPE qp, rp, temp;
-
-	qp = u / this->getHighAsLowBits(v); // qp = u / v.high
-	rp = u % this->getHighAsLowBits(v); // rp = u % v.high
-
-	assert( this->getHighAsLowBits(qp) == 0 || this->getHighAsLowBits(qp) == 1); // assert( qp.hight == 0 || qp.high == 1);
-
-	do {
-		bool decrease = false;
-		if( this->getHighAsLowBits(qp) == 1 ) { // if( qp.high == 1)
-			decrease = true;
-		} else {
-			temp = this->setHighFromLowBits(temp, rp); // temp.hight = rp.low
-			temp = this->setLowFromLowBits(temp, u3); // temp.low = u3.low
-
-			if( qp * this->getLowAsLowBits(v) > temp) { // if( qp * v.low > temp )
-				decrease = true;
-			}
-		}
-
-		nextTest = false;
-
-		if( decrease ) {
-			--qp;
-			rp += this->getHighAsLowBits(v); // rp += v.high
-
-			if( this->getHighAsLowBits(rp) == 0) { // if( rp.high == 0 )
-				nextTest = true;
-			}
-		}
-	}
-	while( nextTest );
-
-	return this->getLowAsLowBits(qp); // return qp.low
-}
-
-void UArbBigInt::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) const {
-	BIG_INT_WORD_TYPE temp, res_high, res_low;
-	this->mulTwoWords(v, q,  &res_high, &res_low);
-
-	BIG_INT_WORD_TYPE sub_res_high, sub_res_low;
-
-	temp = this->setHighFromLowBits(temp, u); // temp.high = u.low
-	temp = this->setLowFromLowBits(temp, u3); // temp.low = u3.low
-
-	BIG_INT_WORD_TYPE c = this->subTwoWords(temp, res_low, 0, &sub_res_low);
-
-	temp = this->setHighFromLowBits(temp, 0); // temp.high = 0
-	temp = this->setLowFromHighBits(temp, u); // temp.low = u.high
-	c = this->subTwoWords(temp, res_high, c, &sub_res_high);
-
-	if( c ) {
-		--q;
-
-		c = this->addTwoWords(sub_res_low, v, 0, &sub_res_low);
-		this->addTwoWords(sub_res_high, 0, c, &sub_res_high);
-	}
-
-	u = this->setHighFromLowBits(u, sub_res_high); // u.high = sub_res_high.low
-	u = this->setLowFromHighBits(u, sub_res_low); // u.low = sub_res_low.high
-	u3 = this->getLowAsLowBits(sub_res_low); // u3 = sub_res_low.low;
-}
 
 // -- divInt
 
@@ -1377,7 +946,7 @@ BIG_INT_WORD_TYPE UArbBigInt::divInt(BIG_INT_WORD_TYPE divisor, UArbBigInt& resu
 	i = this->wordSize - 1;
 
 	for( ; i>=0 ; --i) {
-		this->divTwoWords(r, dividend[i], divisor, &result.value[i], &r);
+		BigIntUtil::divTwoWords(r, dividend[i], divisor, &result.value[i], &r);
 		// find index+1 of most significant word which is not 0
 		if(!nonZeroWordRes && i > 0) {
 			if(result.value[i] == 0) {
@@ -1509,7 +1078,7 @@ BIG_INT_WORD_TYPE UArbBigInt::divKnuth_normalize(UArbBigInt& divisor, uint n, ui
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 
-	uint bit  = (uint)this->findHighestSetBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
+	uint bit  = (uint)BigIntUtil::findHighestSetBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
 	uint move = (BIG_INT_BITS_PER_WORD - bit - 1);
 	d         = move;
 	BIG_INT_WORD_TYPE res  = this->value[this->wordSize -1];
@@ -1562,7 +1131,7 @@ BIG_INT_WORD_TYPE UArbBigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_W
 			BIG_INT_WORD_TYPE temp1[2], temp2[2];
 
 			//UInt<2>::MulTwoWords(u_temp.table[0], v0, temp1.table+1, temp1.table);
-			this->mulTwoWords(qp.value[0], v0, &temp1[1], &temp1[0]);
+			BigIntUtil::mulTwoWords(qp.value[0], v0, &temp1[1], &temp1[0]);
 			temp2[1] = rp;
 			temp2[0] = u0;
 
