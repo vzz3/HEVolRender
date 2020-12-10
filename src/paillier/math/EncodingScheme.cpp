@@ -22,7 +22,7 @@ EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedE
 		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-	const SInfinitBigInt& modulus = yPK.modulus;
+	const SArbBigInt& modulus = yPK.modulus;
 	//if (value.compareTo(context.getPublicKey().getModulus()) >= 0) {
 	//	throw new IllegalArgumentException("value must be less than modulus");
 	//}
@@ -36,24 +36,24 @@ EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedE
 		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-		
-	SInfinitBigInt encSpace = modulus.bitLength() == precision ? modulus : SInfinitBigInt(1) << precision;
+
+	SArbBigInt encSpace = modulus.bitLength() == precision ? modulus : SArbBigInt(1) << precision;
 	if(signedEncoding) {
-		maxEncoded = ((encSpace + SInfinitBigInt(1)) >> 1) - SInfinitBigInt(1);
+		maxEncoded = ((encSpace + SArbBigInt(1)) >> 1) - SArbBigInt(1);
 		minEncoded = modulus - maxEncoded;
 		maxSignificand = maxEncoded;
 		minSignificand = maxEncoded.negate();
 	} else {
-		maxEncoded = encSpace - SInfinitBigInt(1);
-		minEncoded = SInfinitBigInt(0);
+		maxEncoded = encSpace - SArbBigInt(1);
+		minEncoded = SArbBigInt(0);
 		maxSignificand = maxEncoded;
-		minSignificand = SInfinitBigInt(0);
+		minSignificand = SArbBigInt(0);
 	}
 }
 
 EncodingScheme::~EncodingScheme() {
 }
-		
+
 int_fast8_t EncodingScheme::signum(const EncodedNumber& yNumber) const {
 	if (yNumber.mantissa.isZero()) {
 		return 0;
@@ -63,28 +63,28 @@ int_fast8_t EncodingScheme::signum(const EncodedNumber& yNumber) const {
 	}
 	//if this context is signed, then a negative significant is strictly greater
 	//than modulus/2.
-	SInfinitBigInt halfModulus = pk.modulus >> 1;
+	SArbBigInt halfModulus = pk.modulus >> 1;
 	return yNumber.mantissa > halfModulus ? -1 : 1;
 }
-		
+
 int_fast32_t EncodingScheme::getPrecExponent(double yPrecision) const {
 	return (int_fast32_t) std::floor(std::log(yPrecision) / std::log((double) base));
 }
-		
+
 EncodedNumber EncodingScheme::encode(const int64_t yValue) const {
-	return encode(SInfinitBigInt::fromInt64(yValue));
+	return encode(SArbBigInt::fromInt64(yValue));
 }
-			 
-EncodedNumber EncodingScheme::encode(SInfinitBigInt yValue) const {
-	if (yValue < SInfinitBigInt(0) && isUnsigned()) {
+
+EncodedNumber EncodingScheme::encode(SArbBigInt yValue) const {
+	if (yValue < SArbBigInt(0) && isUnsigned()) {
 		std::string msg = "Input value cannot be encoded using this EncodingScheme.";
 		//std::cerr << msg << std::endl;
 		throw EncodeException(msg);
 	}
 	int exponent = 0;
 	if (!yValue.isZero()) {
-		while ((yValue % SInfinitBigInt::fromInt64(base)).isZero()) {
-			yValue = yValue / SInfinitBigInt::fromInt64(base);
+		while ((yValue % SArbBigInt::fromInt64(base)).isZero()) {
+			yValue = yValue / SArbBigInt::fromInt64(base);
 			exponent++;
 		}
 	}
@@ -98,7 +98,7 @@ EncodedNumber EncodingScheme::encode(SInfinitBigInt yValue) const {
 	}
 	return EncodedNumber(yValue, exponent);
 }
-		
+
 EncodedNumber EncodingScheme::encode(const double yValue, const double yPrecision) const {
 	if (isinf(yValue) || isnan(yValue)) {
 		throw EncodeException("Input value cannot be encoded.");
@@ -115,43 +115,43 @@ EncodedNumber EncodingScheme::encode(const double yValue, const double yPrecisio
 	int exponent = getPrecExponent(yPrecision);
 	return EncodedNumber(innerEncode(yValue, exponent), exponent);
 }
-		
-SInfinitBigInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t yExponent) const {
+
+SArbBigInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t yExponent) const {
 	// Compute BASE^(-exponent)
 	//BigDecimal bigDecBaseExponent = (new BigDecimal(base)).pow(-exponent, MathContext.DECIMAL128);
 	//double baseExponent = std::pow(base, -exponent);
-	
+
 	// Compute the integer representation, ie, value * (BASE^-exponent)
 	//BigInteger bigIntRep = ((value.multiply(bigDecBaseExponent)).setScale(0, BigDecimal.ROUND_HALF_UP)).toBigInteger();
-	
+
 	// value * (BASE^-exponent) = v * b^-e = v * (1 / b^e) = v / b^e
-	SInfinitBigInt bigIntRep = SInfinitBigInt::fromInt64((int64_t)(yValue / std::pow(base, yExponent)));
-	
-	
+	SArbBigInt bigIntRep = SArbBigInt::fromInt64((int64_t)(yValue / std::pow(base, yExponent)));
+
+
 	if (bigIntRep > maxSignificand || (yValue < 0 && bigIntRep < minSignificand)) {
 		throw EncodeException("Input value cannot be encoded.");
 	}
-			
+
 	if (bigIntRep.getSignum() < 0) {
 		bigIntRep = bigIntRep + pk.modulus;
 	}
-	
+
 	return bigIntRep;
 }
 
-SInfinitBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) const {
+SArbBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) const {
 	//context.checkSameContext(encoded);
-	//const SInfinitBigInt& mantissa = encoded.mantissa;
-	
+	//const SArbBigInt& mantissa = encoded.mantissa;
+
 	if (yEncoded.mantissa > pk.modulus) {
 		throw DecodeException("The significand of the encoded number is corrupted");
 	}
-	
+
 	// Non-negative
 	if (yEncoded.mantissa <= maxEncoded) {
 		return yEncoded.mantissa;
 	}
-	
+
 	// Negative - note that negative encoded numbers are greater than
 	// non-negative encoded numbers and hence minEncoded > maxEncoded
 	if (signedEncoding && yEncoded.mantissa >= minEncoded) {
@@ -160,9 +160,9 @@ SInfinitBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) con
 	throw DecodeException("Detected overflow. " + yEncoded.toString() );
 }
 
-SInfinitBigInt EncodingScheme::decodeBigInt(const EncodedNumber& yEncoded) const {
-	SInfinitBigInt significand = getSignificand(yEncoded);
-	return significand * SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(yEncoded.exponent));
+SArbBigInt EncodingScheme::decodeBigInt(const EncodedNumber& yEncoded) const {
+	SArbBigInt significand = getSignificand(yEncoded);
+	return significand * SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(yEncoded.exponent));
 }
 
 double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
@@ -173,30 +173,30 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 	// Mantisse (52 Bit): In Bit 0 bis 51 wird der Bruchteil der Mantisse gespeichert. Das erste Bit der Mantisse ist immer 1 und wird nicht gespeichert.
 	static const size_t doubleExpBitLen = 11;
 	static const size_t doubleManBitLen = 52;
-	
-	SInfinitBigInt significand = getSignificand(yEncoded);
+
+	SArbBigInt significand = getSignificand(yEncoded);
 	int32_t exponent = yEncoded.exponent;
-	
+
 	size_t mantissaBitLen = significand.bitLength();
-	
+
 	if(mantissaBitLen > doubleManBitLen) {
 		size_t mantissaOverflowLen = mantissaBitLen - doubleManBitLen;
-		//SInfinitBigInt overflowFactor = SInfinitBigInt(2).pow(mantissaOverflowLen);
-		//SInfinitBigInt overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5; // meine int classe kann aber kein log...
+		//SArbBigInt overflowFactor = SArbBigInt(2).pow(mantissaOverflowLen);
+		//SArbBigInt overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5; // meine int classe kann aber kein log...
 		// overflowFactor = 2^mantissaOverflowLen
 		// overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5 = LOG(2^mantissaOverflowLen) / LOG(base) + 0.5
 		//					= LOG2(2^mantissaOverflowLen) / LOG2(base) + 0.5 = mantissaOverflowLen / LOG2(base) + 0.5
 		//					= mantissaOverflowLen / ( LOG(base) / LOG(2) ) + 0.5
 		size_t overflowRadixLen = (size_t)((double)mantissaOverflowLen / std::log2(base));// + 0.5);
-		SInfinitBigInt scale = SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(overflowRadixLen));
+		SArbBigInt scale = SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(overflowRadixLen));
 		//std::cout << "scale: " << scale << std::endl;
 		significand = significand / scale;
 		//std::cout <<  "significand: " << significand << std::endl;
 		assert(significand.bitLength() <= 63); // the result need to fit into a signed 64bit int variable
 		exponent += overflowRadixLen;
 	}
-	
-	
+
+
 	double expFactor = std::pow(base, exponent);
 	/*
 	size_t exponentBitLen = std::log2(std::log2(std::abs(expFactor))) + 0.5);
@@ -208,10 +208,10 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 	if ( isinf(decoded) || isnan(decoded) ) {
 		throw DecodeException("Decoded value cannot be represented as double.");
 	}
-	
+
 	/*
 	//BigDecimal exp = BigDecimal.valueOf(base).pow(Math.abs(encoded.getExponent()));
-	SInfinitBigInt exp = SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(std::abs(yEncoded.exponent)));
+	SArbBigInt exp = SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(std::abs(yEncoded.exponent)));
 	BigDecimal bigDecoded;
 	if (encoded.getExponent() < 0) {
 		bigDecoded = new BigDecimal(significand).divide(exp, MathContext.DECIMAL128);
@@ -227,18 +227,18 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 }
 
 int64_t EncodingScheme::decodeInt64(const EncodedNumber& yEncoded) const {
-	static const SInfinitBigInt uint64Min = SInfinitBigInt::fromInt64(std::numeric_limits<int64_t>::min());
-	static const SInfinitBigInt uint64Max = SInfinitBigInt::fromInt64(std::numeric_limits<int64_t>::max());
-	
-	SInfinitBigInt decoded = decodeBigInt(yEncoded);
+	static const SArbBigInt uint64Min = SArbBigInt::fromInt64(std::numeric_limits<int64_t>::min());
+	static const SArbBigInt uint64Max = SArbBigInt::fromInt64(std::numeric_limits<int64_t>::max());
+
+	SArbBigInt decoded = decodeBigInt(yEncoded);
 	if (decoded < uint64Min || decoded > uint64Max ) {
 		throw new DecodeException("Decoded value cannot be represented as long.");
 	}
 	return decoded.toInt64();
 }
 
-SInfinitBigInt EncodingScheme::getRescalingFactor(const int32_t expDiff) const {
-	return SInfinitBigInt::fromInt64(base).pow(SInfinitBigInt::fromInt64(expDiff));
+SArbBigInt EncodingScheme::getRescalingFactor(const int32_t expDiff) const {
+	return SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(expDiff));
 }
 
 bool EncodingScheme::operator== (const EncodingScheme& other) const {
@@ -253,4 +253,3 @@ bool EncodingScheme::operator== (const EncodingScheme& other) const {
 			&& pk == other.pk
 	);
 }
-

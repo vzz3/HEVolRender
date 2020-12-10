@@ -4,19 +4,19 @@
 
 using namespace ppvr::paillier::crypto;
 
-PublicKey::PublicKey(const SInfinitBigInt & yModulus)
+PublicKey::PublicKey(const SArbBigInt & yModulus)
 	: modulus(yModulus)
-	, _modulusSquared(yModulus.pow(SInfinitBigInt(2)))
-	, generator(yModulus + SInfinitBigInt(1)) //the generator is always set to modulus+1, as this allows a significantly more efficient encryption function.
+	, _modulusSquared(yModulus.pow(SArbBigInt(2)))
+	, generator(yModulus + SArbBigInt(1)) //the generator is always set to modulus+1, as this allows a significantly more efficient encryption function.
 {}
 
 PublicKey::~PublicKey() {}
 
-SInfinitBigInt PublicKey::encrypt(const SInfinitBigInt & plaintext) const {
+SArbBigInt PublicKey::encrypt(const SArbBigInt & plaintext) const {
 	return obfuscate(encryptWithoutObfuscation(plaintext));
 }
 
-SInfinitBigInt PublicKey::encryptWithoutObfuscation(const SInfinitBigInt & plaintext) const {
+SArbBigInt PublicKey::encryptWithoutObfuscation(const SArbBigInt & plaintext) const {
 	// we chose g = N + 1, so that we can exploit the fact that
 	// (N+1)^plaintext = N*plaintext + 1 mod N^2
 	// Advances in Cryptology - ASIACRYPT 2003: 9th International Conference on the ... Page 275 (4.1 The CGHN Public Key Cryptosystem)
@@ -29,26 +29,26 @@ SInfinitBigInt PublicKey::encryptWithoutObfuscation(const SInfinitBigInt & plain
 	// (1+4N+3N^2) * (1+N) * (1+N) * (1+N) * ..... mod N^2 => (1+4N) * (1+N) * (1+N) * (1+N) * ..... mod N^2
 	// :...
 	// (1+mN+(m-1)N^2   mod N^2 = 1+mN		=> N*m + 1	mod N^2
-	
-	return (modulus * plaintext + SInfinitBigInt(1)) % _modulusSquared;
+
+	return (modulus * plaintext + SArbBigInt(1)) % _modulusSquared;
 }
 
-SInfinitBigInt PublicKey::obfuscate(const SInfinitBigInt & ciphertext) const {
+SArbBigInt PublicKey::obfuscate(const SArbBigInt & ciphertext) const {
 	//return BigIntegerUtil.modPow(randomPositiveNumber(modulus), modulus, _modulusSquared).multiply(ciphertext).mod(_modulusSquared);
-	SInfinitBigInt r = getNewRandomNumber();
+	SArbBigInt r = getNewRandomNumber();
 	return r.modPow(modulus, _modulusSquared) * ciphertext % _modulusSquared;
 }
 
-SInfinitBigInt PublicKey::getNewRandomNumber() const {
+SArbBigInt PublicKey::getNewRandomNumber() const {
 	Random& rnd = Random::getForLocalThread();
-	return SInfinitBigInt::randomNumber(modulus, rnd);
+	return SArbBigInt::randomNumber(modulus, rnd);
 }
 
-SInfinitBigInt PublicKey::add(const SInfinitBigInt & ciphertext1, const SInfinitBigInt & ciphertext2) const {
+SArbBigInt PublicKey::add(const SArbBigInt & ciphertext1, const SArbBigInt & ciphertext2) const {
 	return ciphertext1 * ciphertext2 % _modulusSquared;
 }
 
-SInfinitBigInt PublicKey::multiply(const SInfinitBigInt & ciphertext, const SInfinitBigInt & plainfactor) const {
+SArbBigInt PublicKey::multiply(const SArbBigInt & ciphertext, const SArbBigInt & plainfactor) const {
 	return ciphertext.modPow(plainfactor, _modulusSquared);
 }
 
@@ -59,4 +59,3 @@ bool PublicKey::operator== (const PublicKey& other) const {
 bool PublicKey::operator!= (const PublicKey& other) const {
 	return !(this->operator==(other));
 }
-

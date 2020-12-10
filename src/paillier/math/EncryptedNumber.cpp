@@ -6,7 +6,7 @@
 
 using namespace ppvr::paillier::math;
 
-EncryptedNumber::EncryptedNumber(const SInfinitBigInt& yCiphertext, const int32_t yExponent) //, bool yIsSafe)
+EncryptedNumber::EncryptedNumber(const SArbBigInt& yCiphertext, const int32_t yExponent) //, bool yIsSafe)
 	: ciphertext(yCiphertext)
 	, exponent(yExponent)
 	//, isSafe(yIsSafe)
@@ -22,5 +22,3 @@ EncryptedNumber::EncryptedNumber(const SInfinitBigInt& yCiphertext, const int32_
 }
 
 EncryptedNumber::~EncryptedNumber() {}
-
-

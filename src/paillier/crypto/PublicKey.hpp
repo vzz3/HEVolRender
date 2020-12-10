@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "../../math/SInfinitBigInt.hpp"
+#include "../../math/SArbBigInt.hpp"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 using namespace ppvr::math;
@@ -9,58 +9,58 @@ namespace ppvr {
 	namespace paillier {
 		namespace crypto {
 			class PublicKey {
-				
+
 			// ----- member variables -----
 			public:
 			//protected:
 				/**
 				 * The modulus (n) of the public key.
 				 */
-				 const SInfinitBigInt modulus;
-				
+				 const SArbBigInt modulus;
+
 			private:
 				/**
 				 * The modulus squared (n<sup>2</sup>) of the public key.
 				 */
-				const SInfinitBigInt _modulusSquared;
-				
+				const SArbBigInt _modulusSquared;
+
 			public:
 				/**
 				 * The generator (g) of the public key
 				 */
-				const SInfinitBigInt generator;
-				
+				const SArbBigInt generator;
+
 			public:
 				/**
 				 * Constructs a Paillier public key.
 				 *
 				 * @param modulus of the public key
 				 */
-				PublicKey(const SInfinitBigInt & yModulus);
+				PublicKey(const SArbBigInt & yModulus);
 				~PublicKey();
-				
+
 				/*
-				const SInfinitBigInt & getModulus() const {
+				const SArbBigInt & getModulus() const {
 					return modulus;
 				}
-				
-				const SInfinitBigInt & getGenerator() const {
+
+				const SArbBigInt & getGenerator() const {
 					return _generator;
 				}
 				*/
-				const SInfinitBigInt& getModulusSquared() const {
+				const SArbBigInt& getModulusSquared() const {
 					return _modulusSquared;
 				}
-				
-				
+
+
 				/**
 				 * Implements the encryption function of the Paillier encryption scheme.
 				 *
 				 * @param plaintext to be encrypted.
 				 * @return corresponding ciphertext.
 				 */
-				SInfinitBigInt encrypt(const SInfinitBigInt & plaintext) const;
-				
+				SArbBigInt encrypt(const SArbBigInt & plaintext) const;
+
 				/**
 				 * The encryption function of the Paillier encryption scheme can be divided
 				 * into two parts: - The first part, as implemented here, maps the plaintext
@@ -77,8 +77,8 @@ namespace ppvr {
 				 * @param plaintext to be encrypted.
 				 * @return corresponding unobfuscated ciphertext.
 				 */
-				SInfinitBigInt encryptWithoutObfuscation(const SInfinitBigInt & plaintext) const;
-				
+				SArbBigInt encryptWithoutObfuscation(const SArbBigInt & plaintext) const;
+
 				/**
 				 * Implements the obfuscation function of the Paillier encryption scheme. It
 				 * changes the value of a ciphertext without changing the corresponding
@@ -87,15 +87,15 @@ namespace ppvr {
 				 * @param ciphertext to be ofuscated
 				 * @return obfuscated ciphertext.
 				 */
-				SInfinitBigInt obfuscate(const SInfinitBigInt & ciphertext) const;
-				
+				SArbBigInt obfuscate(const SArbBigInt & ciphertext) const;
+
 			private:
 				/**
 				 * returns a rendom number that is greater the 0 and less then the modulus.
 				 * @return
 				 */
-				SInfinitBigInt getNewRandomNumber() const;
-			
+				SArbBigInt getNewRandomNumber() const;
+
 			public:
 				/**
 				 * Implements the addition function of two ciphertexts of the Paillier
@@ -106,8 +106,8 @@ namespace ppvr {
 				 * @return ciphertext of the sum of the two plaintexts corresponding to
 				 * {@code ciphertext1} and {@code ciphertext2}.
 				 */
-				SInfinitBigInt add(const SInfinitBigInt & ciphertext1, const SInfinitBigInt & ciphertext2) const;
-				
+				SArbBigInt add(const SArbBigInt & ciphertext1, const SArbBigInt & ciphertext2) const;
+
 				/**
 				 * Implements the multiplication function of the Paillier encryption scheme.
 				 * In the Paillier scheme you can only multiply an unencrypted value with an
@@ -117,31 +117,31 @@ namespace ppvr {
 				 * @param plainfactor b.
 				 * @return product a*b.
 				 */
-				SInfinitBigInt multiply(const SInfinitBigInt & ciphertext, const SInfinitBigInt & plainfactor) const;
-				
+				SArbBigInt multiply(const SArbBigInt & ciphertext, const SArbBigInt & plainfactor) const;
+
 				/*
 				public BigInteger dotProduct(BigInteger[] xPlain, BigInteger[] yEncrypted, SecureKey privateKey4Debug) {
 					BigInteger productSumE = this.encrypt(BigInteger.ZERO);
 					assert xPlain.length == yEncrypted.length;
-					
+
 					for(int i=0; i < xPlain.length; i++) {
 						BigInteger productE = this.multiply(yEncrypted[i], xPlain[i]);
 						productSumE = this.add(productSumE, productE);
-						
+
 						double xiPlain = xPlain[i].doubleValue();
 						double yiD = privateKey4Debug.decrypt(yEncrypted[i]).doubleValue();
 						double productD = privateKey4Debug.decrypt(productE).doubleValue();
 						double productSumD = privateKey4Debug.decrypt(productSumE).doubleValue();
 						System.out.println("dotProduct [" + i + "] "+xiPlain+" * "+yiD+" = "+(xiPlain * yiD)+"; Dec(p): " + productD + ",  Dec(s): " + productSumD);
 					}
-					
+
 					return productSumE;
 				}
 				*/
-				
+
 				bool operator== (const PublicKey& other) const;
 				bool operator!= (const PublicKey& other) const;
-				
+
 			};
 		}
 	}

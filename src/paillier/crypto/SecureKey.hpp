@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "../../math/SInfinitBigInt.hpp"
+#include "../../math/SArbBigInt.hpp"
 #include "PublicKey.hpp"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
@@ -9,7 +9,7 @@ namespace ppvr {
 	namespace paillier {
 		namespace crypto {
 			class SecureKey {
-				
+
 			// ----- static create -----
 			public:
 				/**
@@ -20,11 +20,11 @@ namespace ppvr {
 				 * @throws IllegalArgumentException on illegal {@code modulusLength}.
 				 */
 				static SecureKey create(uint modulusBitLength);
-				
+
 			public:
-				SecureKey(const SInfinitBigInt& yP, const SInfinitBigInt& yQ, const PublicKey& yPublicKey);
+				SecureKey(const SArbBigInt& yP, const SArbBigInt& yQ, const PublicKey& yPublicKey);
 				~SecureKey();
-				
+
 				/**
 				 * Implementation of the decryption function of the Paillier encryption
 				 * scheme. Returns the plain text of a given cipher text.
@@ -32,21 +32,21 @@ namespace ppvr {
 				 * @param ciphertext to be decrypted.
 				 * @return the decrypted plaintext.
 				 */
-				SInfinitBigInt decrypt(SInfinitBigInt ciphertext) const;
-				
+				SArbBigInt decrypt(SArbBigInt ciphertext) const;
+
 			private:
 				/**
 				 * Computes the L function as defined in Paillier's paper. That is: L(x,p) =
 				 * (x-1)/p
 				 */
-				static SInfinitBigInt lFunction(const SInfinitBigInt& x, const SInfinitBigInt& p);
-				
+				static SArbBigInt lFunction(const SArbBigInt& x, const SArbBigInt& p);
+
 				/**
 				 * Computes the h-function as defined in Paillier's paper page 12,
 				 * 'Decryption using Chinese-remaindering'.
 				 */
-				static SInfinitBigInt hFunction(const SInfinitBigInt& x, const SInfinitBigInt& xSquared, const PublicKey& yPublicKey);
-				
+				static SArbBigInt hFunction(const SArbBigInt& x, const SArbBigInt& xSquared, const PublicKey& yPublicKey);
+
 				/**
 				 * The Chinese Remainder Theorem as needed for decryption.
 				 *
@@ -54,51 +54,51 @@ namespace ppvr {
 				 * @param mq the solution modulo q.
 				 * @return the solution modulo n=pq.
 				 */
-				SInfinitBigInt crt(const SInfinitBigInt& mp, const SInfinitBigInt& mq ) const;
-				
+				SArbBigInt crt(const SArbBigInt& mp, const SArbBigInt& mq ) const;
+
 			// ----- member variables -----
 			public:
 				/**
 				 * The first prime number, {@code p} such that
 				 * {@code p*q = publicKey.modulus}.
 				 */
-				const SInfinitBigInt p;
-				
+				const SArbBigInt p;
+
 				/**
 				 * The first prime number, {@code q} such that
 				 * {@code p*q = publicKey.modulus}.
 				 */
-				const SInfinitBigInt q;
-				
+				const SArbBigInt q;
+
 				const PublicKey publicKey;
-				
+
 			private:
 				/**
 				 * The value <code>p<sup>2</sup></code>
 				 */
-				const SInfinitBigInt _pSquared;
-				
+				const SArbBigInt _pSquared;
+
 				/**
 				 * The value <code>q<sup>2</sup></code>
 				 */
-				const SInfinitBigInt _qSquared;
-				
+				const SArbBigInt _qSquared;
+
 				/**
 				 * The modular inverse of <code>p modulo q</code>
 				 */
-				const SInfinitBigInt _pInverse;
-				
+				const SArbBigInt _pInverse;
+
 				/**
 				 * Precomputed <code>hp</code> as defined in Paillier's paper page 12:
 				 * Decryption using Chinese-remaindering.
 				 */
-				const SInfinitBigInt _hp;
-				
+				const SArbBigInt _hp;
+
 				/**
 				 * Precomputed <code>hq</code> as defined in Paillier's paper page 12:
 				 * Decryption using Chinese-remaindering.
 				 */
-				const SInfinitBigInt _hq;
+				const SArbBigInt _hq;
 			};
 		}
 	}

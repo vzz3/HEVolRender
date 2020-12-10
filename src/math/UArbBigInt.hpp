@@ -12,7 +12,7 @@
  SFixBigInt:		Signed   Fixed     width Big Integer (only stack memory)
  UArbBigInt:		Unsigned Arbitrary width Big Integer (required heap memory)
  SArbBigInt:		Signed   Arbitrary width Big Integer (required heap memory)
- 
+
  */
 
 /*
@@ -25,76 +25,76 @@ namespace utils {
 
 namespace ppvr {
 	namespace math {
-		class BigInt {
-			
+		class UArbBigInt {
+
 		// ----- statics -----
 		public:
-			friend std::ostream& operator << ( std::ostream& os, const BigInt& value ){
+			friend std::ostream& operator << ( std::ostream& os, const UArbBigInt& value ){
 				os << value.toStringDec();
 				return os;
 			}
-			
-			static const BigInt ZERO;
-			static const BigInt ONE;
-			static const BigInt TWO;
-			static const BigInt TEN;
-			
-			static BigInt fromUint64(const uint64_t& uint64Val);
+
+			static const UArbBigInt ZERO;
+			static const UArbBigInt ONE;
+			static const UArbBigInt TWO;
+			static const UArbBigInt TEN;
+
+			static UArbBigInt fromUint64(const uint64_t& uint64Val);
 		protected:
-			static BigInt& fromUint64(const uint64_t& uint64Val, BigInt &target );
-			
+			static UArbBigInt& fromUint64(const uint64_t& uint64Val, UArbBigInt &target );
+
 		public:
-			static BigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
+			static UArbBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
-			static BigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, BigInt &target );
-			
+			static UArbBigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, UArbBigInt &target );
+
 		// ----- statics rendome -----
 			/*
 		private:
 			static std::random_device rdev;
-			
+
 			// Alpha should (generally) either be 8 for crypto use, or 4 for non-crypto use.
 			// If not provided, it defaults to 8
 			static constexpr std::size_t isaacAlpha = 8;
-			
+
 			typedef utils::isaac64<isaacAlpha> RandomGenerator;
-			
+
 			// Alpha determines the size (in elements of result_type) of the
 			// internal state, and the size of the initial state for seeding.
 			static RandomGenerator randEngine;
-			
+
 			static void randomFill(void * buf, std::size_t count);
 			*/
 		public:
-			
-			static BigInt randomNumber(const uint& sizeInBit, Random& rnd);
-			static BigInt randomNumber(const BigInt& upperBound, Random& rnd);
+
+			static UArbBigInt randomNumber(const uint& sizeInBit, Random& rnd);
+			static UArbBigInt randomNumber(const UArbBigInt& upperBound, Random& rnd);
 		protected:
-			static BigInt& randomNumber(const uint& sizeInBit, Random& rnd, BigInt &target);
-			static BigInt& randomNumber(const BigInt& upperBound, Random& rnd, BigInt &target);
-			
+			static UArbBigInt& randomNumber(const uint& sizeInBit, Random& rnd, UArbBigInt &target);
+			static UArbBigInt& randomNumber(const UArbBigInt& upperBound, Random& rnd, UArbBigInt &target);
+
 		protected:
 			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
-			
+
 		// ----- member variables -----
 		private:
 			BIG_INT_WORD_COUNT_TYPE wordSize = 0; // count of used words (wordCount)
 			BIG_INT_WORD_COUNT_TYPE wordCapacity = 0; // length of the value array
 			BIG_INT_WORD_TYPE *value = NULL;
 			//std::shared_ptr<BIG_INT_WORD_TYPE[]> value;
-			
+
 		// ----- constructors -----
 		public:
-			BigInt();
-			BigInt(const BIG_INT_WORD_TYPE& value);
-			BigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity);
-			BigInt(const BigInt &src);
-			BigInt(const BigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacity);
+			UArbBigInt();
+			UArbBigInt(const BIG_INT_WORD_TYPE& value);
+			UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity);
+			UArbBigInt(const UArbBigInt &src);
+			UArbBigInt(const UArbBigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacity);
 		private:
-			BigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
+			UArbBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
 		public:
-			~BigInt();
-			
+			~UArbBigInt();
+
 		// ----- value export - toString / toUint64 -----
 		public:
 			/**
@@ -105,37 +105,37 @@ namespace ppvr {
 			 * .
 			 */
 			uint64_t toUint64() const;
-			
+
 			std::string toStringHex() const;
 			std::string toStringDec() const;
-			
+
 		// ----- memory managment -----
 		public:
 			/**
 			 * Copy assignment operator
 			 */
-			BigInt& operator= (const BigInt& other);
-			
+			UArbBigInt& operator= (const UArbBigInt& other);
+
 		private:
-			
+
 			/**
 			 * Increase the capacity of the Integer to a value that's greater or equal to newCapacity.
 			 * If new_cap is greater than the current capacity(), new storage is allocated, otherwise the method does nothing.
 			 */
 			void reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity );
-			
+
 			void reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue = 0 );
-			
+
 			void initUnusedWords(const BIG_INT_WORD_TYPE initValue = 0);
-			
+
 		// ----- bit utilities -----
 		public:
 			int bitLength() const;
-			
+
 		protected:
 			void setZero();
 			void setOne();
-			
+
 			/**
 			 * Sets the designated bit in this BigInt.
 			 * (Computes {@code (this | (1<<n))}.)
@@ -143,7 +143,7 @@ namespace ppvr {
 			 * @param  n index of bit to set.
 			 */
 			void setBit(const uint n);
-			
+
 			/**
 			 * Clear the designated bit in this BigInt.
 			 * (Computes {@code (this & ~(1<<n))}.)
@@ -152,7 +152,7 @@ namespace ppvr {
 			 * @return {@code this & ~(1<<n)}
 			 */
 			void clearBit(const uint n);
-			
+
 		public:
 			/**
 			 * Returns a BigInteger whose value is equivalent to this BigInteger
@@ -161,8 +161,8 @@ namespace ppvr {
 			 * @param  n index of bit to set.
 			 * @return {@code this | (1<<n)}
 			 */
-			BigInt withBit(const uint n);
-				
+			UArbBigInt withBit(const uint n);
+
 			/**
 			 * Returns a BigInteger whose value is equivalent to this BigInteger
 			 * with the designated bit cleared.
@@ -171,22 +171,22 @@ namespace ppvr {
 			 * @param  n index of bit to clear.
 			 * @return {@code this & ~(1<<n)}
 			 */
-			BigInt withoutBit(const uint n);
-		
+			UArbBigInt withoutBit(const uint n);
+
 		public:
 			bool isZero() const;
 			bool isOne() const;
-			
+
 			/**
 			 * Returns true iff this MutableBigInteger is even.
 			 */
 			bool isEven() const;
-			
+
 			/**
 			 * Returns true iff this MutableBigInteger is odd.
 			 */
 			bool isOdd() const;
-			
+
 		protected:
 			/**
 			 * Returns {@code true} if and only if the designated bit is set.
@@ -197,20 +197,20 @@ namespace ppvr {
 			 * @throws ArithmeticException {@code n} is negative.
 			 */
 			bool testBit(uint n) const;
-			
+
 		private:
 			/**
 			 * this method returns the number of the highest set bit in word
 			 * if the 'word' is zero this method returns '-1'
 			 */
 			int findHighestSetBitInWord(BIG_INT_WORD_TYPE word) const;
-			
+
 			/**
 			 * this method returns the number of the lowest set bit in word
 			 * if the 'word' is zero this method returns '-1'
 			 */
 			int findLowestSetBitInWord(BIG_INT_WORD_TYPE word) const;
-			
+
 		protected:
 			/**
 			 * Returns the index of the leftmost (highest-order) one bit in this
@@ -220,7 +220,7 @@ namespace ppvr {
 			 * @return index of the leftmost one bit in this BigInteger.
 			 */
 			int findHighestSetBit() const;
-			
+
 			/**
 			 * Returns the index of the rightmost (lowest-order) one bit in this
 			 * BigInteger (the number of zero bits to the right of the rightmost
@@ -229,13 +229,13 @@ namespace ppvr {
 			 * @return index of the rightmost one bit in this BigInteger.
 			 */
 			int findLowestSetBit() const;
-			
+
 		// ----- word utilities -----
 		protected:
 			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
 				return this->wordSize;
 			}
-			
+
 			/**
 			 * Decreases the word count to newMaxWordSize.
 			 * If the word newMaxWordSize-1 is 0 then set the wordSize to newMaxWordSize-1.
@@ -245,11 +245,11 @@ namespace ppvr {
 			 * @param newMaxWordSize new maximal word count
 			 */
 			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize);
-			
+
 			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}
-			
+
 		private:
 			/**
 			 * Replace target.low with src.low bits.
@@ -259,7 +259,7 @@ namespace ppvr {
 			 * res:		hhhhLLLL
 			 */
 			BIG_INT_WORD_TYPE setLowFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Replace target.low with src.high bits.
 			 *
@@ -268,7 +268,7 @@ namespace ppvr {
 			 * res:		hhhhHHHH
 			 */
 			BIG_INT_WORD_TYPE setLowFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Replace target.high with src.high bits.
 			 *
@@ -277,7 +277,7 @@ namespace ppvr {
 			 * res:		HHHHllll
 			 */
 			BIG_INT_WORD_TYPE setHighFromHighBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Replace target.high with src.low bits.
 			 *
@@ -286,7 +286,7 @@ namespace ppvr {
 			 * res:		LLLLllll
 			 */
 			BIG_INT_WORD_TYPE setHighFromLowBits(const BIG_INT_WORD_TYPE target, const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Set low bit to 0 and keep the high bits.
 			 *
@@ -294,7 +294,7 @@ namespace ppvr {
 			 * res:	HHHH0000
 			 */
 			BIG_INT_WORD_TYPE getHighAsHighBits(const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Move the high bits of src to the low bits. The high bits will be 0.
 			 *
@@ -302,7 +302,7 @@ namespace ppvr {
 			 * res:	0000HHHH
 			 */
 			BIG_INT_WORD_TYPE getHighAsLowBits(const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Set high bit to 0 and keep the low bits.
 			 *
@@ -310,7 +310,7 @@ namespace ppvr {
 			 * res:	0000LLLL
 			 */
 			BIG_INT_WORD_TYPE getLowAsLowBits(const BIG_INT_WORD_TYPE src) const;
-			
+
 			/**
 			 * Move the low bits of src to the high bits. The low bits will be 0.
 			 *
@@ -318,7 +318,7 @@ namespace ppvr {
 			 * res:	LLLL0000
 			 */
 			BIG_INT_WORD_TYPE getLowAsHighBits(const BIG_INT_WORD_TYPE src) const;
-			
+
 		// ----- shift left -----
 		private:
 			/**
@@ -329,7 +329,7 @@ namespace ppvr {
 			 * This method does not increase the the word count => it drops informations that are on left end!
 			 */
 			void rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
-			
+
 			/**
 			 * this method moves all bits into the left hand side
 			 * return value <- this <- c
@@ -345,7 +345,7 @@ namespace ppvr {
 			 * This method does not increase the the word count => it drops informations that are on left end!
 			 */
 			BIG_INT_WORD_TYPE rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
-			
+
 		protected:
 			/**
 			 * moving all bits into the left side 'bits' times
@@ -360,10 +360,10 @@ namespace ppvr {
 			 * if resize is false (default) this method does not increase the the word size => it drops informations that are on left end!
 			 */
 			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0, const bool resize=false);
-			
+
 		public:
-			BigInt operator<< (const uint bits) const;
-			
+			UArbBigInt operator<< (const uint bits) const;
+
 		// ----- shift right -----
 		private:
 			/**
@@ -372,7 +372,7 @@ namespace ppvr {
 			 * this method moves only words
 			 */
 			void rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
-			
+
 			/**
 			 * this method moves all bits into the right hand side
 			 * C -> this -> return value
@@ -386,7 +386,7 @@ namespace ppvr {
 			 * after rcr_moveBits(2, 1) there'll be 110000000 and rcr_moveBits returns 1
 			 */
 			BIG_INT_WORD_TYPE rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
-			
+
 		protected:
 			/**
 			 * moving all bits into the right side 'bits' times
@@ -399,10 +399,10 @@ namespace ppvr {
 			 * and the method returns state of the last moved bit
 			 */
 			BIG_INT_WORD_TYPE rcr(const uint bits, const BIG_INT_WORD_TYPE c=0);
-			
+
 		public:
-			BigInt operator>> (const uint bits) const;
-			
+			UArbBigInt operator>> (const uint bits) const;
+
 		// ----- addition -----
 		private:
 			/**
@@ -410,7 +410,7 @@ namespace ppvr {
 			 * returns carry
 			 */
 			BIG_INT_WORD_TYPE addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) const;
-			
+
 			/**
 			 * this method adds only two unsigned words to the existing value
 			 * and these words begin on the 'index' position
@@ -448,7 +448,7 @@ namespace ppvr {
 			 */
 			BIG_INT_WORD_TYPE addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
 			//void addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index);
-			
+
 			/**
 			 * this method adds one word (at a specific position)
 			 * and returns a carry (if it was)
@@ -472,22 +472,22 @@ namespace ppvr {
 			 * of course if there was a carry from table[2] it would be returned
 			 */
 			BIG_INT_WORD_TYPE addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
-			
+
 		protected:
 			/**
 			 * this = this + word
 			 */
 			void addInt(const BIG_INT_WORD_TYPE word);
-			
-			void add(const BigInt &other, BigInt &result) const;
-			void add(const BigInt &other);
-			
+
+			void add(const UArbBigInt &other, UArbBigInt &result) const;
+			void add(const UArbBigInt &other);
+
 		public:
-			BigInt operator+ (const BigInt& other) const;
-			
+			UArbBigInt operator+ (const UArbBigInt& other) const;
+
 		// ----- substraction -----
 		private:
-			
+
 			/**
 			 * this method subtractes one word from the other and subtracting
 			 * carry if it has been defined
@@ -497,7 +497,7 @@ namespace ppvr {
 			 * returns carry(borow)
 			 */
 			BIG_INT_WORD_TYPE subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) const;
-			
+
 			/**
 			 * this method subtracts one word (at a specific position)
 			 * and returns a carry (if it was)
@@ -521,14 +521,14 @@ namespace ppvr {
 			 * of course if there was a carry from table[2] it would be returned
 			 */
 			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) const;
-			
+
 		protected:
 			/**
 			 * this = this - word
 			 * returns the carry (borrow) if this was < word
 			 */
 			BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word);
-			
+
 			/**
 			 * this method's subtracting other from the 'this' and subtracting
 			 * carry if it has been defined
@@ -537,12 +537,12 @@ namespace ppvr {
 			 * carry must be zero or one (might be a bigger value than 1)
 			 * function returns carry (borrow) (1) (if this < other)
 			 */
-			BIG_INT_WORD_TYPE sub(const BigInt& other, BIG_INT_WORD_TYPE carry, BigInt &result) const;
-			BIG_INT_WORD_TYPE sub(const BigInt& other);
-			
+			BIG_INT_WORD_TYPE sub(const UArbBigInt& other, BIG_INT_WORD_TYPE carry, UArbBigInt &result) const;
+			BIG_INT_WORD_TYPE sub(const UArbBigInt& other);
+
 		public:
-			BigInt operator- (const BigInt& other) const;
-			
+			UArbBigInt operator- (const UArbBigInt& other) const;
+
 		// ----- multiplication -----
 		private:
 			/**
@@ -555,34 +555,34 @@ namespace ppvr {
 			 * this method is used in the second version of the multiplication algorithms
 			 */
 			void mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) const;
-			
+
 		protected:
 			/**
 			 * multiplication: result = this * ss2
 			 */
-			void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
-			
+			void mulInt(BIG_INT_WORD_TYPE ss2, UArbBigInt& result) const;
+
 		private:
-			void mulSchool(const BigInt& a, const BigInt& b, BigInt& result) const;
-			
+			void mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const;
+
 		protected:
 			/**
 			 * result = this * b
 			 */
-			void mul(const BigInt& b, BigInt& result) const;
-			
+			void mul(const UArbBigInt& b, UArbBigInt& result) const;
+
 			/**
 			 * this = this * b
 			 */
-			void mul(const BigInt& b);
-			
+			void mul(const UArbBigInt& b);
+
 		public:
-			BigInt operator* (const BigInt& other) const;
-			
+			UArbBigInt operator* (const UArbBigInt& other) const;
+
 		// ----- division -----
 		private:
 			// -- divTwoWords
-			
+
 			/**
 			 * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
 			 * result = a:b / divisor and rest - remainder
@@ -597,9 +597,9 @@ namespace ppvr {
 			 *
 			 */
 			void divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE *remainder = NULL) const;
-			
+
 			// -- divTwoWordsKnuth
-			
+
 			/**
 			 *
 			 * the same algorithm like the division algorithm for all words which is based on
@@ -612,9 +612,9 @@ namespace ppvr {
 			BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) const;
 			unsigned int divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) const;
 			void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) const;
-			
+
 			// -- divInt
-			
+
 		protected:
 			/**
 			 * division by one unsigned word
@@ -622,8 +622,8 @@ namespace ppvr {
 			 *
 			 * returns the remainder
 			 */
-			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, BigInt& result) const;
-			
+			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, UArbBigInt& result) const;
+
 			/**
 			 * division by one unsigned word
 			 * this = this / divisor
@@ -631,14 +631,14 @@ namespace ppvr {
 			 * returns the remainder
 			 */
 			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
-			
+
 		private:
 			// -- divKnuth
-			
-			void divKnuth_division(BigInt divisor, BigInt &result, BigInt& remainder, uint m, uint n) const;
-			void divKnuth_makeNewU(BigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
-			void divKnuth_copyNewU(const BigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
-			
+
+			void divKnuth_division(UArbBigInt divisor, UArbBigInt &result, UArbBigInt& remainder, uint m, uint n) const;
+			void divKnuth_makeNewU(UArbBigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
+			void divKnuth_copyNewU(const UArbBigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
+
 			/**
 			 * D1. [Normaliez]
 			 *
@@ -650,18 +650,18 @@ namespace ppvr {
 			 * -  d - how many times we've moved
 			 * -  return - the next-left value from 'this' (that after value[value_size-1])
 			 */
-			BIG_INT_WORD_TYPE divKnuth_normalize(BigInt& divisor, uint n, uint & d);
-			
+			BIG_INT_WORD_TYPE divKnuth_normalize(UArbBigInt& divisor, uint n, uint & d);
+
 			void divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d);
 			BIG_INT_WORD_TYPE divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const;
-			
+
 			/**
 			 * D4. [Multiply and subtract]
 			 *		includes also: D5. [Test Remainder] and D6. [add back]
 			 *
 			 */
-			void divKnuth_multiplySubtract(	BigInt & uu,  const BigInt & vv, BIG_INT_WORD_TYPE & qp) const;
-			
+			void divKnuth_multiplySubtract(	UArbBigInt & uu,  const UArbBigInt & vv, BIG_INT_WORD_TYPE & qp) const;
+
 			/**
 			 * the third division algorithm
 			 *
@@ -670,23 +670,23 @@ namespace ppvr {
 			 * Donald E. Knuth
 			 * !! give the description here (from the book)
 			 */
-			void divKnuth(const BigInt& divisor, BigInt &result, BigInt& remainder) const;
-			
+			void divKnuth(const UArbBigInt& divisor, UArbBigInt &result, UArbBigInt& remainder) const;
+
 		protected:
 			/**
 			 * result = this / divisor
 			 */
-			void div(const BigInt& divisor, BigInt &result, BigInt& remainder) const;
-			
+			void div(const UArbBigInt& divisor, UArbBigInt &result, UArbBigInt& remainder) const;
+
 			/**
 			 * this = this / divisor
 			 */
-			void div(const BigInt& divisor, BigInt& remainder);
-			
+			void div(const UArbBigInt& divisor, UArbBigInt& remainder);
+
 		public:
-			BigInt operator/ (const BigInt& other) const;
-			BigInt operator% (const BigInt& other) const;
-			
+			UArbBigInt operator/ (const UArbBigInt& other) const;
+			UArbBigInt operator% (const UArbBigInt& other) const;
+
 		// ----- pow(), sqrt() -----
 		public:
 
@@ -694,23 +694,23 @@ namespace ppvr {
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
 			 */
-			BigInt pow(BigInt pow) const;
-			
+			UArbBigInt pow(UArbBigInt pow) const;
+
 			/**
 			 * square root
 			 * e.g. BigInt(9).sqrt() = 3
 			 * ('digit-by-digit' algorithm)
 			 */
-			BigInt sqrt() const;
-			
+			UArbBigInt sqrt() const;
+
 		// ----- Comparison operators -----
 		public:
-			bool operator< (const BigInt& other) const;
-			bool operator<= (const BigInt& other) const;
-			bool operator> (const BigInt& other) const;
-			bool operator>= (const BigInt& other) const;
-			bool operator== (const BigInt& other) const;
-			bool operator!= (const BigInt& other) const;
+			bool operator< (const UArbBigInt& other) const;
+			bool operator<= (const UArbBigInt& other) const;
+			bool operator> (const UArbBigInt& other) const;
+			bool operator>= (const UArbBigInt& other) const;
+			bool operator== (const UArbBigInt& other) const;
+			bool operator!= (const UArbBigInt& other) const;
 		};
 	}
 }

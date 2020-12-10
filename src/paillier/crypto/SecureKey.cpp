@@ -10,26 +10,26 @@ SecureKey SecureKey::create(uint modulusBitLength) {
 		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-	
+
 	// Find two primes p and q whose multiple has the same number of bits
 	// as modulusLength
-	SInfinitBigInt p, q, modulus;
+	SArbBigInt p, q, modulus;
 	uint primeLength = modulusBitLength / 2;
 	Random rnd{};
 	do {
-		p = SInfinitBigInt::probablePrime(primeLength, rnd);
+		p = SArbBigInt::probablePrime(primeLength, rnd);
 		do {
-			q = SInfinitBigInt::probablePrime(primeLength, rnd);
+			q = SArbBigInt::probablePrime(primeLength, rnd);
 		} while (p == q); //p and q must not be equal
 		modulus = p * q;
 	} while (modulus.bitLength() != modulusBitLength);
-	
+
 	const PublicKey publicKey(modulus);
 	const SecureKey privateKey(p, q, publicKey);
 	return privateKey;
 }
 
-SecureKey::SecureKey(const SInfinitBigInt& yP, const SInfinitBigInt& yQ, const PublicKey & yPublicKey)
+SecureKey::SecureKey(const SArbBigInt& yP, const SArbBigInt& yQ, const PublicKey & yPublicKey)
 	: p(yP)
 	, q(yQ)
 	, publicKey(yPublicKey)
@@ -42,26 +42,26 @@ SecureKey::SecureKey(const SInfinitBigInt& yP, const SInfinitBigInt& yQ, const P
 
 SecureKey::~SecureKey() {}
 
-SInfinitBigInt SecureKey::lFunction(const SInfinitBigInt& x, const SInfinitBigInt& p) {
-	return (x - SInfinitBigInt(1) ) / p;
+SArbBigInt SecureKey::lFunction(const SArbBigInt& x, const SArbBigInt& p) {
+	return (x - SArbBigInt(1) ) / p;
 }
 
-SInfinitBigInt SecureKey::hFunction(const SInfinitBigInt& x, const SInfinitBigInt& xSquared, const PublicKey& yPublicKey) {
-	return lFunction(yPublicKey.generator.modPow(x - SInfinitBigInt(1), xSquared), x).modInverse(x);
+SArbBigInt SecureKey::hFunction(const SArbBigInt& x, const SArbBigInt& xSquared, const PublicKey& yPublicKey) {
+	return lFunction(yPublicKey.generator.modPow(x - SArbBigInt(1), xSquared), x).modInverse(x);
 }
 
-SInfinitBigInt SecureKey::crt(const SInfinitBigInt& mp, const SInfinitBigInt& mq) const {
-	SInfinitBigInt u = ((mq - mp) * _pInverse) % q;
+SArbBigInt SecureKey::crt(const SArbBigInt& mp, const SArbBigInt& mq) const {
+	SArbBigInt u = ((mq - mp) * _pInverse) % q;
 	u = u * p + mp;
 	return u;
 }
 
 
-SInfinitBigInt SecureKey::decrypt(SInfinitBigInt ciphertext) const {
+SArbBigInt SecureKey::decrypt(SArbBigInt ciphertext) const {
 	//return c.modPow(this.lambda,this.pubkey.n2).subtract(BigInteger.ONE).divide(this.pubkey.n).multiply(this.x).mod(this.pubkey.n);
-	
-	SInfinitBigInt decryptedToP = (lFunction(ciphertext.modPow(p - 1, _pSquared), p) * _hp) % p;
-	SInfinitBigInt decryptedToQ = (lFunction(ciphertext.modPow(q - 1, _qSquared), q) * _hq) % q;
-	SInfinitBigInt decryptedValue = crt(decryptedToP, decryptedToQ);
+
+	SArbBigInt decryptedToP = (lFunction(ciphertext.modPow(p - 1, _pSquared), p) * _hp) % p;
+	SArbBigInt decryptedToQ = (lFunction(ciphertext.modPow(q - 1, _qSquared), q) * _hq) % q;
+	SArbBigInt decryptedValue = crt(decryptedToP, decryptedToQ);
 	return decryptedValue;
 }

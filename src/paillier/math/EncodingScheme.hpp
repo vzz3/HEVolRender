@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../math/SInfinitBigInt.hpp"
+#include "../../math/SArbBigInt.hpp"
 #include "../crypto/PublicKey.hpp"
 #include "EncodedNumber.hpp"
 
@@ -11,60 +11,60 @@ namespace ppvr {
 	namespace paillier {
 		namespace math {
 			class EncodingScheme {
-				
+
 			// ----- member variables -----
 			private:
-				
+
 				/**
 				 * Denotes whether the numbers represented are signed or unsigned.
 				 */
 				const bool signedEncoding;
-				
+
 				/**
 				 * The precision of this PaillierContext, denotes the number of bits used to
 				 * represent valid numbers that can be encrypted using the associated
 				 * {@code publicKey}.
 				 */
 				const int_fast32_t precision;
-				
+
 				/**
 				 * The base used to compute encoding.
 				 */
 				const uint_fast32_t base;
-				
+
 				/**
 				 * The result of log<sub>2</sub>base.
 				 */
 				const double log2Base;
-				
+
 				/**
 				 * The maximum {@code value} of the {@code EncodedNumber} that can be
 				 * encrypted using the associated {@code publicKey}.
 				 */
-				SInfinitBigInt maxEncoded;
-				
+				SArbBigInt maxEncoded;
+
 				/**
 				 * The minimum {@code value} of the {@code EncodedNumber} that can be
 				 * encrypted using the associated {@code publicKey}.
 				 */
-				SInfinitBigInt minEncoded;
-				
+				SArbBigInt minEncoded;
+
 				/**
 				 * The maximum value that can be encoded and encrypted using the associated
 				 * {@code publicKey}.
 				 */
-				SInfinitBigInt maxSignificand;
-				
+				SArbBigInt maxSignificand;
+
 				/**
 				 * The minimum value that can be encoded and encrypted using the associated
 				 * {@code publicKey}.
 				 */
-				SInfinitBigInt minSignificand;
-				
-				
-				
+				SArbBigInt minSignificand;
+
+
+
 				const crypto::PublicKey pk;
-				
+
 			public:
 				/**
 				 * Constructs a floating point encoding sheme
@@ -76,11 +76,11 @@ namespace ppvr {
 				 */
 				EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedEncoding, const int_fast32_t yPrecision, const uint_fast32_t yBase);
 				~EncodingScheme();
-				
+
 				const crypto::PublicKey getPublicKey() const {
 					return pk;
 				}
-				
+
 				/**
 				 * Checks whether this EncodingScheme supports signed numbers.
 				 *
@@ -90,7 +90,7 @@ namespace ppvr {
 				bool isSigned() const {
 					return signedEncoding;
 				}
-				
+
 				/**
 				 * Checks whether this EncodingScheme supports unsigned numbers.
 				 *
@@ -100,31 +100,31 @@ namespace ppvr {
 				bool isUnsigned() const {
 					return !signedEncoding;
 				}
-				
+
 				uint_fast32_t getBase() const {
 					return base;
 				}
-				
+
 				int_fast32_t getPrecision() const {
 					return precision;
 				}
-				
-				const SInfinitBigInt& getMaxEncoded() const {
+
+				const SArbBigInt& getMaxEncoded() const {
 					return maxEncoded;
 				}
-				
-				const SInfinitBigInt& getMinEncoded() const {
+
+				const SArbBigInt& getMinEncoded() const {
 					return minEncoded;
 				}
-				
-				const SInfinitBigInt& getMaxSignificand() const {
+
+				const SArbBigInt& getMaxSignificand() const {
 					return maxSignificand;
 				}
-				
-				const SInfinitBigInt& getMinSignificand() const {
+
+				const SArbBigInt& getMinSignificand() const {
 					return minSignificand;
 				}
-				
+
 				/**
 				 * Returns the signum function of this EncodedNumber.
 				 *
@@ -132,7 +132,7 @@ namespace ppvr {
 				 * or positive.
 				 */
 				int_fast8_t signum(const EncodedNumber& yNumber) const;
-				
+
 			private:
 				/**
 				 * Returns an exponent derived from precision. The exponent is calculated as
@@ -142,7 +142,7 @@ namespace ppvr {
 				 * @return exponent for this {@code precision}.
 				 */
 				int_fast32_t getPrecExponent(double yPrecision) const;
-				
+
 			public:
 				/**
 				 * Encodes a {@code long} using this {@code PaillierContext}.
@@ -152,7 +152,7 @@ namespace ppvr {
 				 * @throws EncodeException if the {@code value} is not valid.
 				 */
 				EncodedNumber encode(const int64_t yValue) const;
-				
+
 				/**
 				 * Encodes a {@code BigInteger} using this {@code PaillierContext}. Throws
 				 * EncodeException if the input value is greater than {@code maxSignificand}
@@ -162,8 +162,8 @@ namespace ppvr {
 				 * @return the encoding result - {@code EncodedNumber}
 				 * @throws EncodeException if the {@code value} is not valid.
 				 */
-				EncodedNumber encode(SInfinitBigInt yValue) const;
-				
+				EncodedNumber encode(SArbBigInt yValue) const;
+
 				/**
 				 * Encodes a {@code double} given a {@code precision} using this
 				 * {@code PaillierContext}.
@@ -176,7 +176,7 @@ namespace ppvr {
 				 * is not valid.
 				 */
 				EncodedNumber encode(const double yValue, const double yPrecision) const;
-			
+
 			private:
 				/**
 				 * Returns an integer ({@code BigInteger}) representation of a floating
@@ -189,8 +189,8 @@ namespace ppvr {
 				 * @param exponent the exponent to encode the number.
 				 * @return the integer representation of the input floating point number.
 				 */
-				SInfinitBigInt innerEncode(const double yValue, const int_fast32_t yExponent) const;
-				
+				SArbBigInt innerEncode(const double yValue, const int_fast32_t yExponent) const;
+
 			private:
 				/**
 				 * Returns the value of an {@code EncodedNumber} for decoding. Throws a
@@ -205,10 +205,10 @@ namespace ppvr {
 				 * @param encoded the input {@code EncodedNumber}.
 				 * @return the significand of the {@code EncodedNumber}.
 				 */
-				SInfinitBigInt getSignificand(const EncodedNumber& yEncoded) const;
-				
+				SArbBigInt getSignificand(const EncodedNumber& yEncoded) const;
+
 			public:
-				
+
 				/**
 				 * Decodes to the exact {@code BigInteger} representation.
 				 *
@@ -216,8 +216,8 @@ namespace ppvr {
 				 * @return the decoding result.
 				 * @throws DecodeException if the {@code encoded} cannot be decoded.
 				 */
-				SInfinitBigInt decodeBigInt(const EncodedNumber& yEncoded) const;
-				
+				SArbBigInt decodeBigInt(const EncodedNumber& yEncoded) const;
+
 				/**
 				 * Decodes to the exact {@code double} representation. Throws
 				 * DecodeException if the decoded result is
@@ -229,7 +229,7 @@ namespace ppvr {
 				 * @throws DecodeException if the {@code encoded} cannot be decoded.
 				 */
 				double decodeDouble(const EncodedNumber& yEncoded) const;
-				
+
 				/**
 				 * Decodes to the exact {@code long} representation. Throws DecodeException
 				 * if the decoded result is greater than {@link java.lang.Long#MAX_VALUE} or
@@ -240,7 +240,7 @@ namespace ppvr {
 				 * @throws DecodeException if the {@code encoded} cannot be decoded.
 				 */
 				int64_t decodeInt64(const EncodedNumber& yEncoded) const;
-				
+
 				/**
 				 * Returns the rescaling factor to re-encode an {@code EncodedNumber} using the same {@code base}
 				 * but with a different {@code exponent}. The rescaling factor is computed as <code>base</code><sup>expDiff</sup>.
@@ -248,12 +248,12 @@ namespace ppvr {
 				 * @param expDiff the exponent to for the new rescaling factor.
 				 * @return the rescaling factor.
 				 */
-				SInfinitBigInt getRescalingFactor(const int32_t expDiff) const;
-				
-				
-				
+				SArbBigInt getRescalingFactor(const int32_t expDiff) const;
+
+
+
 				bool operator== (const EncodingScheme& other) const;
-				
+
 			};
 		}
 	}

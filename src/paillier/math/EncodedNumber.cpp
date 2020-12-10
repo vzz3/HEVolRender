@@ -6,7 +6,7 @@
 
 using namespace ppvr::paillier::math;
 
-EncodedNumber::EncodedNumber(const SInfinitBigInt& yMantissa, const int32_t yExponent)
+EncodedNumber::EncodedNumber(const SArbBigInt& yMantissa, const int32_t yExponent)
 	: mantissa (yMantissa)
 	, exponent(yExponent)
 {
@@ -30,4 +30,3 @@ std::string EncodedNumber::toString() const {
 bool EncodedNumber::operator== (const EncodedNumber& other) const {
 	return this == &other || (mantissa == other.mantissa && exponent == other.exponent);
 }
-

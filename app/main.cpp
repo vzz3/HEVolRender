@@ -1,8 +1,8 @@
 // main
 #include <iostream>
 #include <string>
-#include "../src/math/BigInt.hpp"
-#include "../src/math/SInfinitBigInt.hpp"
+#include "../src/math/UArbBigInt.hpp"
+#include "../src/math/SArbBigInt.hpp"
 #include <chrono>
 
 using namespace ppvr;
@@ -10,7 +10,7 @@ using namespace ppvr;
 int main (int argc, char *argv[]) {
 	std::cout << "main function\n";
 	
-	std::cout << math::BigInt::fromString(  "121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16).toStringHex() << std::endl;
+	std::cout << math::UArbBigInt::fromString(  "121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16).toStringHex() << std::endl;
 	/*
 	std::string numStrIn("1234");
 	math::BigInt a = math::BigInt::fromString(numStrIn, 10);
@@ -30,8 +30,8 @@ int main (int argc, char *argv[]) {
 	
 	auto startTime = std::chrono::high_resolution_clock::now();
 	
-	math::BigInt devTestRes = math::BigInt::fromString(    "121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16) / math::BigInt::fromString( "fedcba9876543210000000000000000fedcba9876543210", 16);
-	math::BigInt devTestResReference = math::BigInt::fromString(  "123456789abcdef000000000000000123456789abcdef0", 16);
+	math::UArbBigInt devTestRes = math::UArbBigInt::fromString(    "121fa00ad77d7422236d88fe5618cf13419a0b84f54b6445a4618e3b7a5bf121fa00ad77d7422236d88fe5618cf00", 16) / math::UArbBigInt::fromString( "fedcba9876543210000000000000000fedcba9876543210", 16);
+	math::UArbBigInt devTestResReference = math::UArbBigInt::fromString(  "123456789abcdef000000000000000123456789abcdef0", 16);
 	if(devTestRes == devTestResReference) {
 		std::cout << "SUPER!" << std::endl;
 	} else {
@@ -48,7 +48,7 @@ int main (int argc, char *argv[]) {
 	ppvr::math::Random& rnd = ppvr::math::Random::getForLocalThread();
 	for(int i = 0; i<100; i++) {
 		//std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
-		std::cout << "probablePrime: " << ppvr::math::SInfinitBigInt::probablePrime(1024, rnd).toStringDec() << " \n";
+		std::cout << "probablePrime: " << ppvr::math::SArbBigInt::probablePrime(1024, rnd).toStringDec() << " \n";
 	}
 	
 	
