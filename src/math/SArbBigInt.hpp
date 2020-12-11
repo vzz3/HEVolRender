@@ -347,6 +347,8 @@ namespace ppvr {
 			 * return gcd of b and a.
 			 *  also returns the Bézout coefficients, u and v, which satisfy: a.*u + b.*v = gcd.
 			 *	The Bézout coefficients are useful for solving Diophantine equations.
+			 * https://www.mathworks.com/help/matlab/ref/gcd.html
+			 * https://www.geeksforgeeks.org/euclidean-algorithms-basic-and-extended/
 			 */
 			SArbBigInt gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
 

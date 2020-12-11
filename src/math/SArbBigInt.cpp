@@ -816,15 +816,7 @@ SArbBigInt SArbBigInt::sqrt() const {
 }
 
 /* ---------- modInverse / gcd ---------- */
-/**
- * Returns a BigInteger whose value is {@code (this}<sup>-1</sup> {@code mod m)}.
- *
- * @param  m the modulus.
- * @return {@code this}<sup>-1</sup> {@code mod m}.
- * @throws ArithmeticException {@code  m} &le; 0, or this BigInteger
- *         has no multiplicative inverse mod m (that is, this BigInteger
- *         is not <i>relatively prime</i> to m).
- */
+
 SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
 	if (m.isZero()) {
 		std::string msg = "ERROR BigInt: modulus not positive!";
@@ -851,14 +843,7 @@ SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
 	return u % m;
 }
 
-/**
- * Function for extended Euclidean Algorithm
- * return gcd of b and a.
- *  also returns the Bézout coefficients, u and v, which satisfy: a.*u + b.*v = gcd.
- *	The Bézout coefficients are useful for solving Diophantine equations.
- * https://www.mathworks.com/help/matlab/ref/gcd.html
- * https://www.geeksforgeeks.org/euclidean-algorithms-basic-and-extended/
- */
+
 SArbBigInt SArbBigInt::gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const {
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
 	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
@@ -962,10 +947,6 @@ SArbBigInt SArbBigInt::gcdExtended_internIterative(const SArbBigInt &a, const SA
 	return a1;
 }
 
-/**
- * Basic Euclidean Algorithm
- * returns the gcd of a and b
- */
 SArbBigInt SArbBigInt::gcd(const SArbBigInt & a, const SArbBigInt & b) const {
 	if (a.isZero()) {
 		return b;
@@ -975,20 +956,6 @@ SArbBigInt SArbBigInt::gcd(const SArbBigInt & a, const SArbBigInt & b) const {
 
 /* ---------- modPow ---------- */
 
-
-/**
- * Returns a BigInteger whose value is
- * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
- * method permits negative exponents.)
- *
- * @param  exponent the exponent.
- * @param  m the modulus.
- * @return <code>this<sup>exponent</sup> mod m</code>
- * @throws ArithmeticException {@code m} &le; 0 or the exponent is
- *         negative and this BigInteger is not <i>relatively
- *         prime</i> to {@code m}.
- * @see    #modInverse
- */
 SArbBigInt SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &m) const {
 	if (m.signum <= 0) {
 		//throw new ArithmeticException("BigInteger: modulus not positive");

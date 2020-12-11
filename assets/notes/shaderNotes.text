@@ -1,0 +1,11 @@
+As gllampert pointed out in the comments the value is hardware dependent. You can retrieve it with glGet, using GL_MAX_COMBINED_TEXTURE_IMAGE_UNIT. You can find how different hardware performs here.
+
+However, in OpenGL 3 there is a lower bound of at least 48 simultaneously used textures, no matter which type. [source]
+
+GL_MAX_COMBINED_TEXTURE_IMAGE_UNIT
+
+https://community.khronos.org/t/minimum-number-of-texture-slots-supported/104019
+
+Vulkan Image Format and Type Matching
+Rgba32ui -> VK_FORMAT_R32G32B32A32_UINT
+	=> 128bit * 32 Texture units => 4.096bit per voxel
