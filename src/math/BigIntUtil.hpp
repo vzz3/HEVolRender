@@ -7,6 +7,13 @@
 
 #include "Random.hpp"
 
+/*
+ UFixBigInt:		Unsigned Fixed     width Big Integer (only stack memory)
+ SFixBigInt:		Signed   Fixed     width Big Integer (only stack memory)
+ UArbBigInt:		Unsigned Arbitrary width Big Integer (required heap memory)
+ SArbBigInt:		Signed   Arbitrary width Big Integer (required heap memory)
+ */
+
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 

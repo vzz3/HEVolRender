@@ -64,7 +64,7 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const
 	c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
 	c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
 	
-	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c ; ++i) { // TODO
+	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
 		c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
 	}
 	return c;

@@ -24,7 +24,7 @@
 #define BIG_INT_BITS_PER_WORD (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT)
 #define BIG_INT_WORD_HIGHEST_BIT ((BIG_INT_WORD_TYPE)(1ull << (BIG_INT_BITS_PER_WORD - 1)))
 
-
+#define BIG_INT_BIT_TO_SIZE(bit) (BIG_INT_WORD_COUNT_TYPE)( (bit + (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT - 1)) / (sizeof(BIG_INT_WORD_TYPE) * CHAR_BIT) )
 
 // --- Prime numbers generation ---
 

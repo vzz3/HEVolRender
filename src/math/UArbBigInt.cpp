@@ -82,31 +82,34 @@ UArbBigInt& UArbBigInt::fromString(const std::string& str, const BIG_INT_WORD_TY
 	UArbBigInt powTmp(0, wordSize);
 	//UArbBigInt bigBase(base);
 	//UArbBigInt t(0, 1);
-	BIG_INT_WORD_TYPE t;
-	UArbBigInt tPow(0, wordSize);
+	BIG_INT_WORD_TYPE d;
+	UArbBigInt dPow(0, wordSize);
 	for(size_t i = str.length(); i>0; i--) {
 		char c = str[i-1];
 		if(c >= '0' &&  c <= '9') {
-			t = c - '0';
+			d = c - '0';
 		} else if( base > 10 && c >= 'A' &&  c <= 'F') {
-			t = 10 + c - 'A';
+			d = 10 + c - 'A';
 		} else if( base > 10 && c >= 'a' &&  c <= 'f') {
-			t = 10 + c - 'a';
+			d = 10 + c - 'a';
 		} else {
 			continue;
 		}
 
-		powTmp = pow;
+		//powTmp = pow;
 
-		pow.mulInt(t, tPow);
-		target.add(tPow);
+		// target = target + pow * t
+		pow.mulInt(d, dPow);
+		target.add(dPow);
 
+		// pow = pow * base
 		powTmp = pow;
 		powTmp.mulInt(base, pow);
 	}
 
 	return target;
 }
+
 
 // ----- statics rendome -----
 
@@ -193,6 +196,7 @@ BIG_INT_WORD_COUNT_TYPE UArbBigInt::requiredWords(const uint& sizeInBit) {
 	return (sizeInBit + (BIG_INT_BITS_PER_WORD - 1)) / BIG_INT_BITS_PER_WORD;
 }
 
+
 // ----- constructors -----
 
 UArbBigInt::UArbBigInt(): UArbBigInt(0, 0) {}
@@ -233,6 +237,7 @@ UArbBigInt::~UArbBigInt() {
 		delete [] this->value;
 	}
 }
+
 
 // ----- value export - toString / toUint64 -----
 
@@ -303,6 +308,7 @@ std::string UArbBigInt::toStringDec() const {
 	return ret;
 }
 
+
 // ----- memory managment -----
 
 UArbBigInt& UArbBigInt::operator= (const UArbBigInt& other) {
@@ -350,6 +356,7 @@ void UArbBigInt::reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCap
 void UArbBigInt::initUnusedWords(const BIG_INT_WORD_TYPE initValue) {
 	std::fill_n(&this->value[this->wordSize], this->wordCapacity - this->wordSize, initValue);
 }
+
 
 // ----- bit utilities -----
 
@@ -456,6 +463,7 @@ int UArbBigInt::findLowestSetBit() const {
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
 
+
 // ----- word utilities -----
 
 inline void UArbBigInt::trimWordSize(BIG_INT_WORD_COUNT_TYPE newMaxWordSize) {
@@ -464,6 +472,7 @@ inline void UArbBigInt::trimWordSize(BIG_INT_WORD_COUNT_TYPE newMaxWordSize) {
 	for (newWordSize = newMaxWordSize; newWordSize>1 && this->value[newWordSize-1] == 0; newWordSize--);
 	this->wordSize = newWordSize;
 }
+
 
 // ----- shift left -----
 
@@ -587,6 +596,7 @@ UArbBigInt UArbBigInt::operator<< (const uint bits) const {
 	return res;
 }
 
+
 // ----- shift right -----
 
 void UArbBigInt::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
@@ -699,6 +709,7 @@ UArbBigInt UArbBigInt::operator>> (const uint bits) const {
 	return res;
 }
 
+
 // ----- addition -----
 
 void UArbBigInt::addInt(const BIG_INT_WORD_TYPE word) {
@@ -750,6 +761,7 @@ UArbBigInt UArbBigInt::operator+ (const UArbBigInt& other) const {
 	return result;
 }
 
+
 // ----- substraction -----
 
 BIG_INT_WORD_TYPE UArbBigInt::subInt(const BIG_INT_WORD_TYPE word) {
@@ -796,9 +808,8 @@ UArbBigInt UArbBigInt::operator- (const UArbBigInt& other) const {
 	return result;
 }
 
+
 // ----- multiplication -----
-
-
 
 void UArbBigInt::mulInt(BIG_INT_WORD_TYPE ss2, UArbBigInt& result) const {
 	if( ss2 == 0 ) {
@@ -1284,6 +1295,7 @@ UArbBigInt UArbBigInt::operator% (const UArbBigInt& other) const {
 }
 */
 
+
 // ----- pow(), sqrt() -----
 
 UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
@@ -1365,6 +1377,7 @@ UArbBigInt UArbBigInt::sqrt() const {
 
 	return result;
 }
+
 
 /* ---------- comparisons ---------- */
 bool UArbBigInt::operator< (const UArbBigInt& other) const {

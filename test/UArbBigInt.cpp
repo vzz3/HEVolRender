@@ -5,7 +5,7 @@
 
 using ppvr::math::UArbBigInt;
 
-TEST_CASE( "big integer to unsigned int 64 (UArbBigInt from Word constructor)", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer to unsigned int 64 (UArbBigInt from Word constructor)", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::ZERO.toUint64() == 0ull );
 	REQUIRE( UArbBigInt(0).toUint64() == 0ull );
 
@@ -24,7 +24,7 @@ TEST_CASE( "big integer to unsigned int 64 (UArbBigInt from Word constructor)", 
 	REQUIRE( UArbBigInt(255).toUint64() == 255ull );
 }
 
-TEST_CASE( "big integer to unsigned int 64 (UArbBigInt fromUint64())", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer to unsigned int 64 (UArbBigInt fromUint64())", "[UABigint]" ) {
 	//uint64_t int_2e63_test = 0x8000000000000000; // 2^63 => bin: 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
 	//uint64_t test_128 = int_2e63_test >> (8 * 7);
 	//uint64_t test_0 = int_2e63_test >> (8 * 8);
@@ -73,7 +73,7 @@ TEST_CASE( "big integer to unsigned int 64 (UArbBigInt fromUint64())", "[UABigin
 	REQUIRE( UArbBigInt::fromUint64(0xFFFFFFFFFFFFFFFF).toUint64() == int_2e63_m1_mul2_p1 );
 }
 
-TEST_CASE( "big integer check word definitions for 64bit", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer check word definitions for 64bit", "[UABigint]" ) {
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
 		REQUIRE( sizeof(BIG_INT_WORD_TYPE) == 1 );
 
@@ -116,7 +116,7 @@ TEST_CASE( "big integer check word definitions for 64bit", "[UABigint]" ) {
 		REQUIRE( sizeof(BIG_INT_WORD_TYPE) == 4 );
 
 		REQUIRE( BIG_INT_WORD_LOW_BIT_MASK == 0x0000FFFFull );
-		REQUIRE( UArbBigInt::fromUint64(BIG_INT_WORD_LOW_BIT_MASK) == UArbBigInt::fromString("00 00 FF FF ", 16) );
+		REQUIRE( UArbBigInt::fromUint64(BIG_INT_WORD_LOW_BIT_MASK) == UArbBigInt::fromString("00 00 FF FF", 16) );
 
 		REQUIRE( BIG_INT_WORD_HIGH_BIT_MASK == 0xFFFF0000ull );
 		REQUIRE( UArbBigInt::fromUint64(BIG_INT_WORD_HIGH_BIT_MASK) == UArbBigInt::fromString("FF FF 00 00", 16) );
@@ -155,7 +155,7 @@ TEST_CASE( "big integer check word definitions for 64bit", "[UABigint]" ) {
 	}
 }
 
-TEST_CASE( "big integer to std:string hex", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer to std:string hex", "[UABigint]" ) {
 	// --- single byte big int creation ---
 
 	REQUIRE( UArbBigInt(0).toStringHex() == std::string("0") );
@@ -273,7 +273,7 @@ TEST_CASE( "big integer to std:string hex", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringHex() == std::string("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000") );
 }
 
-TEST_CASE( "big integer to std:string dec", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer to std:string dec", "[UABigint]" ) {
 	// --- single byte big int creation ---
 
 	REQUIRE( UArbBigInt(0).toStringDec() == std::string("0") );
@@ -374,7 +374,7 @@ TEST_CASE( "big integer to std:string dec", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringDec() == std::string("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040") );
 }
 
-TEST_CASE( "big integer from std:string", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer from std:string", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt::fromString( "0", 10).toUint64() 	==   0 );
 	REQUIRE( UArbBigInt::fromString( "1", 10).toUint64() 	==   1 );
@@ -432,6 +432,8 @@ TEST_CASE( "big integer from std:string", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString(  "0f", 16).toUint64() 	==   15 );
 	REQUIRE( UArbBigInt::fromString("000A", 16).toUint64() 	==   10 );
 	REQUIRE( UArbBigInt::fromString("00ff", 16).toUint64() 	==   255 );
+	
+	REQUIRE( UArbBigInt::fromString("00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 00   00 00 00 09", 16).toUint64() 	==   9 ); // 160 bits ful of zeros:  that is is even for 64 bit words an interesting leading zero test
 
 	// 2 Bytes (16 bit)
 	REQUIRE( UArbBigInt::fromString("256", 10).toUint64() == 256 ); // 2^16
@@ -478,12 +480,18 @@ TEST_CASE( "big integer from std:string", "[UABigint]" ) {
 
 
 	// ---- ignore blank
+	REQUIRE( UArbBigInt::fromString(" 1 ", 10) 	== UArbBigInt::fromUint64(1ull) );
+	REQUIRE( UArbBigInt::fromString(" 1 1 ", 10) 	== UArbBigInt::fromUint64(11ull) );
+	REQUIRE( UArbBigInt::fromString(" 222 111 000 ", 10) 	== UArbBigInt::fromUint64(222111000ull) );
+	REQUIRE( UArbBigInt::fromString(" 000 111 222  ", 10) 	== UArbBigInt::fromUint64(111222ull) );
+	REQUIRE( UArbBigInt::fromString("        1 2 3 4 5 6 7 8 9 0      ", 10) 	== UArbBigInt::fromUint64(1234567890ull) );
+	
 	REQUIRE( UArbBigInt::fromString("01 F3 86 9C 69 BB 1C 01", 16) 	== UArbBigInt::fromUint64(0x01F3869C69BB1C01ull) );
 	REQUIRE( UArbBigInt::fromString("140 604 019 725 507 585", 10) 	== UArbBigInt::fromUint64(0x01F3869C69BB1C01ull) );
 	REQUIRE( UArbBigInt::fromString("123 456 789 000 000 321", 10) 	== UArbBigInt::fromUint64(123456789000000321ull) );
 }
 
-TEST_CASE( "big integer comparisons", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer comparisons", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt(1) != UArbBigInt::ZERO );
 	REQUIRE( UArbBigInt(0) != UArbBigInt::ONE );
@@ -582,7 +590,7 @@ TEST_CASE( "big integer comparisons", "[UABigint]" ) {
 	//REQUIRE( (UArbBigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + UArbBigInt(11)) 	!=  (UArbBigInt::fromUint64(0xFFFFFFFFFFFFFFFF) + UArbBigInt(11)) );
 }
 
-TEST_CASE( "big integer shift left", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer shift left", "[UABigint]" ) {
 
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt::fromString("1", 2) <<  0 == UArbBigInt::fromString("1", 2) );
@@ -750,7 +758,7 @@ TEST_CASE( "big integer shift left", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2) << 129 == UArbBigInt::fromString("3529260907631713815077", 10) * UArbBigInt::fromString("680564733841876926926749214863536422912", 10) );
 }
 
-TEST_CASE( "big integer shift right", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer shift right", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt::fromString("10000000", 2) >>  0 == UArbBigInt::fromString("10000000", 2) );
 	REQUIRE( UArbBigInt::fromString("10000000", 2) >>  1 == UArbBigInt::fromString( "1000000", 2) );
@@ -892,7 +900,7 @@ TEST_CASE( "big integer shift right", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2) >> 129 == UArbBigInt::fromString("0", 10) );
 }
 
-TEST_CASE( "big integer addition", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer addition", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( (UArbBigInt(  0) + UArbBigInt(  0)).toUint64()	==   0 );
 	REQUIRE( (UArbBigInt(  1) + UArbBigInt(  0)).toUint64()	==   1 );
@@ -904,10 +912,10 @@ TEST_CASE( "big integer addition", "[UABigint]" ) {
 	REQUIRE( (UArbBigInt(128) + UArbBigInt(127)).toUint64()	== 255 );
 
 	// 2 Bytes (16 bit)
-	REQUIRE( (UArbBigInt(128) + UArbBigInt(128).toUint64()).toUint64()	== 0x0100ull );
-	REQUIRE( (UArbBigInt(255) + UArbBigInt(  1).toUint64()).toUint64()	== 0x0100ull );
-	REQUIRE( (UArbBigInt(  1) + UArbBigInt(255).toUint64()).toUint64()	== 0x0100ull );
-	REQUIRE( (UArbBigInt(255) + UArbBigInt(255).toUint64()).toUint64()	== 0x01FEull );
+	REQUIRE( (UArbBigInt(128) + UArbBigInt(128)).toUint64()	== 0x0100ull );
+	REQUIRE( (UArbBigInt(255) + UArbBigInt(  1)).toUint64()	== 0x0100ull );
+	REQUIRE( (UArbBigInt(  1) + UArbBigInt(255)).toUint64()	== 0x0100ull );
+	REQUIRE( (UArbBigInt(255) + UArbBigInt(255)).toUint64()	== 0x01FEull );
 
 	REQUIRE( (UArbBigInt::fromUint64(0x7FFF) + UArbBigInt::fromUint64(0x7FFF) 				).toUint64() == 0xFFFEull );
 	REQUIRE( (UArbBigInt::fromUint64(0x7FFF) + UArbBigInt::fromUint64(0x7FFF) + UArbBigInt(0)	).toUint64() == 0xFFFEull );
@@ -957,7 +965,7 @@ TEST_CASE( "big integer addition", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("987654321000000000000000000000000000009876543210", 10) + UArbBigInt::fromString("123456789000000000000000000000000000001234567890", 10) == UArbBigInt::fromString("1111111110000000000000000000000000000011111111100", 10) );
 }
 
-TEST_CASE( "big integer subtraction", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer subtraction", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( (UArbBigInt(  0) - UArbBigInt(  0)).toUint64() ==   0 );
 	REQUIRE( (UArbBigInt(  1) - UArbBigInt(  0)).toUint64() ==   1 );
@@ -998,7 +1006,7 @@ TEST_CASE( "big integer subtraction", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("987654321000000000000000000000000000009876543210", 10) - UArbBigInt::fromString("123456789000000000000000000000000000001234567890", 10) == UArbBigInt::fromString("864197532000000000000000000000000000008641975320", 10) );
 }
 
-TEST_CASE( "big integer multiplication", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer multiplication", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( (UArbBigInt(  0) * UArbBigInt(0)).toUint64() ==   0 );
 	REQUIRE( (UArbBigInt(  1) * UArbBigInt(0)).toUint64() ==   0 );
@@ -1051,7 +1059,7 @@ TEST_CASE( "big integer multiplication", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("987654321000000000000000000000000000009876543210", 10) *  UArbBigInt::fromString("123456789000000000000000000000000000001234567890", 10) == UArbBigInt::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
 }
 
-TEST_CASE( "big integer division", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer division", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( (UArbBigInt(  0) / UArbBigInt(  1)).toUint64() ==   0 );
 	REQUIRE( (UArbBigInt(  0) % UArbBigInt(  1)).toUint64() ==   0 );
@@ -1186,7 +1194,7 @@ TEST_CASE( "big integer division", "[UABigint]" ) {
 
 }
 
-TEST_CASE( "big integer pow", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer pow", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt(  1).pow(UArbBigInt(  1)).toUint64() ==   1 );
 	REQUIRE( UArbBigInt(  0).pow(UArbBigInt(  1)).toUint64() ==   0 );
@@ -1228,7 +1236,7 @@ TEST_CASE( "big integer pow", "[UABigint]" ) {
 	REQUIRE( UArbBigInt(  0).pow(UArbBigInt::fromString("1234523643567098765433567268387411043985640123642389767832457568567546743234", 10)).toUint64() ==   0 );
 }
 
-TEST_CASE( "big integer sqrt", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer sqrt", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UArbBigInt(  0).sqrt().toUint64() ==   0 );
 	REQUIRE( UArbBigInt(  1).sqrt().toUint64() ==   1 );
@@ -1283,7 +1291,7 @@ TEST_CASE( "big integer sqrt", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("1524048626526185117008148645329708998795770321794318911442256140455458946053172210513801777413097237329246447244122385285308414454789711324787960475901495579519924778756", 10).sqrt() == UArbBigInt::fromString("1234523643567098765433100593754267268387411043985640123642389767832457568567546743234", 10) );
 }
 
-TEST_CASE( "big integer bitLength", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer bitLength", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("00000000", 2).bitLength() == 0 );
 	REQUIRE( UArbBigInt::fromString("00000001", 2).bitLength() == 1 );
 	REQUIRE( UArbBigInt::fromString("00000011", 2).bitLength() == 2 );
@@ -1349,7 +1357,7 @@ TEST_CASE( "big integer bitLength", "[UABigint]" ) {
 
 }
 
-TEST_CASE( "big integer randomNumber", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer randomNumber", "[UABigint]" ) {
 	ppvr::math::Random rnd{};
 
 	REQUIRE_THROWS (UArbBigInt::randomNumber(0, rnd));
@@ -1446,7 +1454,7 @@ TEST_CASE( "big integer randomNumber", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::randomNumber(2049, rnd).bitLength() <= 2049 );
 }
 
-TEST_CASE( "big integer setBit", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer setBit", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("00000000", 2).withBit(0) == UArbBigInt::fromString("00000001", 2) );
 	REQUIRE( UArbBigInt::fromString("00000000", 2).withBit(1) == UArbBigInt::fromString("00000010", 2) );
 	REQUIRE( UArbBigInt::fromString("00000000", 2).withBit(2) == UArbBigInt::fromString("00000100", 2) );
@@ -1479,7 +1487,7 @@ TEST_CASE( "big integer setBit", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(193) == UArbBigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
 }
 
-TEST_CASE( "big integer clearBit", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer clearBit", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("00000001", 2).withoutBit(0) == UArbBigInt::fromString("00000000", 2) );
 	REQUIRE( UArbBigInt::fromString("00000010", 2).withoutBit(1) == UArbBigInt::fromString("00000000", 2) );
 	REQUIRE( UArbBigInt::fromString("00000100", 2).withoutBit(2) == UArbBigInt::fromString("00000000", 2) );
