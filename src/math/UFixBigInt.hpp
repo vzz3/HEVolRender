@@ -361,7 +361,7 @@ namespace ppvr {
 
 		public:
 			UArbBigInt operator* (const UArbBigInt& other) const;
-
+*/
 		// ----- division -----
 
 		// -- divInt
@@ -372,17 +372,17 @@ namespace ppvr {
 			 * restul = this / divisor
 			 *
 			 * returns the remainder
-			 * /
-			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, UArbBigInt& result) const;
+			 */
+			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const;
 
 			/**
 			 * division by one unsigned word
 			 * this = this / divisor
 			 *
 			 * returns the remainder
-			 * /
+			 */
 			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
-
+/*
 		private:
 			// -- divKnuth
 

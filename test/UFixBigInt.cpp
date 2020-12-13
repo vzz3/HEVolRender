@@ -9,7 +9,7 @@
 using ppvr::math::UArbBigInt;
 using ppvr::math::UFixBigInt;
 
-TEST_CASE( "Test macro tat calculates the minumum word count for a given bit size", "[UFBigint]" ) {
+TEST_CASE( "Test macro that calculates the minumum word count for a given bit size", "[UFBigint]" ) {
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
 		REQUIRE( BIG_INT_BIT_TO_SIZE(1) == 1 );
 		REQUIRE( BIG_INT_BIT_TO_SIZE(7) == 1 );
@@ -391,6 +391,108 @@ TEST_CASE( "unsigned fixed big integer to std:string hex", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(312)>::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringHex() == std::string("123456789ABCDEF00000000000000000000000000000000000000000000123456789ABCDEF000") );
 
 }
+
+TEST_CASE( "unsigned fixed big integer to std:string dec", "[UFBigint]" ) {
+	// --- single byte big int creation ---
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0).toStringDec() == std::string("0") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(1).toStringDec() == std::string("1") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(2).toStringDec() == std::string("2") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(3).toStringDec() == std::string("3") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(4).toStringDec() == std::string("4") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(5).toStringDec() == std::string("5") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(6).toStringDec() == std::string("6") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(7).toStringDec() == std::string("7") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(8).toStringDec() == std::string("8") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(9).toStringDec() == std::string("9") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(10).toStringDec() == std::string("10") );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0x42).toStringDec() == std::string("66") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0x7F).toStringDec() == std::string("127") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0x80).toStringDec() == std::string("128") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0xFF).toStringDec() == std::string("255") );
+
+	// --- use 64 bit conversion for big int creation ---
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(256).toStringDec() == std::string("256") );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(0xFFFFFFFF).toStringDec() == std::string("4294967295") ); // 2^32 - 1
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(0x0100000000).toStringDec() == std::string("4294967296") ); // 2^32
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(0x0100000001).toStringDec() == std::string("4294967297") ); // 2^32 + 1
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(0xFFFFFFFFFFFFFFFF).toStringDec() == std::string("18446744073709551615") ); // 2^64 - 1
+
+	// 128 bit test!
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromUint64(                0xFFFFFFFFFFFFFFFF).toStringDec()      == std::string(                   "18446744073709551615") ); // 2^64 - 1
+	REQUIRE((UFixBigInt<BIG_INT_BIT_TO_SIZE( 68)>::fromUint64(                0xFFFFFFFFFFFFFFFF) + UFixBigInt<BIG_INT_BIT_TO_SIZE(68)>(1)).toStringDec() == std::string(     "18446744073709551616") ); // 2^64
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromString(                 "FFFFFFFFFFFFFFFF", 16).toStringDec() == std::string(                   "18446744073709551615") ); // 2^64 - 1
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 68)>::fromString(                "10000000000000000", 16).toStringDec() == std::string(                   "18446744073709551616") ); // 2^64
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 76)>::fromString(              "1000000000000000000", 16).toStringDec() == std::string(                 "4722366482869645213696") ); // 2^72
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 84)>::fromString(            "100000000000000000000", 16).toStringDec() == std::string(              "1208925819614629174706176") ); // 2^80
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 92)>::fromString(          "10000000000000000000000", 16).toStringDec() == std::string(            "309485009821345068724781056") ); // 2^88
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(100)>::fromString(        "1000000000000000000000000", 16).toStringDec() == std::string(          "79228162514264337593543950336") ); // 2^96
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(108)>::fromString(      "100000000000000000000000000", 16).toStringDec() == std::string(       "20282409603651670423947251286016") ); // 2^104
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(116)>::fromString(    "10000000000000000000000000000", 16).toStringDec() == std::string(     "5192296858534827628530496329220096") ); // 2^112
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString(  "1000000000000000000000000000000", 16).toStringDec() == std::string(  "1329227995784915872903807060280344576") ); // 2^120
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString(  "1000000000000000000000000000001", 16).toStringDec() == std::string(  "1329227995784915872903807060280344577") ); // 2^120 + 1
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString(  "100000000000000000000000000000F", 16).toStringDec() == std::string(  "1329227995784915872903807060280344591") ); // 2^120 + 15
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(132)>::fromString("100000000000000000000000000000000", 16).toStringDec() == std::string("340282366920938463463374607431768211456") ); // 2^128
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(132)>::fromString("100000000000000000000000000000001", 16).toStringDec() == std::string("340282366920938463463374607431768211457") ); // 2^128 + 1
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(132)>::fromString("10000000000000000000000000000000F", 16).toStringDec() == std::string("340282366920938463463374607431768211471") ); // 2^128 + 15
+
+	//REQUIRE( UArbBigInt::fromString( "121fa00ad77d7422236d88fe5618cf", 16).toStringDec() == std::string( "94102778012703968913903738141677775") );
+	//REQUIRE( UArbBigInt::fromString( "121fa00ad77d7422236d88fe5618cf00", 16).toStringDec() == std::string( "24090311171252216041959356964269510400") );
+
+	//REQUIRE( UArbBigInt::fromString( "94102778012703968913903738141677775", 10).toStringDec() == std::string( "94102778012703968913903738141677775") );
+	//REQUIRE( UArbBigInt::fromString( "24090311171252216041959356964269510400", 10).toStringDec() == std::string( "24090311171252216041959356964269510400") );
+
+	// --------
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromUint64(0x121fa00ad77d7422ull).toStringDec()                         == std::string(                    "1305938385386173474") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromString( "121fa00ad77d7422", 16).toStringDec()                       == std::string(                    "1305938385386173474") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 68)>::fromString( "121fa00ad77d74222", 16).toStringDec()                      == std::string(                   "20895014166178775586") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString( "121fa00ad77d742223", 16).toStringDec()                     == std::string(                  "334320226658860409379") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 76)>::fromString( "121fa00ad77d7422236", 16).toStringDec()                    == std::string(                 "5349123626541766550070") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 80)>::fromString( "121fa00ad77d7422236d", 16).toStringDec()                   == std::string(                "85585978024668264801133") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 84)>::fromString( "121fa00ad77d7422236d8", 16).toStringDec()                  == std::string(              "1369375648394692236818136") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 88)>::fromString( "121fa00ad77d7422236d88", 16).toStringDec()                 == std::string(             "21910010374315075789090184") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 92)>::fromString( "121fa00ad77d7422236d88f", 16).toStringDec()                == std::string(            "350560165989041212625442959") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 96)>::fromString( "121fa00ad77d7422236d88fe", 16).toStringDec()               == std::string(           "5608962655824659402007087358") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(100)>::fromString( "121fa00ad77d7422236d88fe5", 16).toStringDec()              == std::string(          "89743402493194550432113397733") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(104)>::fromString( "121fa00ad77d7422236d88fe56", 16).toStringDec()             == std::string(        "1435894439891112806913814363734") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(108)>::fromString( "121fa00ad77d7422236d88fe561", 16).toStringDec()            == std::string(       "22974311038257804910621029819745") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(112)>::fromString( "121fa00ad77d7422236d88fe5618", 16).toStringDec()           == std::string(      "367588976612124878569936477115928") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(116)>::fromString( "121fa00ad77d7422236d88fe5618c", 16).toStringDec()          == std::string(     "5881423625793998057118983633854860") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(120)>::fromString( "121fa00ad77d7422236d88fe5618cf", 16).toStringDec()         == std::string(    "94102778012703968913903738141677775") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(124)>::fromString( "121fa00ad77d7422236d88fe5618cf0", 16).toStringDec()        == std::string(  "1505644448203263502622459810266844400") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString( "121fa00ad77d7422236d88fe5618cf00", 16).toStringDec()       == std::string( "24090311171252216041959356964269510400") );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromUint64(                     1305938385386173474ull  ).toStringDec() == std::string(                    "1305938385386173474") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 64)>::fromString(                    "1305938385386173474", 10).toStringDec() == std::string(                    "1305938385386173474") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 68)>::fromString(                   "20895014166178775586", 10).toStringDec() == std::string(                   "20895014166178775586") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString(                  "334320226658860409379", 10).toStringDec() == std::string(                  "334320226658860409379") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 76)>::fromString(                 "5349123626541766550070", 10).toStringDec() == std::string(                 "5349123626541766550070") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 80)>::fromString(                "85585978024668264801133", 10).toStringDec() == std::string(                "85585978024668264801133") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 84)>::fromString(              "1369375648394692236818136", 10).toStringDec() == std::string(              "1369375648394692236818136") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 88)>::fromString(             "21910010374315075789090184", 10).toStringDec() == std::string(             "21910010374315075789090184") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 92)>::fromString(            "350560165989041212625442959", 10).toStringDec() == std::string(            "350560165989041212625442959") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 96)>::fromString(           "5608962655824659402007087358", 10).toStringDec() == std::string(           "5608962655824659402007087358") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(100)>::fromString(          "89743402493194550432113397733", 10).toStringDec() == std::string(          "89743402493194550432113397733") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(104)>::fromString(        "1435894439891112806913814363734", 10).toStringDec() == std::string(        "1435894439891112806913814363734") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(108)>::fromString(       "22974311038257804910621029819745", 10).toStringDec() == std::string(       "22974311038257804910621029819745") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(112)>::fromString(      "367588976612124878569936477115928", 10).toStringDec() == std::string(      "367588976612124878569936477115928") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(116)>::fromString(     "5881423625793998057118983633854860", 10).toStringDec() == std::string(     "5881423625793998057118983633854860") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(120)>::fromString(    "94102778012703968913903738141677775", 10).toStringDec() == std::string(    "94102778012703968913903738141677775") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(124)>::fromString(  "1505644448203263502622459810266844400", 10).toStringDec() == std::string(  "1505644448203263502622459810266844400") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString( "24090311171252216041959356964269510400", 10).toStringDec() == std::string( "24090311171252216041959356964269510400") );
+
+	// --------
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(216)>::fromString("1e02bc 1e8aa1d6 3b5b9ccf 516f9d67 d27b3c80 b500001c be991a08", 16).toStringDec()            == std::string("12345678900000000000000000000000000000000000000000000123456789000") );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(216)>::fromString("12345678900000000000000000000000000000000000000000000123456789000", 10).toStringDec() == std::string("12345678900000000000000000000000000000000000000000000123456789000") );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(308)>::fromString("12345 6789ABCD EF000000 00000000 00000000 00000000 00000000 00000012 3456789A BCDEF000", 16).toStringDec()                == std::string("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040") ); // 39 Bytes => 312 bit
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(308)>::fromString("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040", 10).toStringDec() == std::string("37083108262515799557102920138478281554203075264980329467169710128521593951634998575520215040") );
+}
+
 TEST_CASE( "unsigned fixed big integer from std:string", "[UFBigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString( "0", 10).toUint64() 	==   0 );

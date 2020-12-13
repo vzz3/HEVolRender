@@ -170,7 +170,6 @@ std::string UFixBigInt<S>::toStringHex() const {
 	return ret;
 }
 
-/*
 template <BIG_INT_WORD_COUNT_TYPE S>
 std::string UFixBigInt<S>::toStringDec() const {
 	static const char* digits = "0123456789";
@@ -189,7 +188,6 @@ std::string UFixBigInt<S>::toStringDec() const {
 	
 	return ret;
 }
-*/
 
 // ----- bit utilities -----
 /*
@@ -370,6 +368,54 @@ void UFixBigInt<S>::mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
 	
 }
 
+
+
+
+
+
+
+// ----- division -----
+
+
+// -- divInt
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const {
+	if(divisor == 0) {
+		std::string msg = "UArbBigInt devision by (uint)0.";
+		std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	
+	if( divisor == 1 ) {
+		if(this != &result) {
+			result = *this;
+		}
+		return 0;
+	}
+	
+	//UInt<value_size> dividend(*this);
+	const BIG_INT_WORD_TYPE* dividend = this->value;
+	
+	int i;  // i must be with a sign
+	BIG_INT_WORD_TYPE r = 0;
+	
+	// we're looking for the last word in dividend (most significant word that is not null)
+	//result.setZero();
+	//for(i=S-1 ; i>0 && dividend[i]==0 ; --i);
+	i = S - 1;
+	
+	for( ; i>=0 ; --i) {
+		BigIntUtil::divTwoWords(r, dividend[i], divisor, &result.value[i], &r);
+	}
+	
+	return r;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor) {
+	return this->divInt(divisor, *this);
+}
 
 
 
