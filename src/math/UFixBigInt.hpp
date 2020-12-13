@@ -22,12 +22,11 @@ namespace ppvr {
 
 		// ----- statics -----
 		public:
-			/*
 			friend std::ostream& operator << ( std::ostream& os, const UFixBigInt<S>& value ){
 				os << value.toStringDec();
 				return os;
 			}
-			*/
+			
 			static UFixBigInt<S> fromUint64(const uint64_t& uint64Val);
 		protected:
 			static UFixBigInt<S>& fromUint64(const uint64_t& uint64Val, UFixBigInt<S> &target );
@@ -208,8 +207,7 @@ namespace ppvr {
 			 *
 			 * this method moves only words
 			 *
-			 * This method does not increase the the word count => it drops informations that are on left end!
-			 * /
+			 */
 			void rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
 
 			/**
@@ -225,7 +223,7 @@ namespace ppvr {
 			 * after rcl_moveBits(3, 1) there'll be 010000111 and rcl_moveBits returns 1
 			 *
 			 * This method does not increase the the word count => it drops informations that are on left end!
-			 * /
+			 */
 			BIG_INT_WORD_TYPE rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 
 		protected:
@@ -240,11 +238,11 @@ namespace ppvr {
 			 * and the method returns state of the last moved bit
 			 *
 			 * if resize is false (default) this method does not increase the the word size => it drops informations that are on left end!
-			 * /
-			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0, const bool resize=false);
+			 */
+			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0);
 
 		public:
-			UArbBigInt operator<< (const uint bits) const;
+			UFixBigInt<S> operator<< (const uint bits) const;
 
 		// ----- shift right -----
 		private:
@@ -252,7 +250,7 @@ namespace ppvr {
 			 * an auxiliary method for moving bits into the right hand side
 			 *
 			 * this method moves only words
-			 * /
+			 */
 			void rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c);
 
 			/**
@@ -266,7 +264,7 @@ namespace ppvr {
 			 * for example:
 			 * let this is 000000010
 			 * after rcr_moveBits(2, 1) there'll be 110000000 and rcr_moveBits returns 1
-			 * /
+			 */
 			BIG_INT_WORD_TYPE rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c);
 
 		protected:
@@ -279,12 +277,12 @@ namespace ppvr {
 			 *
 			 * the value c will be set into the highest bits
 			 * and the method returns state of the last moved bit
-			 * /
+			 */
 			BIG_INT_WORD_TYPE rcr(const uint bits, const BIG_INT_WORD_TYPE c=0);
 
 		public:
-			UArbBigInt operator>> (const uint bits) const;
-*/
+			UFixBigInt<S> operator>> (const uint bits) const;
+
 		// ----- addition -----
 		protected:
 			/**

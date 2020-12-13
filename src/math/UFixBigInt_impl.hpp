@@ -329,6 +329,233 @@ int UFixBigInt<S>::findLowestSetBit() const {
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
 
+
+// ----- shift left -----
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
+	restBits      = bits % BIG_INT_BITS_PER_WORD;
+	uint allWords = bits / BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
+	
+	
+	if( allWords >= S ) {
+		if( allWords == S && restBits == 0 ) {
+			lastC = this->value[0] & 1;
+		}
+		// else: last_c is default set to 0
+		
+		// clearing
+		for(uint i = 0 ; i<S ; ++i) {
+			this->value[i] = mask;
+		}
+		
+		restBits = 0;
+	} else {
+		if( allWords > 0 ) {
+			// 0 < all_words < value_size
+			
+			int first, second;
+			lastC = this->value[S - allWords] & 1; // all_words is greater than 0
+			
+			// copying the first part of the value
+			for(first = S-1, second=first-allWords ; second>=0 ; --first, --second) {
+				this->value[first] = this->value[second];
+			}
+			
+			// setting the rest to 'c'
+			for( ; first>=0 ; --first ) {
+				this->value[first] = mask;
+			}
+		}
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::rcl_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
+	assert( bits>0 && bits<BIG_INT_BITS_PER_WORD );
+	
+	uint move = BIG_INT_BITS_PER_WORD - bits;
+	BIG_INT_WORD_COUNT_TYPE i;
+	BIG_INT_WORD_TYPE newC;
+	
+	if( c != 0 ) {
+		c = BIG_INT_BITS_PER_WORD >> move;
+	}
+	
+	for(i=0 ; i<S ; ++i) {
+		newC    = this->value[i] >> move;
+		this->value[i] = (this->value[i] << bits) | c;
+		c        = newC;
+	}
+	
+	return (c & 1);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::rcl(const uint bits, const BIG_INT_WORD_TYPE c) {
+	BIG_INT_WORD_TYPE lastC    = 0;
+	uint restBits = bits;
+	
+	if( bits == 0 )
+		return 0;
+	
+	if( bits >= BIG_INT_BITS_PER_WORD ) {
+		this->rcl_moveWords(restBits, lastC, bits, c);
+	}
+	
+	if( restBits == 0 ) {
+		return lastC;
+	}
+	/*
+	 // rest_bits is from 1 to TTMATH_BITS_PER_UINT-1 now
+	 if( restBits == 1 ) {
+	 lastC = Rcl2_one(c);
+	 }
+	 else if( restBits == 2 )
+	 {
+	 // performance tests showed that for rest_bits==2 it's better to use Rcl2_one twice instead of Rcl2(2,c)
+	 Rcl2_one(c);
+	 last_c = Rcl2_one(c);
+	 }
+	 else
+	 {
+	 */
+	lastC = this->rcl_moveBits(restBits, c);
+	/*
+	 }
+	 */
+	
+	return lastC;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator<< (const uint bits) const {
+	UFixBigInt<S> res(*this);
+	res.rcl(bits, 0);
+	return res;
+}
+
+
+// ----- shift right -----
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
+	restBits      = bits % BIG_INT_BITS_PER_WORD;
+	uint allWords = bits / BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
+	
+	
+	if( allWords >= S ) {
+		if( allWords == S && restBits == 0 ) {
+			lastC = (this->value[S-1] & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0;
+		}
+		// else: last_c is default set to 0
+		
+		// clearing
+		for(uint i = 0 ; i<S ; ++i) {
+			this->value[i] = mask;
+		}
+		//this->value[0] = mask;
+		//this->wordSize = 1;
+		
+		restBits = 0;
+	} else if( allWords > 0 ) {
+		// 0 < all_words < value_size
+		
+		uint first, second;
+		lastC = (this->value[allWords - 1] & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0; // all_words is > 0
+		
+		// copying the first part of the value
+		for(first=0, second=allWords ; second<S ; ++first, ++second) {
+			this->value[first] = this->value[second];
+		}
+		
+		// setting the rest to 'c'
+		for( ; first<S ; ++first ) {
+			this->value[first] = mask;
+		}
+		//this->wordSize = first;
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE c) {
+	assert ( bits>0 && bits<BIG_INT_BITS_PER_WORD );
+	
+	uint move = BIG_INT_BITS_PER_WORD - bits;
+	int i; // signed
+	BIG_INT_WORD_TYPE newC;
+	
+	if( c != 0 ) {
+		c = BIG_INT_WORD_MAX_VALUE << move;
+	}
+	
+	for(i=S-1 ; i>=0 ; --i) {
+		newC    = this->value[i] << move;
+		this->value[i] = (this->value[i] >> bits) | c;
+		c        = newC;
+	}
+	
+	c = (c & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0;
+	
+	//if(this->wordSize > 1 && this->value[this->wordSize-1] == 0) {
+	//	this->wordSize--;
+	//}
+	
+	return c;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
+	BIG_INT_WORD_TYPE lastC    = 0;
+	uint restBits = bits;
+	
+	if( bits == 0 ) {
+		return 0;
+	}
+	
+	if( bits >= BIG_INT_BITS_PER_WORD ) {
+		this->rcr_moveWords(restBits, lastC, bits, c);
+	}
+	
+	if( restBits == 0 ) {
+		return lastC;
+	}
+	
+	/*
+	 // rest_bits is from 1 to TTMATH_BITS_PER_UINT-1 now
+	 if( rest_bits == 1 )
+	 {
+	 last_c = Rcr2_one(c);
+	 }
+	 else if( rest_bits == 2 )
+	 {
+	 // performance tests showed that for rest_bits==2 it's better to use Rcr2_one twice instead of Rcr2(2,c)
+	 Rcr2_one(c);
+	 last_c = Rcr2_one(c);
+	 }
+	 else
+	 {
+	 */
+	lastC = rcr_moveBits(restBits, c);
+	/*
+	 }
+	 */
+	
+	return lastC;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator>> (const uint bits) const {
+	UFixBigInt<S> res(*this);
+	res.rcr(bits);
+	return res;
+}
+
+
+
+
 // ----- addition -----
 /*
 template <BIG_INT_WORD_COUNT_TYPE S>
