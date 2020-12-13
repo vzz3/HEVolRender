@@ -837,3 +837,184 @@ TEST_CASE( "unsigned fixed big integer subtraction", "[UFBigint]" ) {
 	REQUIRE( UArbBigInt::fromString("987654321000000000000000000000000000009876543210", 10) - UArbBigInt::fromString("123456789000000000000000000000000000001234567890", 10) == UArbBigInt::fromString("864197532000000000000000000000000000008641975320", 10) );
 */
 }
+
+TEST_CASE( "unsigned fixed big integer bitLength", "[UFBigint]" ) {
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).bitLength() == 0 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000001", 2).bitLength() == 1 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000011", 2).bitLength() == 2 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000111", 2).bitLength() == 3 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00001111", 2).bitLength() == 4 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00011111", 2).bitLength() == 5 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00111111", 2).bitLength() == 6 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("01111111", 2).bitLength() == 7 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("11111111", 2).bitLength() == 8 );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).bitLength() == 0 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000001", 2).bitLength() == 1 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000010", 2).bitLength() == 2 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000100", 2).bitLength() == 3 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00001000", 2).bitLength() == 4 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00010000", 2).bitLength() == 5 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00100000", 2).bitLength() == 6 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("01000000", 2).bitLength() == 7 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10000000", 2).bitLength() == 8 );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00000000 00000000", 2).bitLength() ==  0 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00000001 00000000", 2).bitLength() ==  9 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00000010 00000000", 2).bitLength() == 10 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00000100 00000000", 2).bitLength() == 11 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00001000 00000000", 2).bitLength() == 12 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00010000 00000000", 2).bitLength() == 13 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("00100000 00000000", 2).bitLength() == 14 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("01000000 00000000", 2).bitLength() == 15 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10000000 00000000", 2).bitLength() == 16 );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00000000 00000000 00000000", 2).bitLength() ==  0 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00000001 00000000 00000000", 2).bitLength() == 17 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00000010 00000000 00000000", 2).bitLength() == 18 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00000100 00000000 00000000", 2).bitLength() == 19 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00001000 00000000 00000000", 2).bitLength() == 20 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00010000 00000000 00000000", 2).bitLength() == 21 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("00100000 00000000 00000000", 2).bitLength() == 22 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("01000000 00000000 00000000", 2).bitLength() == 23 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("10000000 00000000 00000000", 2).bitLength() == 24 );
+
+	// 9 byte
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() ==  0 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000000 10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 64 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000001 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 65 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 66 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000100 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 67 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00001000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 68 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00010000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 69 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00100000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 70 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("01000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 71 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("10000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2).bitLength() == 72 );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000000 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 57 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000000 10000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 64 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000001 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 65 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000011 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 66 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00000111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 67 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00001111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 68 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00011111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 69 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("00111111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 70 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("01111111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 71 );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(72)>::fromString("11111111 00000001 10000000 00011000 00000000 10000001 10000000 00000000 00000001", 2).bitLength() == 72 );
+
+}
+
+TEST_CASE( "unsigned fixed big integer setBit", "[UFBigint]" ) {
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(0) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000001", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(1) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(2) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000100", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(3) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00001000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(4) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00010000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(5) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00100000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(6) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("01000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2).withBit(7) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10000000", 2) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(0) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101011", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(1) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(2) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101110", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(3) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(4) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10111010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(5) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(6) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("11101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(7) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 65)>::fromString("    77 66 55 44 33 22 11 00", 16).withBit( 64) == UFixBigInt<BIG_INT_BIT_TO_SIZE( 65)>::fromString("                         01  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(  7) == UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString("                         88  77 66 55 44 33 22 11 80", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(127) == UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("00  80 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(128) == UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(130)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(129) == UFixBigInt<BIG_INT_BIT_TO_SIZE(130)>::fromString("02  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(130) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("04  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(131) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("08  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(132) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("10  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(191) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(192) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("01  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(193) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	
+	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(10) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint16_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withBit(18) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withBit(34) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint64_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withBit(66) );
+	}
+	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withBit(129) );
+}
+
+TEST_CASE( "unsigned fixed big integer clearBit", "[UFBigint]" ) {
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000001", 2).withoutBit(0) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000010", 2).withoutBit(1) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000100", 2).withoutBit(2) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00001000", 2).withoutBit(3) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00010000", 2).withoutBit(4) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00100000", 2).withoutBit(5) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("01000000", 2).withoutBit(6) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10000000", 2).withoutBit(7) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00000000", 2) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(0) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(1) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101000", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(2) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(3) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10100010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(4) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(5) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10001010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(6) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(7) == UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("00101010", 2) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 65)>::fromString("                         01  77 66 55 44 33 22 11 00", 16).withoutBit( 64) == UFixBigInt<BIG_INT_BIT_TO_SIZE( 65)>::fromString("    77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString("                         88  77 66 55 44 33 22 11 80", 16).withoutBit(  7) == UFixBigInt<BIG_INT_BIT_TO_SIZE( 72)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("00  80 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(127) == UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("01  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(128) == UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(130)>::fromString("02  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(129) == UFixBigInt<BIG_INT_BIT_TO_SIZE(130)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("04  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(130) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("08  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(131) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("10  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(132) == UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("88  77 66 55 44 33 22 11 00", 16) );
+
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(191) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("01  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(193) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
+	
+	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(10) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint16_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withoutBit(18) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withoutBit(34) );
+	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint64_t)) {
+		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withoutBit(66) );
+	}
+	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withoutBit(129) );
+}
+
+TEST_CASE( "unsigned fixed big integer isEven", "[UFBigint]" ) {
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).isEven() == true );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101011", 2).isEven() == false );
+	
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("254", 2).isEven() == true );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("255", 2).isEven() == false );
+	
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).isEven() == true );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 01", 16).isEven() == false );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0a", 16).isEven() == true );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isEven() == false );
+}
+
+TEST_CASE( "unsigned fixed big integer isOdd", "[UFBigint]" ) {
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).isOdd() == false );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101011", 2).isOdd() == true );
+	
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("254", 2).isOdd() == false );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("255", 2).isOdd() == true );
+	
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).isOdd() == false );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 01", 16).isOdd() == true );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0a", 16).isOdd() == false );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isOdd() == true );
+}

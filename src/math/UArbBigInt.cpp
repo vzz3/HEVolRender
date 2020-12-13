@@ -374,10 +374,6 @@ void UArbBigInt::setOne() {
 	this->wordSize = 1;
 }
 
-bool UArbBigInt::isZero() const {
-	return (this->wordSize == 1 && this->value[0] == 0);
-}
-
 void UArbBigInt::setBit(const uint n) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(n+1);
 	this->reserveWordsAndInitUnused(requiredWords);
@@ -417,6 +413,10 @@ UArbBigInt UArbBigInt::withoutBit(const uint n) {
 	return res;
 }
 
+bool UArbBigInt::isZero() const {
+	return (this->wordSize == 1 && this->value[0] == 0);
+}
+
 bool UArbBigInt::isOne() const {
 	return (this->wordSize == 1 && this->value[0] == 1);
 }
@@ -443,7 +443,7 @@ int UArbBigInt::findHighestSetBit() const {
 
 	int wordIndex = this->wordSize-1;
 
-	BIG_INT_WORD_TYPE word = this->value[wordIndex];
+	const BIG_INT_WORD_TYPE word = this->value[wordIndex];
 	int bit = BigIntUtil::findHighestSetBitInWord(word);
 
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
@@ -457,7 +457,7 @@ int UArbBigInt::findLowestSetBit() const {
 	int wordIndex=0;
 	for(wordIndex=0; wordIndex < this->wordSize && this->value[wordIndex] == 0; wordIndex++);
 
-	BIG_INT_WORD_TYPE word = this->value[wordIndex];
+	const BIG_INT_WORD_TYPE word = this->value[wordIndex];
 	int bit = BigIntUtil::findLowestSetBitInWord(word);
 
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
@@ -1267,6 +1267,7 @@ void UArbBigInt::div(const UArbBigInt& divisor, UArbBigInt& remainder) {
 	//this->div(divisor, result, *this);
 	//*this = result;
 }
+
 UArbBigInt UArbBigInt::operator/ (const UArbBigInt& other) const {
 	UArbBigInt result(0, this->wordSize), reminder(0, this->wordSize);
 	this->div(other, result, reminder);

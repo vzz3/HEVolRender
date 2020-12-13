@@ -85,21 +85,21 @@ namespace ppvr {
  		*/
 		private:
 			void initWords(const BIG_INT_WORD_TYPE initValue = 0);
-		/*
+			
 		// ----- bit utilities -----
 		public:
 			int bitLength() const;
-		 */
+			
 		protected:
 			void setZero();
-	/*		void setOne();
+			void setOne();
 
 			/**
 			 * Sets the designated bit in this BigInt.
 			 * (Computes {@code (this | (1<<n))}.)
 			 *
 			 * @param  n index of bit to set.
-			 * /
+			 */
 			void setBit(const uint n);
 
 			/**
@@ -108,9 +108,9 @@ namespace ppvr {
 			 *
 			 * @param  n index of bit to clear.
 			 * @return {@code this & ~(1<<n)}
-			 * /
+			 */
 			void clearBit(const uint n);
-
+			
 		public:
 			/**
 			 * Returns a BigInteger whose value is equivalent to this BigInteger
@@ -118,8 +118,8 @@ namespace ppvr {
 			 *
 			 * @param  n index of bit to set.
 			 * @return {@code this | (1<<n)}
-			 * /
-			UArbBigInt withBit(const uint n);
+			 */
+			UFixBigInt<S> withBit(const uint n);
 
 			/**
 			 * Returns a BigInteger whose value is equivalent to this BigInteger
@@ -128,22 +128,22 @@ namespace ppvr {
 			 *
 			 * @param  n index of bit to clear.
 			 * @return {@code this & ~(1<<n)}
-			 * /
-			UArbBigInt withoutBit(const uint n);
+			 */
+			UFixBigInt<S> withoutBit(const uint n);
 
 		public:
-		 */
+			
 			bool isZero() const;
 			bool isOne() const;
-/*
+
 			/**
 			 * Returns true iff this MutableBigInteger is even.
-			 * /
+			 */
 			bool isEven() const;
 
 			/**
 			 * Returns true iff this MutableBigInteger is odd.
-			 * /
+			 */
 			bool isOdd() const;
 
 		protected:
@@ -154,7 +154,7 @@ namespace ppvr {
 			 * @param  n index of bit to test.
 			 * @return {@code true} if and only if the designated bit is set.
 			 * @throws ArithmeticException {@code n} is negative.
-			 * /
+			 */
 			bool testBit(uint n) const;
 
 		
@@ -166,7 +166,7 @@ namespace ppvr {
 			 * one bit).  Returns -1 if this BigInteger contains no one bits.
 			 *
 			 * @return index of the leftmost one bit in this BigInteger.
-			 * /
+			 */
 			int findHighestSetBit() const;
 
 			/**
@@ -175,13 +175,13 @@ namespace ppvr {
 			 * one bit).  Returns -1 if this BigInteger contains no one bits.
 			 *
 			 * @return index of the rightmost one bit in this BigInteger.
-			 * /
+			 */
 			int findLowestSetBit() const;
 
 		// ----- word utilities -----
 		protected:
 			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
-				return this->wordSize;
+				return S;
 			}
 
 			/**
@@ -193,7 +193,7 @@ namespace ppvr {
 			 * @param newMaxWordSize new maximal word count
 			 * /
 			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize);
-
+			 */
 			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}

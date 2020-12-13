@@ -190,16 +190,60 @@ std::string UFixBigInt<S>::toStringDec() const {
 }
 
 // ----- bit utilities -----
-/*
+
 template <BIG_INT_WORD_COUNT_TYPE S>
 int UFixBigInt<S>::bitLength() const {
-	return S * CHAR_BIT;
+	return findHighestSetBit()+1;
 }
-*/
+
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::setZero() {
 	initWords(0);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::setOne() {
+	initWords(0);
+	this->wordSize = 1;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::setBit(const uint n) {
+	uint restBits   = n % BIG_INT_BITS_PER_WORD;
+	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
+	
+	if(allWords >= S) {
+		throw FixBigIntOverflow("Can not set Bit " + std::to_string(n) + " because it is not within "  + std::to_string(S) + " words.");
+	}
+	
+	this->value[allWords] |= (BIG_INT_WORD_TYPE(1) << restBits);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::clearBit(const uint n) {
+	uint restBits   = n % BIG_INT_BITS_PER_WORD;
+	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
+	
+	if(allWords >= S) {
+		throw FixBigIntOverflow("Can not clear Bit " + std::to_string(n) + " because it is not within "  + std::to_string(S) + " words.");
+	}
+		
+	this->value[allWords] &= ~(BIG_INT_WORD_TYPE(1) << restBits);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::withBit(const uint n) {
+	UFixBigInt<S> res(*this);
+	res.setBit(n);
+	return res;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::withoutBit(const uint n) {
+	UFixBigInt<S> res(*this);
+	res.clearBit(n);
+	return res;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -223,6 +267,66 @@ bool UFixBigInt<S>::isOne() const {
 		}
 	}
 	return true;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+bool UFixBigInt<S>::isEven() const {
+	return !(this->testBit(0));
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+bool UFixBigInt<S>::isOdd() const {
+	return this->testBit(0);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+bool UFixBigInt<S>::testBit(uint n) const {
+	uint restBits   = n % BIG_INT_BITS_PER_WORD;
+	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
+	
+	if(allWords >= S) {
+		throw FixBigIntOverflow("Can not test Bit " + std::to_string(n) + " because it is not within "  + std::to_string(S) + " words.");
+	}
+	
+	return ((this->value[allWords] >> restBits) & 1);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+int UFixBigInt<S>::findHighestSetBit() const {
+	//if(this->isZero()) { // Does not have an advantage for a fixed with integer, because we need to loop over all words anyway.
+	//	return -1;
+	//}
+	
+	int wordIndex;
+	for(wordIndex=S-1; wordIndex > 0 && this->value[wordIndex] == 0; wordIndex--);
+	
+	BIG_INT_WORD_TYPE word = this->value[wordIndex];
+	int bit = BigIntUtil::findHighestSetBitInWord(word);
+	
+	if(bit < 0) {
+		return -1;
+	}
+	
+	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+int UFixBigInt<S>::findLowestSetBit() const {
+	//if(this->isZero()) { // Does not have an advantage for a fixed with integer, because we need to loop over all words anyway.
+	//	return -1;
+	//}
+	
+	int wordIndex=0;
+	for(wordIndex=0; wordIndex < S-1 && this->value[wordIndex] == 0; wordIndex++);
+	
+	BIG_INT_WORD_TYPE word = this->value[wordIndex];
+	int bit = BigIntUtil::findLowestSetBitInWord(word);
+	
+	if(bit < 0) {
+		return -1;
+	}
+	
+	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
 }
 
 // ----- addition -----

@@ -1520,3 +1520,29 @@ TEST_CASE( "unsigned infinit big integer clearBit", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(193) == UArbBigInt::fromString("                                                  88  77 66 55 44 33 22 11 00", 16) );
 	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == UArbBigInt::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
 }
+
+TEST_CASE( "unsigned infinit big integer isEven", "[UABigint]" ) {
+	REQUIRE( UArbBigInt::fromString("10101010", 2).isEven() == true );
+	REQUIRE( UArbBigInt::fromString("10101011", 2).isEven() == false );
+	
+	REQUIRE( UArbBigInt::fromString("254", 2).isEven() == true );
+	REQUIRE( UArbBigInt::fromString("255", 2).isEven() == false );
+	
+	REQUIRE( UArbBigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).isEven() == true );
+	REQUIRE( UArbBigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 01", 16).isEven() == false );
+	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0a", 16).isEven() == true );
+	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isEven() == false );
+}
+
+TEST_CASE( "unsigned infinit big integer isOdd", "[UABigint]" ) {
+	REQUIRE( UArbBigInt::fromString("10101010", 2).isOdd() == false );
+	REQUIRE( UArbBigInt::fromString("10101011", 2).isOdd() == true );
+	
+	REQUIRE( UArbBigInt::fromString("254", 2).isOdd() == false );
+	REQUIRE( UArbBigInt::fromString("255", 2).isOdd() == true );
+	
+	REQUIRE( UArbBigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).isOdd() == false );
+	REQUIRE( UArbBigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 01", 16).isOdd() == true );
+	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0a", 16).isOdd() == false );
+	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isOdd() == true );
+}
