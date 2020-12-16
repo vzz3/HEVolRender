@@ -878,6 +878,7 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 
 	if( aSize==0 || bSize==0 ) {
 		result.setZero();
+		return;
 	}
 
 	BIG_INT_WORD_TYPE r2, r1;

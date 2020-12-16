@@ -342,24 +342,24 @@ namespace ppvr {
 			 */
 			//template <BIG_INT_WORD_COUNT_TYPE R>
 			void mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const;
-/*
+
 		private:
-			void mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const;
+			void mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UFixBigInt<S>& result) const;
 
 		protected:
 			/**
 			 * result = this * b
-			 * /
-			void mul(const UArbBigInt& b, UArbBigInt& result) const;
+			 */
+			void mul(const UFixBigInt<S>& b, UFixBigInt<S>& result) const;
 
 			/**
 			 * this = this * b
-			 * /
-			void mul(const UArbBigInt& b);
+			 */
+			void mul(const UFixBigInt<S>& b);
 
 		public:
-			UArbBigInt operator* (const UArbBigInt& other) const;
-*/
+			UFixBigInt<S> operator* (const UFixBigInt<S>& other) const;
+			
 		// ----- division -----
 
 		// -- divInt

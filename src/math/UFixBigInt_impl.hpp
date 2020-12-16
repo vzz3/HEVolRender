@@ -690,7 +690,7 @@ void UFixBigInt<S>::mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
 			throw FixBigIntOverflow(std::string("mulInt not posible without overflow (r2)"));
 		}
 		
-		carry += BigIntUtil::addInt(r1, S-1, result.value, S);
+		carry = BigIntUtil::addInt(r1, S-1, result.value, S);
 		if(carry > 0) {
 			throw FixBigIntOverflow(std::string("mulInt not posible without overflow (r1)"));
 		}
@@ -699,6 +699,89 @@ void UFixBigInt<S>::mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
 	
 }
 
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UFixBigInt<S>& result) const {
+	BIG_INT_WORD_COUNT_TYPE aSize  = S, 	bSize  = S;
+	BIG_INT_WORD_COUNT_TYPE aStart = 0,     bStart = 0;
+	
+	//if( aSize > 2 ) {
+		// if the wordCount is smaller than or equal to 2
+		// there is no sense to set aSize (and others) to another values
+		
+		for( ; aSize>0 && a.value[aSize-1]==0 ; --aSize);
+		for(aStart=0 ; aStart<aSize && a.value[aStart]==0 ; ++aStart);
+	//}
+	//if( bSize > 2 ) {
+		// if the wordCount is smaller than or equal to 2
+		// there is no sense to set bSize (and others) to another values
+		
+		for( ; bSize>0 && b.value[bSize-1]==0 ; --bSize);
+		for(bStart=0 ; bStart<bSize && b.value[bStart]==0 ; ++bStart);
+	//}
+	
+	result.setZero();
+	if( aSize==0 || bSize==0 ) {
+		return;
+	}
+	
+	if((aSize + bSize - 1) > S) {
+		throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
+	}
+	
+	BIG_INT_WORD_TYPE r2, r1, carry = 0;
+	
+	for(uint aI=aStart ; aI<aSize ; ++aI) {
+		//for(uint bI=bStart ; bI<bSize ; ++bI) {
+		for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
+			BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
+			carry += BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
+			
+		}
+	}
+	
+	if(carry > 0) {
+		throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (loop)"));
+	}
+	
+	// multiply with last word if required
+	if( (aSize + bSize - 1) == S ) {
+		BigIntUtil::mulTwoWords(a.value[aSize-1], b.value[bSize-1], &r2, &r1);
+		carry = r2;
+		if(carry > 0) {
+			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r2)"));
+		}
+		
+		carry = BigIntUtil::addInt(r1, S-1, result.value, S);
+		if(carry > 0) {
+			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r1)"));
+		}
+	}
+	
+	// optimize word count
+	//BIG_INT_WORD_COUNT_TYPE usedWordIndex;
+	//for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
+	//
+	//result.wordSize = usedWordIndex;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::mul(const UFixBigInt<S>& b, UFixBigInt<S>& result) const {
+	this->mulSchool(*this, b, result);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::mul(const UFixBigInt<S>& b) {
+	UArbBigInt result;
+	this->mul(b, result);
+	*this = result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator* (const UFixBigInt<S>& other) const {
+	UFixBigInt<S> result;
+	this->mul(other, result);
+	return result;
+}
 
 
 
