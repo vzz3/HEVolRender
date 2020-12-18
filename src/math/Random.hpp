@@ -9,6 +9,10 @@ namespace utils {
 }
 */
 
+// https://burtleburtle.net/bob/rand/isaacafa.html
+// https://github.com/edgeofmagic/ISAAC-engine/blob/master/isaac.h
+// https://github.com/sjinks/cpp_isaac64/blob/master/isaac64_engine.h
+
 namespace ppvr {
 	namespace math {
 		/**

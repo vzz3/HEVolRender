@@ -111,8 +111,27 @@ UFixBigInt<S>::UFixBigInt(const BIG_INT_WORD_TYPE& value) {
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-UFixBigInt<S>::UFixBigInt(const UFixBigInt &src) {
-	std::copy(&src.value[0], &src.value[0] + S, this->value);
+UFixBigInt<S>::UFixBigInt(const UFixBigInt<S> &src) {
+	//std::copy(&src.value[0], &src.value[0] + S, this->value);
+	std::copy_n(&src.value[0], S, &value[0]);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE OS>
+UFixBigInt<S>::UFixBigInt(const UFixBigInt<OS> &src) {
+	BIG_INT_WORD_COUNT_TYPE nThis = S;
+	BIG_INT_WORD_COUNT_TYPE nSrc = OS;
+	BIG_INT_WORD_COUNT_TYPE n = std::min(nThis, nSrc);
+	
+	//for(uint i=0 ; i<n ; ++i) {
+	//	value[i] = src.value[i];
+	//}
+	std::copy_n(&src.value[0], n, &value[0]);
+	
+	if(nThis > nSrc) {
+		// fill remaining words with 0
+		std::fill_n(&value[nSrc], nThis-nSrc, 0);
+	}
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -205,7 +224,8 @@ void UFixBigInt<S>::setZero() {
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::setOne() {
 	initWords(0);
-	this->wordSize = 1;
+	this->value[0] = 1;
+	//this->wordSize = 1;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -327,6 +347,14 @@ int UFixBigInt<S>::findLowestSetBit() const {
 	}
 	
 	return wordIndex * BIG_INT_BITS_PER_WORD + bit;
+}
+
+// ----- word utilities -----
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_COUNT_TYPE UFixBigInt<S>::getWordSize() const {
+	int wordIndex;
+	for(wordIndex=S-1; wordIndex > 0 && this->value[wordIndex] == 0; wordIndex--);
+	return wordIndex + 1;
 }
 
 
@@ -604,12 +632,12 @@ UFixBigInt<S> UFixBigInt<S>::operator+ (const UFixBigInt<S>& other) const {
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 BIG_INT_WORD_TYPE UFixBigInt<S>::subInt(const BIG_INT_WORD_TYPE word) {
-	BIG_INT_WORD_TYPE c = BigIntUtil::subInt(word, 0, this->value, this->wordSize);
+	BIG_INT_WORD_TYPE c = BigIntUtil::subInt(word, 0, this->value, S);
 	
 	// reduce word size if a word was truncated
-	if(this->value[this->wordSize-1] == 0) {
-		this->wordSize = this->wordSize-1;
-	}
+	//if(this->value[this->wordSize-1] == 0) {
+	//	this->wordSize = this->wordSize-1;
+	//}
 	
 	return c;
 }
@@ -831,7 +859,358 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor) {
 	return this->divInt(divisor, *this);
 }
 
+// -- divKnuth
 
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, uint m, uint n) const {
+	// this: dividend
+	assert(n >= 2);
+	//assert(this != &remainder);
+	
+	//BIG_INT_WORD_COUNT_TYPE maxWordCount = this->wordSize;
+	
+	remainder = *this;
+	
+	//UInt<value_size+1> uu, vv;
+	//UArbBigInt uu(0, maxWordCount+1);
+	UFixBigInt<S+1> uu(0);
+	//UArbBigInt vv(*this, maxWordCount+1);
+	
+	//UInt<value_size> q;
+	//result.reserveWords(maxWordCount);
+	
+	uint d, j=m;
+	BIG_INT_WORD_TYPE u_value_size, u0, u1, u2, v1, v0;
+	
+	u_value_size = remainder.divKnuth_normalize(divisor, n, d);
+	
+	if( j+n == S /*remainder.wordSize*/ ) {
+		u2 = u_value_size;
+	} else {
+		assert( (j+n) < S );
+		u2 = remainder.value[j+n];
+	}
+	
+	//Div3_MakeBiggerV(v, vv);
+	//UArbBigInt vv(divisor, maxWordCount+1);
+	UFixBigInt<S+1> vv(divisor);
+	//std::copy(&divisor.value[0], (&divisor.value[0] + divisor.wordSize), vv);
+	//vv[divisor.wordSize] = 0;
+	
+	std::cout << "pre fill_n; ";
+	//std::fill_n(&result.value[0], S, 0);
+	result.setZero();
+	std::cout << "post fill_n ";
+	
+	while( true ) {
+		assert( (j+n-1) < S );
+		assert( (j+n-1) >= 0 );
+		assert( (j+n-2) < S );
+		assert( (j+n-2) >= 0 );
+		assert( (n-1) < S );
+		assert( (n-1) >= 0 );
+		assert( (n-2) < S );
+		assert( (n-2) >= 0 );
+		
+		u1 = remainder.value[j+n-1]; // divident high
+		u0 = remainder.value[j+n-2]; // divident low
+		v1 = divisor.value[n-1]; // divisor  high
+		v0 = divisor.value[n-2]; // divident low
+		
+		BIG_INT_WORD_TYPE qp = this->divKnuth_calculate(u2,u1,u0, v1,v0);
+		
+		remainder.divKnuth_makeNewU(uu, j, n, u2);
+		remainder.divKnuth_multiplySubtract(uu, vv, qp);
+		remainder.divKnuth_copyNewU(uu, j, n);
+		
+		result.value[j] = qp;
+		
+		// the next loop
+		if( j-- == 0 ) {
+			break;
+		}
+		
+		assert( (j+n) < S );
+		u2 = remainder.value[j+n];
+	}
+	
+	//BIG_INT_WORD_COUNT_TYPE newWordSize;
+	//// trim reminder word size
+	////for (newWordSize = n; newWordSize>1 && remainder.value[newWordSize-1] == 0; newWordSize--);
+	////remainder.wordSize = newWordSize;
+	//remainder.trimWordSize(n);
+	
+	//// set new word size of the result
+	////for (newWordSize = maxWordCount; newWordSize>1 && result.value[newWordSize-1] == 0; newWordSize--);
+	////result.wordSize = newWordSize;
+	//result.trimWordSize(maxWordCount);
+	
+	//if( remainder ) {
+	remainder.divKnuth_unnormalize(d);
+	//}
+	
+	//*this = result;
+	
+	std::cout << "divKnuth_division end; ";
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
+	BIG_INT_WORD_COUNT_TYPE i;
+	
+	//for(i=0 ; i<n ; ++i, ++j)
+	//	uu.table[i] = table[j];
+	//uu.reserveWords(n);
+	assert( (j+n) <= (S+1) );
+	std::copy_n(&this->value[j], n, &uu.value[0]);
+	i = n;
+	
+	// 'n' is from <1..value_size> so and 'i' is from <0..value_size>
+	// then table[i] is always correct (look at the declaration of 'uu')
+	uu.value[i] = u_max;
+	
+	
+	//for( ++i ; i<value_size+1 ; ++i)
+	//	uu.table[i] = 0;
+	//uu.wordSize = i+1;
+	std::cout << "i+1 = " << (i+1) << "; ";
+	std::cout << "S+1 = " << (S+1) << "; ";
+	std::cout << "(i+1) + ((S+1) - (i+1)) = " << ((i+1) + ((S+1) - (i+1))) << "; ";
+	assert( ((i+1) + ((S+1) - (i+1))) == (S+1) );
+	std::fill_n(&uu.value[i+1], (S+1) - (i+1), 0);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<S+1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
+	BIG_INT_WORD_COUNT_TYPE i;
+	
+	for(i=0 ; i<n ; ++i) {
+		assert( (i+j) < S );
+		assert( i < (S+1) ) ;
+		this->value[i+j] = uu.value[i];
+	}
+	
+	if( i+j < S ) {
+		assert( (i+j) < S );
+		assert( i < (S+1) ) ;
+		this->value[i+j] = uu.value[i];
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, uint n, uint & d) {
+	// this = dividend, v = divisor
+	// v.table[n-1] is != 0
+	
+	assert( (n-1) < S );
+	uint bit  = (uint)BigIntUtil::findHighestSetBitInWord(divisor.value[n-1]); // TODO divisor.value[divisor.wordSize - 1] ?
+	uint move = (BIG_INT_BITS_PER_WORD - bit - 1);
+	d         = move;
+	BIG_INT_WORD_TYPE res  = this->value[S - 1];
+	
+	if( move > 0 ) {
+		divisor.rcl(move, 0);
+		this->rcl(move, 0);
+		res = res >> (bit + 1); // this is the same as the bits that was shiftet out by "this->rcl(move, 0)" - the teoretical new most significant word of this
+	}
+	else {
+		res = 0;
+	}
+	
+	return res;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d) {
+	this->rcr(d,0);
+	//*remainder = *this;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
+	//UInt<2> u_temp;
+	// u_temp in qp (quotient) umbenant
+	//BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
+	//BIG_INT_WORD_TYPE qpValue[2];
+	//UArbBigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
+	UFixBigInt<2> qp;
+	
+	BIG_INT_WORD_TYPE rp, c;
+	bool next_test;
+	
+	assert( v1 != 0 );
+	
+	
+	qp.value[1] = u2;
+	qp.value[0] = u1;
+	//u_temp.DivInt(v1, &rp);
+	rp = qp.divInt(v1);
+	
+	//TTMATH_ASSERT( u_temp.table[1]==0 || u_temp.table[1]==1 )
+	assert( qp.value[1]==0 || qp.value[1]==1 );
+	
+	do {
+		bool decrease = false;
+		
+		if( qp.value[1] == 1 ) {
+			decrease = true;
+		} else {
+			//UInt<2> temp1, temp2;
+			BIG_INT_WORD_TYPE temp1[2], temp2[2];
+			
+			//UInt<2>::MulTwoWords(u_temp.table[0], v0, temp1.table+1, temp1.table);
+			BigIntUtil::mulTwoWords(qp.value[0], v0, &temp1[1], &temp1[0]);
+			temp2[1] = rp;
+			temp2[0] = u0;
+			
+			//if( temp1 > temp2 ) {
+			if(temp1[1] > temp2[1] || (temp1[1] == temp2[1] && temp1[0] > temp2[0])) {
+				decrease = true;
+			}
+		}
+		
+		next_test = false;
+		
+		if( decrease ) {
+			//qp.SubOne();
+			//this->subInt(1, 0, &qp.value[0], 2);
+			qp.subInt(1);
+			
+			rp += v1;
+			
+			if( rp >= v1 ) { // it means that there wasn't a carry (r<b from the book)
+				next_test = true;
+			}
+		}
+	}
+	while( next_test );
+	
+	//qp.value = NULL;
+	return qp.value[0];
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth_multiplySubtract(UFixBigInt<S+1> & uu,  const UFixBigInt<S+1> & vv, BIG_INT_WORD_TYPE & qp) const {
+	// D4 (in the book)
+	
+	UFixBigInt<S+1> vv_temp(0);
+	//UArbBigInt vv_temp(vv);
+	vv.mulInt(qp, vv_temp);
+	
+	//  D5. [Test Remainder]
+	if( uu.sub(vv_temp) ) {
+		// there was a carry (borrow)
+		// D6. [add back]
+		
+		//
+		// TODO make shure to test this code because the execution of this part is very unlikely (only of the order 2/b)
+		//
+		//BIG_INT_WORD_COUNT_TYPE uuWordSizeWithoutCarry = uu.wordSize;
+		
+		--qp;
+		uu.add(vv);
+		
+		// There can be a carry from this additions but it should be ignored
+		// because it cancels with the borrow from uu.Sub(vv_temp).
+		// My add() method does not return a carry bit because it automaticaly adds another most significant word.
+		// Therefore, I truncate this word again (if it was added.);
+		//uu.wordSize = uuWordSizeWithoutCarry;
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::divKnuth(const UFixBigInt<S>& divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder) const {
+	const UFixBigInt<S>& dividend = *this;
+	if(divisor.isZero()) {
+		std::string msg = "UArbBigInt devision by (UArbBigInt)0.";
+		std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	if(dividend < divisor) {
+		// set the reminder to this value and replace this with "0";
+		remainder = *this;
+		result.setZero();
+		return;
+	}
+	if(dividend.isZero()) {
+		// 0/x => result = 0; remainder = 0
+		remainder.setZero();
+		result.setZero();
+		return;
+	}
+	if(dividend == divisor) {
+		// x/x => result = 1; remainder = 0
+		remainder.setZero();
+		result.setOne();
+		return;
+	}
+	
+	//uint m,n, test;
+	
+	//  'm' - is the index (from 0) of last non-zero word in this->value ('dividend')
+	//  'n' - is the index (from 0) of last non-zero word in divisor.value
+	BIG_INT_WORD_COUNT_TYPE m = dividend.getWordSize() - 1;
+	std::cout << "dividend.getWordSize()= " << m << "; ";
+	BIG_INT_WORD_COUNT_TYPE n = divisor.getWordSize() - 1;
+	std::cout << "divisor.getWordSize()= " << n << "; ";
+	
+	//test = Div_StandardTest(v, m, n, remainder);
+	//if( test < 2 )
+	//	return test;
+	
+	if( n == 0 ) {
+		BIG_INT_WORD_TYPE r;
+		r = this->divInt( divisor.value[0], result );
+		//if( remainder ) {
+		remainder.setZero();
+		remainder.value[0] = r;
+		//remainder.wordSize = 1;
+		//}
+		return;
+	}
+	
+	// we can only use the third division algorithm when
+	// the divisor is greater or equal 2^32 (has more than one 32-bit word)
+	++m;
+	++n;
+	m = m - n;
+	
+	this->divKnuth_division(divisor, result, remainder, m, n);
+	// debug build only SIGABRT
+	// 	in libsystem_kernel.dylib`__pthread_kill:
+	//		0x7fff799cab66 <+10>: jae    0x7fff799cab70            ; <+20>
+	// EXC_BAD_INSTRUCTION (code=EXC_I386_INVOP, subcode=0x0)
+	// 	in libsystem_c.dylib`__abort:
+	//		0x7fff7992626e <+177>: ud2
+	std::cout << "divKnuth end; ";
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::div(const UFixBigInt<S>& divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder) const {
+	this->divKnuth(divisor, result, remainder);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::div(const UFixBigInt<S>& divisor, UFixBigInt<S>& remainder) {
+	this->div(divisor, *this, remainder);
+	//UArbBigInt result;
+	//this->div(divisor, result, *this);
+	//*this = result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator/ (const UFixBigInt<S>& other) const {
+	UFixBigInt<S> result(0), reminder(0);
+	this->div(other, result, reminder);
+	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator% (const UFixBigInt<S>& other) const {
+	UFixBigInt<S> result(0), reminder(0);
+	this->div(other, result, reminder);
+	return reminder;
+}
 
 
 

@@ -19,6 +19,9 @@ namespace ppvr {
 	namespace math {
 		template <BIG_INT_WORD_COUNT_TYPE S>
 		class UFixBigInt {
+			// make every version of this template classe a frend of ervery other version
+			template<BIG_INT_WORD_COUNT_TYPE OS>
+			friend class UFixBigInt;
 
 		// ----- statics -----
 		public:
@@ -55,9 +58,12 @@ namespace ppvr {
 		public:
 			UFixBigInt();
 			UFixBigInt(const BIG_INT_WORD_TYPE& value);
-			UFixBigInt(const UFixBigInt &src);
+			UFixBigInt(const UFixBigInt<S> &src);
 		private:
 			UFixBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
+			
+			template<BIG_INT_WORD_COUNT_TYPE OS>
+			UFixBigInt(const UFixBigInt<OS> &src);
 		public:
 			~UFixBigInt();
 
@@ -179,9 +185,10 @@ namespace ppvr {
 
 		// ----- word utilities -----
 		protected:
-			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
-				return S;
-			}
+			/**
+			 * @return the count of used words (index of the word with the most significant bit + 1)
+			 */
+			BIG_INT_WORD_COUNT_TYPE getWordSize() const;
 
 			/**
 			 * Decreases the word count to newMaxWordSize.
@@ -380,13 +387,13 @@ namespace ppvr {
 			 * returns the remainder
 			 */
 			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor);
-/*
+
 		private:
 			// -- divKnuth
 
-			void divKnuth_division(UArbBigInt divisor, UArbBigInt &result, UArbBigInt& remainder, uint m, uint n) const;
-			void divKnuth_makeNewU(UArbBigInt &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
-			void divKnuth_copyNewU(const UArbBigInt & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
+			void divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, uint m, uint n) const;
+			void divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
+			void divKnuth_copyNewU(const UFixBigInt<S+1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
 
 			/**
 			 * D1. [Normaliez]
@@ -398,8 +405,8 @@ namespace ppvr {
 			 * return values:
 			 * -  d - how many times we've moved
 			 * -  return - the next-left value from 'this' (that after value[value_size-1])
-			 * /
-			BIG_INT_WORD_TYPE divKnuth_normalize(UArbBigInt& divisor, uint n, uint & d);
+			 */
+			BIG_INT_WORD_TYPE divKnuth_normalize(UFixBigInt<S>& divisor, uint n, uint & d);
 
 			void divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d);
 			BIG_INT_WORD_TYPE divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const;
@@ -408,8 +415,8 @@ namespace ppvr {
 			 * D4. [Multiply and subtract]
 			 *		includes also: D5. [Test Remainder] and D6. [add back]
 			 *
-			 * /
-			void divKnuth_multiplySubtract(	UArbBigInt & uu,  const UArbBigInt & vv, BIG_INT_WORD_TYPE & qp) const;
+			 */
+			void divKnuth_multiplySubtract(UFixBigInt<S+1> & uu,  const UFixBigInt<S+1> & vv, BIG_INT_WORD_TYPE & qp) const;
 
 			/**
 			 * the third division algorithm
@@ -418,24 +425,24 @@ namespace ppvr {
 			 * "The art of computer programming 2" (4.3.1 page 257)
 			 * Donald E. Knuth
 			 * !! give the description here (from the book)
-			 * /
-			void divKnuth(const UArbBigInt& divisor, UArbBigInt &result, UArbBigInt& remainder) const;
+			 */
+			void divKnuth(const UFixBigInt<S>& divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder) const;
 
 		protected:
 			/**
 			 * result = this / divisor
-			 * /
-			void div(const UArbBigInt& divisor, UArbBigInt &result, UArbBigInt& remainder) const;
+			 */
+			void div(const UFixBigInt<S>& divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder) const;
 
 			/**
 			 * this = this / divisor
-			 * /
-			void div(const UArbBigInt& divisor, UArbBigInt& remainder);
+			 */
+			void div(const UFixBigInt<S>& divisor, UFixBigInt<S>& remainder);
 
 		public:
-			UArbBigInt operator/ (const UArbBigInt& other) const;
-			UArbBigInt operator% (const UArbBigInt& other) const;
-
+			UFixBigInt<S> operator/ (const UFixBigInt<S>& other) const;
+			UFixBigInt<S> operator% (const UFixBigInt<S>& other) const;
+			
 		// ----- pow(), sqrt() -----
 		public:
 

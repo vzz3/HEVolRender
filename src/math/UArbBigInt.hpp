@@ -214,6 +214,9 @@ namespace ppvr {
 
 		// ----- word utilities -----
 		protected:
+			/**
+			 * @return the count of used words (index of the word with the most significant bit + 1)
+			 */
 			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
 				return this->wordSize;
 			}
