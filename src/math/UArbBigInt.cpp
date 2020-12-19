@@ -1177,7 +1177,7 @@ void UArbBigInt::divKnuth_multiplySubtract(	UArbBigInt & uu,  const UArbBigInt &
 	// D4 (in the book)
 
 	//UInt<value_size+1> vv_temp(vv);
-	UArbBigInt vv_temp(vv);
+	UArbBigInt vv_temp(0, vv.wordSize+1);
 	vv.mulInt(qp, vv_temp);
 
 	//  D5. [Test Remainder]
@@ -1203,7 +1203,7 @@ void UArbBigInt::divKnuth_multiplySubtract(	UArbBigInt & uu,  const UArbBigInt &
 
 void UArbBigInt::divKnuth(const UArbBigInt& divisor, UArbBigInt &result, UArbBigInt& remainder) const {
 	const UArbBigInt& dividend = *this;
-	if(divisor == UArbBigInt::ZERO) {
+	if(divisor.isZero()) {
 		std::string msg = "UArbBigInt devision by (UArbBigInt)0.";
 		std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
@@ -1214,7 +1214,7 @@ void UArbBigInt::divKnuth(const UArbBigInt& divisor, UArbBigInt &result, UArbBig
 		result.setZero();
 		return;
 	}
-	if(dividend == UArbBigInt::ZERO) {
+	if(dividend.isZero()) {
 		// 0/x => result = 0; remainder = 0
 		remainder.setZero();
 		result.setZero();
