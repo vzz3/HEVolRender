@@ -1,0 +1,13 @@
+language: cpp
+
+branches:
+  only:
+    - master
+
+sudo: false
+
+compiler:
+  - gcc
+
+script:
+  -  make -C tests

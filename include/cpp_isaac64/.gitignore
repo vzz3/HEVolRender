@@ -1,0 +1,4 @@
+*.o
+/tests/result32.txt
+/tests/result64.txt
+/tests/*_test
