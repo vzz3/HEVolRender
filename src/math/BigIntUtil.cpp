@@ -1,5 +1,6 @@
 
 #include "BigIntUtil.hpp"
+#include <cassert>
 
 
 using namespace ppvr::math;

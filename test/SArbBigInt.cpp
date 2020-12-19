@@ -79,13 +79,13 @@ TEST_CASE( "signed infinit big integer from int64", "[SABigint]" ) {
 	REQUIRE( SArbBigInt::fromInt64(9223372036854775806).toStringDec() 	==   "9223372036854775806" ); // 64 bit signed max - 1
 	REQUIRE( SArbBigInt::fromInt64(9223372036854775807).toStringDec() 	==   "9223372036854775807" ); // 64 bit signed max
 	//REQUIRE( SArbBigInt::fromInt64(9223372036854775808).toStringDec() 	==   "9223372036854775808" ); // 64 bit signed max + 1 // darf nicht funktionieren
-	REQUIRE( SArbBigInt::fromInt64(9223372036854775808).toStringDec() 	==   "-9223372036854775808" ); // 64 bit signed max + 1 // ATTETION unsigned interpreted as signed!
+	REQUIRE( SArbBigInt::fromInt64(9223372036854775808).toStringDec() 	==   "-9223372036854775808" ); // 64 bit signed max + 1 // ATTENTION unsigned interpreted as signed!
 
 	//REQUIRE( SArbBigInt::fromInt64(18446744073709551614).toStringDec() 	==   "18446744073709551614" ); // 64 bit unsigned max - 1
 	//REQUIRE( SArbBigInt::fromInt64(18446744073709551615).toStringDec() 	==   "18446744073709551615" ); // 64 bit unsigned max
 	//REQUIRE( SArbBigInt::fromInt64(18446744073709551616).toStringDec() 	==   18446744073709551616 ); // 32 bit unsigned max + 1 // darf nicht funktionieren
 
-	// ATTETION unsigned interpreted as signed!
+	// ATTENTION unsigned interpreted as signed!
 	REQUIRE( SArbBigInt::fromInt64(18446744073709551614).toStringDec() 	==   "-2" ); // 64 bit unsigned max - 1
 	REQUIRE( SArbBigInt::fromInt64(18446744073709551615).toStringDec() 	==   "-1" ); // 64 bit unsigned max
 }

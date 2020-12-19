@@ -1,6 +1,8 @@
 
 #include "SArbBigInt.hpp"
+#include <cassert>
 #include <iostream>
+#include <algorithm> // required for std::find_if (trim tring)
 
 using namespace ppvr::math;
 

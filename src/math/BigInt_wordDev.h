@@ -1,5 +1,8 @@
 #pragma once
 
+#include <climits>
+#include <sys/types.h>
+
 #define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
 //#include "BigInt_wordDev8bit.h"
 

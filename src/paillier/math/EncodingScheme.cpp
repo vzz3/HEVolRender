@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 #include "exceptions.hpp"
+#include <cassert>
+#include <cmath> // isinf(decoded) || isnan(decoded)
 
 using namespace ppvr::paillier::crypto;
 using namespace ppvr::paillier::math;
@@ -100,7 +102,7 @@ EncodedNumber EncodingScheme::encode(SArbBigInt yValue) const {
 }
 
 EncodedNumber EncodingScheme::encode(const double yValue, const double yPrecision) const {
-	if (isinf(yValue) || isnan(yValue)) {
+	if (std::isinf(yValue) || std::isnan(yValue)) {
 		throw EncodeException("Input value cannot be encoded.");
 	}
 
@@ -205,7 +207,7 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 	}
 	*/
 	double decoded = (double)significand.toInt64() * expFactor;
-	if ( isinf(decoded) || isnan(decoded) ) {
+	if ( std::isinf(decoded) || std::isnan(decoded) ) {
 		throw DecodeException("Decoded value cannot be represented as double.");
 	}
 

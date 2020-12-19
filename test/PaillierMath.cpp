@@ -319,8 +319,8 @@ TEST_CASE( "paillier FP decode float", "[paillierMath]" ) {
 	EncodedNumber doubleMantissaOverflowEnc1 = esS.encode(doubleMaxMantissa + SArbBigInt(1));
 	REQUIRE( esS.decodeDouble( doubleMantissaOverflowEnc1 ) == (double)((doubleMaxMantissa + SArbBigInt(1)).toInt64()/esS.getBase()) * (double)esS.getBase() );
 
-	REQUIRE( (int64_t)esS.decodeDouble( esS.encode(doubleMaxMantissa + SArbBigInt(1024)) ) == (doubleMaxMantissa + SArbBigInt(1024)).toInt64() );
-	REQUIRE( (int64_t)esS.decodeDouble( esS.encode(doubleMaxMantissa + SArbBigInt(1025)) ) != (doubleMaxMantissa + SArbBigInt(1025)).toInt64() );
+	REQUIRE( (int64_t)esS.decodeDouble( esS.encode(doubleMaxMantissa + SArbBigInt::fromInt64(1024)) ) == (doubleMaxMantissa + SArbBigInt::fromInt64(1024)).toInt64() );
+	REQUIRE( (int64_t)esS.decodeDouble( esS.encode(doubleMaxMantissa + SArbBigInt::fromInt64(1025)) ) != (doubleMaxMantissa + SArbBigInt::fromInt64(1025)).toInt64() );
 
 	//SArbBigInt t2bigInt =  SArbBigInt::fromString("48 96 25 87 46 95 78 65 21 48 23 65 21 45", 16); // 112 bit
 	SArbBigInt t2bigInt =  SArbBigInt::fromString("1472229330323731852950423889846597", 10); // 112 bit

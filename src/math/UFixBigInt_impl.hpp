@@ -3,6 +3,7 @@
 #include <iostream>
 #include "BigIntUtil.hpp"
 #include "exceptions.hpp"
+#include <cassert>
 
 using ppvr::math::UFixBigInt;
 

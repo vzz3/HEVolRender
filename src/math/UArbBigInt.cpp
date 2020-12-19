@@ -8,6 +8,7 @@
 #include <math.h>       /* log2 */
 //#include <Security/Security.h>
 #include "BigIntUtil.hpp"
+#include <cassert>
 
 
 
@@ -378,8 +379,8 @@ void UArbBigInt::setBit(const uint n) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(n+1);
 	this->reserveWordsAndInitUnused(requiredWords);
 
-	uint restBits   = n % BIG_INT_BITS_PER_WORD;
-	uint allWords 	= n / BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_COUNT_TYPE restBits   = n % BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_COUNT_TYPE allWords 	= n / BIG_INT_BITS_PER_WORD;
 
 	this->value[allWords] |= (BIG_INT_WORD_TYPE(1) << restBits);
 

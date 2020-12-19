@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <sys/types.h>
-
 #include "BigInt_wordDev.h"
 
 #include "Random.hpp"
