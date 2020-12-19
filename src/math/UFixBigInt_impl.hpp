@@ -898,10 +898,8 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 	//std::copy(&divisor.value[0], (&divisor.value[0] + divisor.wordSize), vv);
 	//vv[divisor.wordSize] = 0;
 	
-	std::cout << "pre fill_n; ";
 	//std::fill_n(&result.value[0], S, 0);
 	result.setZero();
-	std::cout << "post fill_n ";
 	
 	while( true ) {
 		assert( (j+n-1) < S );
@@ -951,8 +949,6 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 	//}
 	
 	//*this = result;
-	
-	std::cout << "divKnuth_division end; ";
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -974,11 +970,7 @@ void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TY
 	//for( ++i ; i<value_size+1 ; ++i)
 	//	uu.table[i] = 0;
 	//uu.wordSize = i+1;
-	std::cout << "i+1 = " << (i+1) << "; ";
-	std::cout << "S+1 = " << (S+1) << "; ";
-	std::cout << "(i+1) + ((S+1) - (i+1)) = " << ((i+1) + ((S+1) - (i+1))) << "; ";
 	assert( ((i+1) + ((S+1) - (i+1))) == (S+1) );
-	std::fill_n(&uu.value[i+1], (S+1) - (i+1), 0);
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -1151,9 +1143,7 @@ void UFixBigInt<S>::divKnuth(const UFixBigInt<S>& divisor, UFixBigInt<S> &result
 	//  'm' - is the index (from 0) of last non-zero word in this->value ('dividend')
 	//  'n' - is the index (from 0) of last non-zero word in divisor.value
 	BIG_INT_WORD_COUNT_TYPE m = dividend.getWordSize() - 1;
-	std::cout << "dividend.getWordSize()= " << m << "; ";
 	BIG_INT_WORD_COUNT_TYPE n = divisor.getWordSize() - 1;
-	std::cout << "divisor.getWordSize()= " << n << "; ";
 	
 	//test = Div_StandardTest(v, m, n, remainder);
 	//if( test < 2 )
@@ -1183,7 +1173,6 @@ void UFixBigInt<S>::divKnuth(const UFixBigInt<S>& divisor, UFixBigInt<S> &result
 	// EXC_BAD_INSTRUCTION (code=EXC_I386_INVOP, subcode=0x0)
 	// 	in libsystem_c.dylib`__abort:
 	//		0x7fff7992626e <+177>: ud2
-	std::cout << "divKnuth end; ";
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
