@@ -7,33 +7,34 @@
 namespace ppvr {
 	namespace math {
 		/**
-		 * Signed Arbitrary (Arb) length Big Integer class (length is not limited, not fixed-width(Fix) )
+		 * Signed Fixed (Fix) length Big Integer class (length is not limited, not fixed-width(Fix) )
 		 */
-		class SArbBigInt: protected UArbBigInt {
-
+		template <BIG_INT_WORD_COUNT_TYPE S>
+		class SFixBigInt: protected UFixBigInt<S> {
+		
 		// ----- statics -----
 		public:
-			friend std::ostream& operator << ( std::ostream& os, const SArbBigInt& value ) {
+			friend std::ostream& operator << ( std::ostream& os, const SFixBigInt<S>& value ) {
 				os << value.toStringDec();
 				return os;
 			}
-
-			static SArbBigInt fromInt64(const int64_t& int64Val);
+		
+			static SFixBigInt<S> fromInt64(const int64_t& int64Val);
 		protected:
-			static SArbBigInt& fromInt64(const int64_t& int64Val, SArbBigInt &target );
+			static SFixBigInt<S>& fromInt64(const int64_t& int64Val, SFixBigInt<S> &target );
 
 		public:
-			static SArbBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
+			static SFixBigInt<S> fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
-			static SArbBigInt& fromString(std::string str, const BIG_INT_WORD_TYPE base, SArbBigInt &target );
+			static SFixBigInt<S>& fromString(std::string str, const BIG_INT_WORD_TYPE base, SFixBigInt<S> &target );
 
 		public:
-			static SArbBigInt randomNumber(const uint& sizeInBit, Random& rnd);
-			static SArbBigInt randomNumber(const SArbBigInt& upperBound, Random& rnd);
+			static SFixBigInt<S> randomNumber(const uint& sizeInBit, Random& rnd);
+			static SFixBigInt<S> randomNumber(const SFixBigInt<S>& upperBound, Random& rnd);
 		protected:
-			static SArbBigInt& randomNumber(const uint& sizeInBit, Random& rnd, SArbBigInt &target);
-			static SArbBigInt& randomNumber(const SArbBigInt& upperBound, Random& rnd, SArbBigInt &target);
-
+			static SFixBigInt<S>& randomNumber(const uint& sizeInBit, Random& rnd, SFixBigInt<S> &target);
+			static SFixBigInt<S>& randomNumber(const SFixBigInt<S>& upperBound, Random& rnd, SFixBigInt<S> &target);
+/*
 		private:
 
 			static const SArbBigInt SmallPrimeProduct;
@@ -58,7 +59,7 @@ namespace ppvr {
 			 * @throws ArithmeticException {@code bitLength < 2} or {@code bitLength} is too large.
 			 * @see    #bitLength()
 			 * @since 1.4
-			 */
+			 * /
 			static SArbBigInt probablePrime(const uint& bitLength, Random& rnd);
 
 		private:
@@ -68,7 +69,7 @@ namespace ppvr {
 			 * larger bitlengths.
 			 *
 			 * This method assumes bitLength > 1.
-			 */
+			 * /
 			static SArbBigInt smallPrime(const uint& bitLength, const uint& certainty, Random& rnd);
 
 
@@ -77,13 +78,13 @@ namespace ppvr {
 			 * This method is more appropriate for larger bitlengths since it uses
 			 * a sieve to eliminate most composites before using a more expensive
 			 * test.
-			 */
+			 * /
 			static SArbBigInt largePrime(const uint& bitLength, const uint& certainty, Random& rnd);
 
 			/**
 			 * This step is a a low level primality test which requires the pre-calculation of the first few hundred primes (using Sieve of Eratosthenes).
 			 * The prime candidate is divided by the pre-generated primes to check for divisibility. If the prime candidate is perfectly divisible by any of these pre-generated primes, the test fails and a new prime candidate must be picked and tested. This is repeated as long as a value which is coprime to all the primes in our generated primes list is found
-			 */
+			 * /
 			static void lowLevelPrime(const uint& bitLength, Random& rnd, SArbBigInt &target);
 
 			//static int getPrimeSearchLen(int bitLength);
@@ -101,7 +102,7 @@ namespace ppvr {
 			 *         this method is proportional to the value of this parameter.
 			 * @return {@code true} if this BigInteger is probably prime,
 			 *         {@code false} if it's definitely composite.
-			 */
+			 * /
 			bool primeToCertainty(const uint certainty, Random& rnd);
 
 			/**
@@ -109,13 +110,13 @@ namespace ppvr {
 			 *
 			 * The following assumptions are made:
 			 * This BigInteger is a positive, odd number.
-			 */
+			 * /
 			bool passesLucasLehmer();
 
 			/**
 			 * Computes Jacobi(p,n).
 			 * Assumes n positive, odd, n>=3.
-			 */
+			 * /
 			static int jacobiSymbol(int16_t p, const SArbBigInt& n); // TODO replace int16_t with int
 
 			static SArbBigInt lucasLehmerSequence(int z, const SArbBigInt& k, const SArbBigInt& n);
@@ -128,7 +129,7 @@ namespace ppvr {
 			 * The following assumptions are made:
 			 * This BigInteger is a positive, odd number greater than 2.
 			 * iterations<=50.
-			 */
+			 * /
 			bool passesMillerRabin(int iterations, Random& rnd);
 
 		public:
@@ -145,9 +146,9 @@ namespace ppvr {
 			 *         this method is proportional to the value of this parameter.
 			 * @return {@code true} if this BigInteger is probably prime,
 			 *         {@code false} if it's definitely composite.
-			 */
+			 * /
 			bool isProbablePrime(const uint certainty, Random& rnd);
-
+	*/
 		// ----- member variables -----
 		private:
 			int_fast8_t signum;
@@ -159,12 +160,12 @@ namespace ppvr {
 
 		// ----- constructors -----
 		public:
-			SArbBigInt();
-			SArbBigInt(const BIG_INT_WORD_TYPE& value, bool negative = false);
-			SArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity, bool negative = false);
-			SArbBigInt(const UArbBigInt& value, bool negative = false);
-			SArbBigInt(const SArbBigInt& value);
-			~SArbBigInt();
+			SFixBigInt();
+			SFixBigInt(const BIG_INT_WORD_TYPE& value, bool negative = false);
+			//SFixBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity, bool negative = false);
+			SFixBigInt(const UFixBigInt<S>& value, bool negative = false);
+			SFixBigInt(const SFixBigInt<S>& value);
+			~SFixBigInt();
 
 		// ----- value export - toString / toUint64 -----
 		public:
@@ -184,7 +185,7 @@ namespace ppvr {
 		public:
 			/**
 			 * Copy assignment operator
-			 */
+			 * /
 			SArbBigInt& operator= (const SArbBigInt& other);
 
 		// ----- bit utilities -----
@@ -194,13 +195,13 @@ namespace ppvr {
 		protected:
 			void setZero();
 			void setOne();
-			void setAbs();
+			void setAbs(); */
 			void setNegate();
 
 		private:
 			bool isMagnitudeZero() const;
 			bool isMagnitudeOne() const;
-
+/*
 		public:
 			bool isZero() const;
 			bool isOne() const;
@@ -210,14 +211,14 @@ namespace ppvr {
 			 * BigInteger.
 			 *
 			 * @return {@code abs(this)}
-			 */
+			 * /
 			SArbBigInt abs() const;
 
 			/**
 			 * Returns a BigInteger whose value is {@code (-this)}.
 			 *
 			 * @return {@code -this}
-			 */
+			 * /
 			SArbBigInt negate() const;
 
 		// ----- shift left -----
@@ -239,41 +240,41 @@ namespace ppvr {
 			 */
 			//void addInt(const BIG_INT_WORD_TYPE word);
 
-			void add(const SArbBigInt &other, SArbBigInt &result) const;
-			void add(const SArbBigInt &other);
+			void add(const SFixBigInt<S> &other, SFixBigInt<S> &result) const;
+			void add(const SFixBigInt<S> &other);
 
 		public:
-			SArbBigInt operator+ (const SArbBigInt& other) const;
+			SFixBigInt<S> operator+ (const SFixBigInt<S>& other) const;
 
 		// ----- substraction -----
 		private:
-			BIG_INT_WORD_TYPE subUArbBigInt(const SArbBigInt& b, SArbBigInt& restul) const;
+			BIG_INT_WORD_TYPE subUFixBigInt(const SFixBigInt<S>& b, SFixBigInt<S>& restul) const;
 			//SArbBigInt subAsPositive(const BigInt& a, const BigInt& b) const;
-			void subAsPositive(const SArbBigInt& a, const SArbBigInt& b, SArbBigInt& restul) const;
+			void subAsPositive(const SFixBigInt<S>& a, const SFixBigInt<S>& b, SFixBigInt<S>& restul) const;
 
 		protected:
 			//BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word);
-			void sub(const SArbBigInt& other, SArbBigInt &result) const;
-			void sub(const SArbBigInt& other);
+			void sub(const SFixBigInt<S>& other, SFixBigInt<S> &result) const;
+			void sub(const SFixBigInt<S>& other);
 
 		public:
-			SArbBigInt operator- (const SArbBigInt& other) const;
+			SFixBigInt<S> operator- (const SFixBigInt<S>& other) const;
 
 		// ----- multiplication -----
 		protected:
 			/**
 			 * multiplication: result = this * ss2
-			 */
+			 * /
 			//void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
 
 			/**
 			 * result = this * b
-			 */
+			 * /
 			void mul(const SArbBigInt& b, SArbBigInt& result) const;
 
 			/**
 			 * this = this * b
-			 */
+			 * /
 			void mul(const SArbBigInt& b);
 
 		public:
@@ -300,12 +301,12 @@ namespace ppvr {
 
 			/**
 			 * result = this / divisor
-			 */
+			 * /
 			void div(const SArbBigInt& divisor, SArbBigInt &result, SArbBigInt& remainder) const;
 
 			/**
 			 * this = this / divisor
-			 */
+			 * /
 			void div(const SArbBigInt& divisor, SArbBigInt& remainder);
 
 		public:
@@ -317,25 +318,25 @@ namespace ppvr {
 			/**
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
-			 */
+			 * /
 			SArbBigInt pow(SArbBigInt pow) const;
 
 			/**
 			 * square root
 			 * e.g. BigInt(9).sqrt() = 3
 			 * ('digit-by-digit' algorithm)
-			 */
+			 * /
 			SArbBigInt sqrt() const;
 
-
+*/
 		// ----- Comparison operators -----
 		public:
-			bool operator< (const SArbBigInt& other) const;
-			bool operator<= (const SArbBigInt& other) const;
-			bool operator> (const SArbBigInt& other) const;
-			bool operator>= (const SArbBigInt& other) const;
-			bool operator== (const SArbBigInt& other) const;
-			bool operator!= (const SArbBigInt& other) const;
+			bool operator< (const SFixBigInt<S>& other) const;
+			bool operator<= (const SFixBigInt<S>& other) const;
+			bool operator> (const SFixBigInt<S>& other) const;
+			bool operator>= (const SFixBigInt<S>& other) const;
+			bool operator== (const SFixBigInt<S>& other) const;
+			bool operator!= (const SFixBigInt<S>& other) const;
 
 
 
@@ -349,7 +350,7 @@ namespace ppvr {
 			 *	The Bézout coefficients are useful for solving Diophantine equations.
 			 * https://www.mathworks.com/help/matlab/ref/gcd.html
 			 * https://www.geeksforgeeks.org/euclidean-algorithms-basic-and-extended/
-			 */
+			 * /
 			SArbBigInt gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
 
 			SArbBigInt gcdExtended_internRecursive(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
@@ -358,7 +359,7 @@ namespace ppvr {
 			/**
 			 * Basic Euclidean Algorithm
 			 * returns the gcd of a and b
-			 */
+			 * /
 			SArbBigInt gcd(const SArbBigInt & a, const SArbBigInt & b) const;
 
 		public:
@@ -370,7 +371,7 @@ namespace ppvr {
 			 * @throws ArithmeticException {@code  m} &le; 0, or this BigInteger
 			 *         has no multiplicative inverse mod m (that is, this BigInteger
 			 *         is not <i>relatively prime</i> to m).
-			 */
+			 * /
 			SArbBigInt modInverse(const SArbBigInt &m) const;
 
 
@@ -381,13 +382,13 @@ namespace ppvr {
 
 			/**
 			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 */
+			 * /
 			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
 
 			/**
 			 * Returns a BigInteger whose value is this mod(2**p).
 			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 */
+			 * /
 			//SArbBigInt mod2(int p) const;
 
 		public:
@@ -403,9 +404,11 @@ namespace ppvr {
 			 *         negative and this BigInteger is not <i>relatively
 			 *         prime</i> to {@code m}.
 			 * @see    #modInverse
-			 */
+			 * /
 			SArbBigInt modPow(const SArbBigInt &exponent, const SArbBigInt &m) const;
-
+*/
 		};
 	}
 }
+
+#include "SFixBigInt_impl.hpp"

@@ -677,7 +677,7 @@ SArbBigInt SArbBigInt::operator+ (const SArbBigInt& other) const {
 }
 
 // ----- substraction -----
-BIG_INT_WORD_TYPE SArbBigInt::subInfUInt(const SArbBigInt& b, SArbBigInt& restul) const {
+BIG_INT_WORD_TYPE SArbBigInt::subUArbBigInt(const SArbBigInt& b, SArbBigInt& restul) const {
 	return UArbBigInt::sub(b, 0, restul);
 }
 
@@ -687,11 +687,11 @@ void SArbBigInt::subAsPositive(const SArbBigInt& a, const SArbBigInt& b, SArbBig
 	//if( (BigInt)b < (BigInt)a ) { // only compare the magnitude
 	if(static_cast<const UArbBigInt&>(b) < static_cast<const UArbBigInt&>(a)  ) { // only compare the magnitude (ignore the sign); static_cast<const BigInt&>(X): cast without calling the copy constructor
 		//restul = SArbBigInt(a - b, false);
-		a.subInfUInt(b, restul);
+		a.subUArbBigInt(b, restul);
 		restul.signum = restul.isMagnitudeZero() ? 0 : +1;
 	} else {
 		//restul = SArbBigInt(b - a, true);
-		b.subInfUInt(a, restul);
+		b.subUArbBigInt(a, restul);
 		restul.signum = restul.isMagnitudeZero() ? 0 : -1;
 	}
 
