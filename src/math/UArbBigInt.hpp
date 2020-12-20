@@ -4,6 +4,7 @@
 #include "BigInt_wordDev.h"
 
 #include "Random.hpp"
+//#include "UFixBigInt.hpp"
 
 
 /*
@@ -16,10 +17,20 @@ namespace utils {
 
 namespace ppvr {
 	namespace math {
+	
+		template <BIG_INT_WORD_COUNT_TYPE S>
+		class UFixBigInt;
+		
 		class UArbBigInt {
 
 		// ----- statics -----
 		public:
+			//template <BIG_INT_WORD_COUNT_TYPE S>
+			//friend int UFixBigInt<S>::fromUArbBigInt();
+			
+			//template <BIG_INT_WORD_COUNT_TYPE S>
+			//friend class UFixBigInt;
+			
 			friend std::ostream& operator << ( std::ostream& os, const UArbBigInt& value ){
 				os << value.toStringDec();
 				return os;
@@ -38,6 +49,14 @@ namespace ppvr {
 			static UArbBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
 			static UArbBigInt& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, UArbBigInt &target );
+
+		public:
+			template <BIG_INT_WORD_COUNT_TYPE S>
+			static UArbBigInt fromUFixBigInt(const UFixBigInt<S>& src);
+
+		protected:
+			template <BIG_INT_WORD_COUNT_TYPE S>
+			static UArbBigInt& fromUFixBigInt(const UFixBigInt<S>& src, UArbBigInt &target);
 
 		// ----- statics rendome -----
 			/*
@@ -70,7 +89,11 @@ namespace ppvr {
 			BIG_INT_WORD_COUNT_TYPE wordCapacity = 0; // length of the value array
 			BIG_INT_WORD_TYPE *value = NULL;
 			//std::shared_ptr<BIG_INT_WORD_TYPE[]> value;
-
+		public:
+			inline const BIG_INT_WORD_TYPE* getData() const {
+				return this->value;
+			}
+			
 		// ----- constructors -----
 		public:
 			UArbBigInt();
@@ -208,14 +231,14 @@ namespace ppvr {
 			int findLowestSetBit() const;
 
 		// ----- word utilities -----
-		protected:
+		public:
 			/**
 			 * @return the count of used words (index of the word with the most significant bit + 1)
 			 */
-			BIG_INT_WORD_COUNT_TYPE getWordSize() const {
+			inline BIG_INT_WORD_COUNT_TYPE getWordSize() const {
 				return this->wordSize;
 			}
-
+		protected:
 			/**
 			 * Decreases the word count to newMaxWordSize.
 			 * If the word newMaxWordSize-1 is 0 then set the wordSize to newMaxWordSize-1.
@@ -226,7 +249,7 @@ namespace ppvr {
 			 */
 			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize);
 
-			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
+			inline BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}
 
@@ -484,3 +507,5 @@ namespace ppvr {
 		};
 	}
 }
+
+#include "UArbBigInt_impl.hpp"

@@ -17,6 +17,8 @@ namespace utils {
 
 namespace ppvr {
 	namespace math {
+		class UArbBigInt;
+	
 		template <BIG_INT_WORD_COUNT_TYPE S>
 		class UFixBigInt {
 			// make every version of this template classe a frend of ervery other version
@@ -39,6 +41,11 @@ namespace ppvr {
 		protected:
 			static UFixBigInt<S>& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, UFixBigInt<S> &target );
 
+		public:
+			static UFixBigInt<S> fromUArbBigInt(const UArbBigInt& src);
+		protected:
+			static UFixBigInt<S>& fromUArbBigInt(const UArbBigInt& src, UFixBigInt<S> &target);
+			
 		// ----- statics rendome -----
 		public:
 
@@ -52,14 +59,18 @@ namespace ppvr {
 		private:
 			BIG_INT_WORD_TYPE value[S];
 			//std::shared_ptr<BIG_INT_WORD_TYPE[]> value;
-
+			
+		public:
+			inline const decltype(value) &getData() const {
+				return this->value;
+			}
 		// ----- constructors -----
 		public:
 			UFixBigInt();
 			UFixBigInt(const BIG_INT_WORD_TYPE& value);
 			UFixBigInt(const UFixBigInt<S> &src);
 		private:
-			UFixBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
+			//UFixBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
 			
 			template<BIG_INT_WORD_COUNT_TYPE OS>
 			UFixBigInt(const UFixBigInt<OS> &src);
@@ -183,12 +194,13 @@ namespace ppvr {
 			int findLowestSetBit() const;
 
 		// ----- word utilities -----
-		protected:
+		public:
 			/**
 			 * @return the count of used words (index of the word with the most significant bit + 1)
 			 */
 			BIG_INT_WORD_COUNT_TYPE getWordSize() const;
 
+		protected:
 			/**
 			 * Decreases the word count to newMaxWordSize.
 			 * If the word newMaxWordSize-1 is 0 then set the wordSize to newMaxWordSize-1.

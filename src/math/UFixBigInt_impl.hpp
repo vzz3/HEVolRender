@@ -4,6 +4,7 @@
 #include "BigIntUtil.hpp"
 #include "exceptions.hpp"
 #include <cassert>
+#include "UArbBigInt.hpp"
 
 using ppvr::math::UFixBigInt;
 
@@ -97,6 +98,31 @@ UFixBigInt<S>& UFixBigInt<S>::fromString(const std::string& str, const BIG_INT_W
 		throw FixBigIntOverflow(std::string("The number from the string ") + str + std::string(" can not be stored within ") + std::to_string(S) + std::string(" words."));
 	}
 	
+	return target;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::fromUArbBigInt(const UArbBigInt& src) {
+	UFixBigInt<S> res{};
+	UFixBigInt<S>::fromUArbBigInt(src, res);
+	return res;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S>& UFixBigInt<S>::fromUArbBigInt(const UArbBigInt& src, UFixBigInt<S> &target) {
+	BIG_INT_WORD_COUNT_TYPE srcWordCount = src.getWordSize();
+	if(srcWordCount > S ) {
+		std::string msg = "overflow error, provided UArbBigInt (" + std::to_string(srcWordCount) +  " wordes) does not fit  not the target UFixBigInt<S> (" + std::to_string(S) +  " wordes).";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	
+	//const BIG_INT_WORD_TYPE *test = src.getData();
+	//test[2] = 12;
+	//BIG_INT_WORD_TYPE test2 = test[1];
+	
+	std::copy_n(src.getData(), srcWordCount, target.value);
+	std::fill_n(&(target.value[srcWordCount]), S - srcWordCount, 0);
 	return target;
 }
 
@@ -870,7 +896,7 @@ void UFixBigInt<S>::mul(const UFixBigInt<S>& b, UFixBigInt<S>& result) const {
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::mul(const UFixBigInt<S>& b) {
-	UArbBigInt result;
+	UFixBigInt<S> result;
 	this->mul(b, result);
 	*this = result;
 }

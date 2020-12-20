@@ -1,9 +1,11 @@
 #include "../include/catch2/catch.hpp"
 #include "../src/math/UArbBigInt.hpp"
+#include "../src/math/UFixBigInt.hpp"
 
 #define LONG_TESTS 0
 
 using ppvr::math::UArbBigInt;
+using ppvr::math::UFixBigInt;
 
 TEST_CASE( "unsigned infinit big integer to unsigned int 64 (UArbBigInt from Word constructor)", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::ZERO.toUint64() == 0ull );
@@ -1545,4 +1547,18 @@ TEST_CASE( "unsigned infinit big integer isOdd", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("    80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 01", 16).isOdd() == true );
 	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0a", 16).isOdd() == false );
 	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isOdd() == true );
+}
+
+TEST_CASE( "unsigned infinit big integer fromUArbBigInt", "[UABigint]" ) {
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0)) == UArbBigInt(0) );
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(1)) == UArbBigInt(1) );
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(127)) == UArbBigInt(127) );
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(128)) == UArbBigInt(128) );
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(255)) == UArbBigInt(255) );
+	
+	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(560)>::fromString("1 524 048 626 526 185 117 008 148 645 329 708 998 795 770 321 794 318 911 442 256 140 455 458 946 053 172 210 513 801 777 413  097 237 329 246 447 244 122 385 285 308 414 454 789 711 324 787 960 475 901 495 579 519 924 778 756", 10)) == UArbBigInt::fromString("1524048626526185117008148645329708998795770321794318911442256140455458946053172210513801777413097237329246447244122385285308414454789711324787960475901495579519924778756", 10) );
+	
+	REQUIRE( UArbBigInt::fromUFixBigInt( UFixBigInt<BIG_INT_BIT_TO_SIZE(1024)>::fromString("1 FF", 16)) == UArbBigInt::fromString("1 FF", 16) );
+
+	//REQUIRE_THROWS( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("1  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00", 16)) );
 }
