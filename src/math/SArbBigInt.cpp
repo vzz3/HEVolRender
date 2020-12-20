@@ -103,14 +103,14 @@ SArbBigInt& SArbBigInt::fromString(std::string str, const BIG_INT_WORD_TYPE base
 }
 
 SArbBigInt SArbBigInt::randomNumber(const uint& sizeInBit, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(sizeInBit);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
 	SArbBigInt res(0, requiredWords);
 	SArbBigInt::randomNumber(sizeInBit, rnd, res);
 	return res;
 }
 
 SArbBigInt SArbBigInt::randomNumber(const SArbBigInt& upperBound, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(upperBound.bitLength());
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(upperBound.bitLength());
 	SArbBigInt res(0, requiredWords);
 	SArbBigInt::randomNumber(upperBound, rnd, res);
 	return res;
@@ -196,7 +196,7 @@ SArbBigInt SArbBigInt::smallPrime(const uint& bitLength, const uint& certainty, 
 	 }
 	 */
 
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(bitLength);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(bitLength);
 	SArbBigInt p(0, requiredWords);
 
 	while (true) {
@@ -235,7 +235,7 @@ SArbBigInt SArbBigInt::largePrime(const uint& bitLength, const uint& certainty, 
 	// https://crypto.stackexchange.com/questions/1812/how-to-better-generate-large-primes-sieving-and-then-random-picking-or-random-p
 
 	// Algorithm and comments adapted from https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
-	SArbBigInt primeCandidate(0, requiredWords(bitLength));
+	SArbBigInt primeCandidate(0, BIG_INT_REQUIRED_WORDS(bitLength));
 	while(true) {
 		SArbBigInt::lowLevelPrime(bitLength, rnd, primeCandidate);
 		if (primeCandidate.primeToCertainty(certainty, rnd)) {

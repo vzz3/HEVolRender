@@ -100,6 +100,76 @@ UFixBigInt<S>& UFixBigInt<S>::fromString(const std::string& str, const BIG_INT_W
 	return target;
 }
 
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd) {
+	UFixBigInt<S> res{};
+	UFixBigInt<S>::randomNumber(sizeInBit, rnd, res);
+	return res;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::randomNumber(const UFixBigInt<S>& upperBound, Random& rnd) {
+	UFixBigInt<S> res{};
+	UFixBigInt<S>::randomNumber(upperBound, rnd, res);
+	return res;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S>& UFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd, UFixBigInt<S> &target) {
+	if(sizeInBit < 1) {
+		std::string msg = "ERROR randomNumber: the sizeInBit parameter must be greater then 0.";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	if(sizeInBit > (S * BIG_INT_BITS_PER_WORD) ) {
+		std::string msg = "ERROR randomNumber: the sizeInBit can not be greater then the bit length of the magnitude store (S * BIG_INT_BITS_PER_WORD).";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
+
+	// calculate required
+	size_t requiredBytes = (sizeInBit + (CHAR_BIT - 1)) / CHAR_BIT;
+	size_t oversizeInBits = requiredWords * BIG_INT_BITS_PER_WORD - sizeInBit;
+	BIG_INT_WORD_TYPE oversizeMask = BIG_INT_WORD_MAX_VALUE >> oversizeInBits;
+
+	// set words that are not required to zero
+	for (size_t i = requiredWords; i < S; i++) {
+		target.value[i] = 0;
+	}
+
+	do {
+		// copy randome numbers
+		rnd.randomFill(&(target.value[0]), requiredBytes);
+		
+		// set bits that are over sizeInBit to zero
+		target.value[requiredWords-1] = target.value[requiredWords-1] & oversizeMask;
+
+		//target.trimWordSize(requiredWords);
+
+	} while (target.isZero());
+
+	return target;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S>& UFixBigInt<S>::randomNumber(const UFixBigInt<S>& upperBound, Random& rnd, UFixBigInt<S> &target) {
+	if(upperBound.isZero()) {
+		std::string msg = "ERROR upperBound: must be strictly greater than one";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	uint bits = upperBound.bitLength();
+	do {
+		UFixBigInt<S>::randomNumber(bits, rnd, target);
+		// make sure r <= upperBound (modulus)
+	} while (target >= upperBound);
+	return target;
+}
+
+
 // ----- constructors -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>

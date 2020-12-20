@@ -38,7 +38,7 @@ namespace ppvr {
 			static UFixBigInt<S> fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
 			static UFixBigInt<S>& fromString(const std::string& str, const BIG_INT_WORD_TYPE base, UFixBigInt<S> &target );
-/*
+
 		// ----- statics rendome -----
 		public:
 
@@ -47,7 +47,6 @@ namespace ppvr {
 		protected:
 			static UFixBigInt<S>& randomNumber(const uint& sizeInBit, Random& rnd, UFixBigInt<S> &target);
 			static UFixBigInt<S>& randomNumber(const UFixBigInt<S>& upperBound, Random& rnd, UFixBigInt<S> &target);
-		*/
 
 		// ----- member variables -----
 		private:

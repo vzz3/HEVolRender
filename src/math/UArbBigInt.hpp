@@ -64,9 +64,6 @@ namespace ppvr {
 			static UArbBigInt& randomNumber(const uint& sizeInBit, Random& rnd, UArbBigInt &target);
 			static UArbBigInt& randomNumber(const UArbBigInt& upperBound, Random& rnd, UArbBigInt &target);
 
-		protected:
-			 static BIG_INT_WORD_COUNT_TYPE requiredWords(const uint& sizeInBit);
-
 		// ----- member variables -----
 		private:
 			BIG_INT_WORD_COUNT_TYPE wordSize = 0; // count of used words (wordCount)

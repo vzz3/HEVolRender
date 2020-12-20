@@ -115,14 +115,14 @@ UArbBigInt& UArbBigInt::fromString(const std::string& str, const BIG_INT_WORD_TY
 // ----- statics rendome -----
 
 UArbBigInt UArbBigInt::randomNumber(const uint& sizeInBit, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(sizeInBit);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
 	UArbBigInt res(0, requiredWords);
 	UArbBigInt::randomNumber(sizeInBit, rnd, res);
 	return res;
 }
 
 UArbBigInt UArbBigInt::randomNumber(const UArbBigInt& upperBound, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(upperBound.bitLength());
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(upperBound.bitLength());
 	UArbBigInt res(0, requiredWords);
 	UArbBigInt::randomNumber(upperBound, rnd, res);
 	return res;
@@ -136,7 +136,7 @@ UArbBigInt& UArbBigInt::randomNumber(const uint& sizeInBit, Random& rnd, UArbBig
 	}
 
 	// reserve required words
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(sizeInBit);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
 	target.setZero(); // prevent unessesery coping values that will be overwritten by random numbers anyway.
 	target.reserveWords(requiredWords);
 
@@ -193,9 +193,7 @@ UArbBigInt& UArbBigInt::randomNumber(const UArbBigInt& upperBound, Random& rnd, 
 
 
 
-BIG_INT_WORD_COUNT_TYPE UArbBigInt::requiredWords(const uint& sizeInBit) {
-	return (sizeInBit + (BIG_INT_BITS_PER_WORD - 1)) / BIG_INT_BITS_PER_WORD;
-}
+
 
 
 // ----- constructors -----
@@ -376,7 +374,7 @@ void UArbBigInt::setOne() {
 }
 
 void UArbBigInt::setBit(const uint n) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(n+1);
+	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(n+1);
 	this->reserveWordsAndInitUnused(requiredWords);
 
 	BIG_INT_WORD_COUNT_TYPE restBits = n % BIG_INT_BITS_PER_WORD;
