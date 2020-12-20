@@ -449,16 +449,16 @@ namespace ppvr {
 			/**
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
-			 * /
-			UArbBigInt pow(UArbBigInt pow) const;
+			 */
+			UFixBigInt<S> pow(UFixBigInt<S> pow) const;
 
 			/**
 			 * square root
 			 * e.g. BigInt(9).sqrt() = 3
 			 * ('digit-by-digit' algorithm)
-			 * /
-			UArbBigInt sqrt() const;
- */
+			 */
+			UFixBigInt<S> sqrt() const;
+ 
 		// ----- Comparison operators -----
 		public:
 			bool operator< (const UFixBigInt<S>& other) const;

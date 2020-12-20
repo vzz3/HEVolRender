@@ -379,8 +379,8 @@ void UArbBigInt::setBit(const uint n) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = UArbBigInt::requiredWords(n+1);
 	this->reserveWordsAndInitUnused(requiredWords);
 
-	BIG_INT_WORD_COUNT_TYPE restBits   = n % BIG_INT_BITS_PER_WORD;
-	BIG_INT_WORD_COUNT_TYPE allWords 	= n / BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_COUNT_TYPE restBits = n % BIG_INT_BITS_PER_WORD;
+	BIG_INT_WORD_COUNT_TYPE allWords = n / BIG_INT_BITS_PER_WORD;
 
 	this->value[allWords] |= (BIG_INT_WORD_TYPE(1) << restBits);
 

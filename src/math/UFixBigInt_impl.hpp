@@ -1202,7 +1202,89 @@ UFixBigInt<S> UFixBigInt<S>::operator% (const UFixBigInt<S>& other) const {
 	return reminder;
 }
 
+// ----- pow(), sqrt() -----
 
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::pow(UFixBigInt<S> pow) const {
+	//if( IsNan() )
+	//	return 1;
+
+	if( this->isZero() ) {
+		if( pow.isZero() ) {
+			// we don't define zero^zero
+			std::string msg = "UArbBigInt zero^zero is not defined.";
+			std::cerr << msg << std::endl;
+			throw std::invalid_argument(msg);
+		}
+
+		// 0^(+something) is zero
+		//return 0;
+		return *this;
+	}
+
+	UFixBigInt<S> start(*this);
+	UFixBigInt<S> result(1);
+	uint c = 0;
+
+	//while( !c ) {
+	while( true ) {
+		if( pow.value[0] & 1 ) {
+			//c += result.mul(start);
+			result = result * start;
+		}
+
+		pow.rcr(1);
+
+		if( pow.isZero() ) {
+			break;
+		}
+
+		//c += start.Mul(start);
+		start = start * start;
+	}
+
+	//*this = result;
+	//return CheckCarry(c);
+	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::sqrt() const {
+	if( this->isZero() ) {
+		return UFixBigInt<S>(0);
+	}
+
+	UFixBigInt<S> bit(0), temp(0), result(0);
+
+	UFixBigInt<S> value(*this);
+
+	//this->setZero();
+	//bit.SetZero();
+	//std::fill_n(bit.value, this->wordSize, 0);
+	bit.value[this->getWordSize()-1] = (BIG_INT_WORD_HIGHEST_BIT >> 1);
+	//bit.wordSize = this->wordSize;
+
+	while( bit > value ) {
+		bit.rcr(2);
+	}
+
+	while( !bit.isZero() ) {
+		temp = result;
+		temp.add(bit);
+
+		if( value >= temp ) {
+			value.sub(temp);
+			result.rcr(1);
+			result.add(bit);
+		} else {
+			result.rcr(1);
+		}
+
+		bit.rcr(2);
+	}
+
+	return result;
+}
 
 
 
