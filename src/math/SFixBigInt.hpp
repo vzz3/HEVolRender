@@ -6,6 +6,8 @@
 
 namespace ppvr {
 	namespace math {
+		class SArbBigInt;
+		
 		/**
 		 * Signed Fixed (Fix) length Big Integer class (length is not limited, not fixed-width(Fix) )
 		 */
@@ -30,6 +32,11 @@ namespace ppvr {
 			static SFixBigInt<S> fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
 			static SFixBigInt<S>& fromString(std::string str, const BIG_INT_WORD_TYPE base, SFixBigInt<S> &target );
+
+		public:
+			static SFixBigInt<S> fromSArbBigInt(const SArbBigInt& src);
+		protected:
+			static SFixBigInt<S>& fromSArbBigInt(const SArbBigInt& src, SFixBigInt<S> &target);
 
 		public:
 			static SFixBigInt<S> randomNumber(const uint& sizeInBit, Random& rnd);
@@ -183,6 +190,18 @@ namespace ppvr {
 		public:
 			~SFixBigInt();
 
+		// ----- memory managment -----
+		public:
+			/**
+			 * Copy assignment operator
+			 * /
+			SArbBigInt& operator= (const SArbBigInt& other);
+			*/
+			
+			const UFixBigInt<S>& asUnsigned() const {
+				return static_cast<const UFixBigInt<S>&>(*this);
+			}
+
 		// ----- value export - toString / toUint64 -----
 		public:
 			/**
@@ -197,13 +216,13 @@ namespace ppvr {
 			std::string toStringHex() const;
 			std::string toStringDec() const;
 
-		// ----- memory managment -----
+		// ----- word utilities -----
 		public:
 			/**
-			 * Copy assignment operator
-			 * /
-			SArbBigInt& operator= (const SArbBigInt& other);
-*/
+			 * @return the count of used words (index of the word with the most significant bit + 1)
+			 */
+			BIG_INT_WORD_COUNT_TYPE getWordSize() const;
+
 		// ----- bit utilities -----
 		public:
 			int bitLength() const;

@@ -6,6 +6,9 @@
 
 namespace ppvr {
 	namespace math {
+		template <BIG_INT_WORD_COUNT_TYPE S>
+		class SFixBigInt;
+	
 		/**
 		 * Signed Arbitrary (Arb) length Big Integer class (length is not limited, not fixed-width(Fix) )
 		 */
@@ -26,6 +29,14 @@ namespace ppvr {
 			static SArbBigInt fromString(const std::string& str, const BIG_INT_WORD_TYPE base);
 		protected:
 			static SArbBigInt& fromString(std::string str, const BIG_INT_WORD_TYPE base, SArbBigInt &target );
+
+		public:
+			template <BIG_INT_WORD_COUNT_TYPE S>
+			static SArbBigInt fromSFixBigInt(const SFixBigInt<S>& src);
+
+		protected:
+			template <BIG_INT_WORD_COUNT_TYPE S>
+			static SArbBigInt& fromSFixBigInt(const SFixBigInt<S>& src, SArbBigInt &target);
 
 		public:
 			static SArbBigInt randomNumber(const uint& sizeInBit, Random& rnd);
@@ -165,10 +176,32 @@ namespace ppvr {
 			SArbBigInt(const UArbBigInt& value, bool negative = false);
 			
 			/**
-			 * copy constructor
+			 * Copy constructor
 			 */
 			SArbBigInt(const SArbBigInt& value);
+			
+			/**
+			 * Move constructor
+			 */
+			SArbBigInt(SArbBigInt&& src);
+			
 			~SArbBigInt();
+
+		// ----- memory managment -----
+		public:
+			/**
+			 * Copy assignment operator
+			 */
+			SArbBigInt& operator= (const SArbBigInt& other);
+			
+			/**
+			 * Move assignment operator
+			 */
+			SArbBigInt& operator= (SArbBigInt&& other);
+			
+			const UArbBigInt& asUnsigned() const {
+				return static_cast<const UArbBigInt&>(*this);
+			}
 
 		// ----- value export - toString / toUint64 -----
 		public:
@@ -183,13 +216,6 @@ namespace ppvr {
 
 			std::string toStringHex() const;
 			std::string toStringDec() const;
-
-		// ----- memory managment -----
-		public:
-			/**
-			 * Copy assignment operator
-			 */
-			SArbBigInt& operator= (const SArbBigInt& other);
 
 		// ----- bit utilities -----
 		public:
@@ -413,3 +439,5 @@ namespace ppvr {
 		};
 	}
 }
+
+#include "SArbBigInt_impl.hpp"

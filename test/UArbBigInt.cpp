@@ -1549,7 +1549,7 @@ TEST_CASE( "unsigned infinit big integer isOdd", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 0d", 16).isOdd() == true );
 }
 
-TEST_CASE( "unsigned infinit big integer fromUArbBigInt", "[UABigint]" ) {
+TEST_CASE( "unsigned infinit big integer fromUFixBigInt", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(0)) == UArbBigInt(0) );
 	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(1)) == UArbBigInt(1) );
 	REQUIRE( UArbBigInt::fromUFixBigInt(UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(127)) == UArbBigInt(127) );

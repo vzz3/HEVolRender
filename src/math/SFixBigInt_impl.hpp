@@ -4,6 +4,8 @@
 
 using namespace ppvr::math;
 
+#include "SArbBigInt.hpp"
+
 // ----- statics -----
 
 template<BIG_INT_WORD_COUNT_TYPE S>
@@ -74,6 +76,22 @@ SFixBigInt<S>& SFixBigInt<S>::fromString(std::string str, const BIG_INT_WORD_TYP
 	return target;
 }
 
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::fromSArbBigInt(const SArbBigInt& src) {
+	SFixBigInt<S> res{};
+	SFixBigInt<S>::fromSArbBigInt(src, res);
+	return res;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S>& SFixBigInt<S>::fromSArbBigInt(const SArbBigInt& src, SFixBigInt<S> &target) {
+	UFixBigInt<S>::fromUArbBigInt(src.asUnsigned(), target);
+	target.signum = src.getSignum();
+	return target;
+}
+
+
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
@@ -92,7 +110,7 @@ SFixBigInt<S> SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rando
 
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd, SFixBigInt<S> &target) {
-	UArbBigInt::randomNumber(sizeInBit, rnd, target);
+	UFixBigInt<S>::randomNumber(sizeInBit, rnd, target);
 	if(target.isMagnitudeZero()) {
 		target.signum = 0;
 	} else {
@@ -109,7 +127,7 @@ SFixBigInt<S>& SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rand
 		throw std::invalid_argument(msg);
 	}
 
-	UArbBigInt::randomNumber(upperBound, rnd, target);
+	UFixBigInt<S>::randomNumber(upperBound, rnd, target);
 	if(target.isMagnitudeZero()) {
 		target.signum = 0;
 	} else {
@@ -186,6 +204,13 @@ std::string SFixBigInt<S>::toStringDec() const {
 	}
 	return res;
 }
+
+// ----- word utilities -----
+template<BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_COUNT_TYPE SFixBigInt<S>::getWordSize() const {
+	return UFixBigInt<S>::getWordSize();
+}
+
 
 // ----- bit utilities -----
 

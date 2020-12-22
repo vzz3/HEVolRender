@@ -234,6 +234,9 @@ UFixBigInt<S>::UFixBigInt(const UFixBigInt<OS>& src) {
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S>::~UFixBigInt() {}
 
+
+// ----- memory managment -----
+
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::initWords(const BIG_INT_WORD_TYPE initValue) {
 	std::fill_n(&this->value[0], S, initValue);

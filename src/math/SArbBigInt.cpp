@@ -494,8 +494,46 @@ SArbBigInt::SArbBigInt(const UArbBigInt& value, bool negative): UArbBigInt(value
 
 SArbBigInt::SArbBigInt(const SArbBigInt& value): UArbBigInt(value), signum(value.signum) {}
 
-SArbBigInt::~SArbBigInt() {
+SArbBigInt::SArbBigInt(SArbBigInt&& src): UArbBigInt(std::move(src)), signum(src.signum) {
+	src.signum = 0;
+}
 
+SArbBigInt::~SArbBigInt() {
+}
+
+// ----- memory managment -----
+
+SArbBigInt& SArbBigInt::operator= (const SArbBigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+
+	UArbBigInt::operator=(other);
+	this->signum = other.signum;
+
+	return *this;
+}
+
+SArbBigInt& SArbBigInt::operator= (SArbBigInt&& other) {
+	// If we're not trying to move the object into itself...
+	if (this != &other) {
+		UArbBigInt::operator=(std::move(other)); // call the base class move assignment operator
+	
+		// Delete this original data original data.
+		//if(this->value != nullptr) {
+		//	delete [] this->value;
+		//}
+		
+		// Copy the other string's data into this string.
+		//this->value = other.value;
+		this->signum = other.signum;
+	
+		// Finally, reset the other string's data pointer.
+		//other.value = nullptr;
+		other.signum = 0;
+	}
+    return *this;
 }
 
 // ----- value export - toString / toUint64 -----
@@ -524,19 +562,6 @@ std::string SArbBigInt::toStringDec() const {
 	return res;
 }
 
-// ----- memory managment -----
-
-SArbBigInt& SArbBigInt::operator= (const SArbBigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-
-	UArbBigInt::operator=(other);
-	this->signum = other.signum;
-
-	return *this;
-}
 
 // ----- bit utilities -----
 

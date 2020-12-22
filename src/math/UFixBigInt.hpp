@@ -82,6 +82,16 @@ namespace ppvr {
 			UFixBigInt(const UFixBigInt<OS>& src);
 		public:
 			~UFixBigInt();
+			
+		// ----- memory managment -----
+		public:
+			/**
+			 * Copy assignment operator
+			 * /
+			UArbBigInt& operator= (const UArbBigInt& other);
+ 		*/
+		private:
+			void initWords(const BIG_INT_WORD_TYPE initValue = 0);
 
 		// ----- value export - toString / toUint64 -----
 		public:
@@ -96,16 +106,6 @@ namespace ppvr {
 
 			std::string toStringHex() const;
 			std::string toStringDec() const;
-
-		// ----- memory managment -----
-		public:
-			/**
-			 * Copy assignment operator
-			 * /
-			UArbBigInt& operator= (const UArbBigInt& other);
- 		*/
-		private:
-			void initWords(const BIG_INT_WORD_TYPE initValue = 0);
 			
 		// ----- bit utilities -----
 		public:

@@ -212,9 +212,9 @@ UArbBigInt::UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE m
 	//this->_dataRefCount = 1;
 }
 
-UArbBigInt::UArbBigInt(const UArbBigInt &src ) : UArbBigInt(src, 0) {}
+UArbBigInt::UArbBigInt(const UArbBigInt& src ) : UArbBigInt(src, 0) {}
 
-UArbBigInt::UArbBigInt(const UArbBigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacity ) {
+UArbBigInt::UArbBigInt(const UArbBigInt& src, BIG_INT_WORD_COUNT_TYPE minCapacity ) {
 	BIG_INT_WORD_COUNT_TYPE newCapacity = std::max(src.wordSize, minCapacity);
 
 	BIG_INT_WORD_TYPE *newValue = new BIG_INT_WORD_TYPE[newCapacity];
@@ -223,6 +223,12 @@ UArbBigInt::UArbBigInt(const UArbBigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacit
 	this->wordCapacity = newCapacity;
 	this->wordSize = src.wordSize;
 	this->value = newValue;
+}
+
+UArbBigInt::UArbBigInt(UArbBigInt&& src): UArbBigInt(src.value, src.wordCapacity, src.wordSize) {
+	src.value = nullptr;
+	src.wordCapacity = 0;
+	src.wordSize = 0;
 }
 
 UArbBigInt::UArbBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize) {
@@ -235,6 +241,78 @@ UArbBigInt::~UArbBigInt() {
 	if(this->value != NULL) {
 		delete [] this->value;
 	}
+}
+
+
+
+
+
+// ----- memory managment -----
+
+UArbBigInt& UArbBigInt::operator= (const UArbBigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+
+	// reuse storage when possible
+	if(this->wordCapacity < other.wordSize) {
+		delete [] this->value;
+		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
+		this->wordCapacity = other.wordSize;
+	}
+
+	this->wordSize = other.wordSize;
+	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
+
+	return *this;
+}
+
+UArbBigInt& UArbBigInt::operator= (UArbBigInt&& other) {
+	// If we're not trying to move the object into itself...
+	if (this != &other) {
+		// Delete this original data original data.
+		if(this->value != nullptr) {
+			delete [] this->value;
+		}
+		// Copy the other string's data into this string.
+		this->value = other.value;
+		this->wordCapacity = other.wordCapacity;
+		this->wordSize = other.wordSize;
+	
+		// Finally, reset the other string's data pointer.
+		other.value = nullptr;
+		other.wordCapacity = 0;
+		other.wordSize = 0;
+	}
+    return *this;
+}
+
+void UArbBigInt::reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity ) {
+	if(newCapacity <= this->wordCapacity) {
+		return;
+	}
+
+	BIG_INT_WORD_TYPE *newValue = new BIG_INT_WORD_TYPE[newCapacity];
+	std::copy(&this->value[0], &this->value[0] + this->wordSize, newValue);
+
+	// free old word storage array
+	delete [] this->value;
+
+	// set new data to this
+	this->value = newValue;
+	this->wordCapacity = newCapacity;
+}
+
+void UArbBigInt::reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue ) {
+	this->reserveWords(newCapacity);
+
+	// inizialize all words with an index >= this->wordSize (all alocated but not used words. this can be more then the (newCapacity - this->wordSize) because this->this->wordCapacity can be > then newCapacity)
+	this->initUnusedWords();
+}
+
+void UArbBigInt::initUnusedWords(const BIG_INT_WORD_TYPE initValue) {
+	std::fill_n(&this->value[this->wordSize], this->wordCapacity - this->wordSize, initValue);
 }
 
 
@@ -305,55 +383,6 @@ std::string UArbBigInt::toStringDec() const {
 	}
 
 	return ret;
-}
-
-
-// ----- memory managment -----
-
-UArbBigInt& UArbBigInt::operator= (const UArbBigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-
-	// reuse storage when possible
-	if(this->wordCapacity < other.wordSize) {
-		delete [] this->value;
-		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
-		this->wordCapacity = other.wordSize;
-	}
-
-	this->wordSize = other.wordSize;
-	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
-
-	return *this;
-}
-
-void UArbBigInt::reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity ) {
-	if(newCapacity <= this->wordCapacity) {
-		return;
-	}
-
-	BIG_INT_WORD_TYPE *newValue = new BIG_INT_WORD_TYPE[newCapacity];
-	std::copy(&this->value[0], &this->value[0] + this->wordSize, newValue);
-
-	// free old word storage array
-	delete [] this->value;
-
-	// set new data to this
-	this->value = newValue;
-	this->wordCapacity = newCapacity;
-}
-
-void UArbBigInt::reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue ) {
-	this->reserveWords(newCapacity);
-
-	// inizialize all words with an index >= this->wordSize (all alocated but not used words. this can be more then the (newCapacity - this->wordSize) because this->this->wordCapacity can be > then newCapacity)
-	this->initUnusedWords();
-}
-
-void UArbBigInt::initUnusedWords(const BIG_INT_WORD_TYPE initValue) {
-	std::fill_n(&this->value[this->wordSize], this->wordCapacity - this->wordSize, initValue);
 }
 
 

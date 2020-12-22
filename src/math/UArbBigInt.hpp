@@ -101,14 +101,45 @@ namespace ppvr {
 			UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity);
 			
 			/**
-			 * copy constructor
+			 * Copy constructor
 			 */
-			UArbBigInt(const UArbBigInt &src);
-			UArbBigInt(const UArbBigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacity);
+			UArbBigInt(const UArbBigInt& src);
+			UArbBigInt(const UArbBigInt& src, BIG_INT_WORD_COUNT_TYPE minCapacity);
+			
+			/**
+			 * Move constructor
+			 */
+			UArbBigInt(UArbBigInt&& src);
 		private:
 			UArbBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
 		public:
 			~UArbBigInt();
+
+		
+
+		// ----- memory managment -----
+		public:
+			/**
+			 * Copy assignment operator
+			 */
+			UArbBigInt& operator= (const UArbBigInt& other);
+
+			/**
+			 * Move assignment operator
+			 */
+			UArbBigInt& operator= (UArbBigInt&& other);
+
+		private:
+
+			/**
+			 * Increase the capacity of the Integer to a value that's greater or equal to newCapacity.
+			 * If new_cap is greater than the current capacity(), new storage is allocated, otherwise the method does nothing.
+			 */
+			void reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity );
+
+			void reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue = 0 );
+
+			void initUnusedWords(const BIG_INT_WORD_TYPE initValue = 0);
 
 		// ----- value export - toString / toUint64 -----
 		public:
@@ -123,25 +154,6 @@ namespace ppvr {
 
 			std::string toStringHex() const;
 			std::string toStringDec() const;
-
-		// ----- memory managment -----
-		public:
-			/**
-			 * Copy assignment operator
-			 */
-			UArbBigInt& operator= (const UArbBigInt& other);
-
-		private:
-
-			/**
-			 * Increase the capacity of the Integer to a value that's greater or equal to newCapacity.
-			 * If new_cap is greater than the current capacity(), new storage is allocated, otherwise the method does nothing.
-			 */
-			void reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity );
-
-			void reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue = 0 );
-
-			void initUnusedWords(const BIG_INT_WORD_TYPE initValue = 0);
 
 		// ----- bit utilities -----
 		public:
