@@ -6,14 +6,14 @@ using namespace ppvr::math;
 
 // ----- statics -----
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::fromInt64(const int64_t& int64Val) {
 	SFixBigInt<S> res(0);
 	SFixBigInt<S>::fromInt64(int64Val, res);
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::fromInt64(const int64_t& int64Val, SFixBigInt<S> &target ) {
 	UFixBigInt<S>::fromUint64(std::abs(int64Val), target);
 	if(target.isMagnitudeZero() ) {
@@ -28,14 +28,14 @@ SFixBigInt<S>& SFixBigInt<S>::fromInt64(const int64_t& int64Val, SFixBigInt<S> &
 	return target;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::fromString(const std::string& str, const BIG_INT_WORD_TYPE base) {
 	SFixBigInt<S> res(0);
 	SFixBigInt<S>::fromString(str, base, res);
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::fromString(std::string str, const BIG_INT_WORD_TYPE base, SFixBigInt<S> &target ) {
 	// trim space on the left side
 	auto nonSpaceBegin = std::find_if(str.begin(), str.end(), [](int ch) {
@@ -74,7 +74,7 @@ SFixBigInt<S>& SFixBigInt<S>::fromString(std::string str, const BIG_INT_WORD_TYP
 	return target;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
 	SFixBigInt<S> res(0, requiredWords);
@@ -82,7 +82,7 @@ SFixBigInt<S> SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd) {
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Random& rnd) {
 	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(upperBound.bitLength());
 	SFixBigInt<S> res(0, requiredWords);
@@ -90,7 +90,7 @@ SFixBigInt<S> SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rando
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd, SFixBigInt<S> &target) {
 	UArbBigInt::randomNumber(sizeInBit, rnd, target);
 	if(target.isMagnitudeZero()) {
@@ -101,7 +101,7 @@ SFixBigInt<S>& SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd, S
 	return target;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Random& rnd, SFixBigInt<S> &target) {
 	if(upperBound.signum < 0) {
 		std::string msg = "ERROR upperBound: must be strictly greater than one";
@@ -121,10 +121,10 @@ SFixBigInt<S>& SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rand
 
 // ----- constructors -----
 
-template <BIG_INT_WORD_COUNT_TYPE S>
-SFixBigInt<S>::SFixBigInt(): SFixBigInt(0, 0, false) {}
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S>::SFixBigInt(): SFixBigInt<S>(0, false) {}
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>::SFixBigInt(const BIG_INT_WORD_TYPE& value, bool negative): UFixBigInt<S>(value) {
 	if(UFixBigInt<S>::isZero()) {
 		this->signum = 0;
@@ -135,7 +135,7 @@ SFixBigInt<S>::SFixBigInt(const BIG_INT_WORD_TYPE& value, bool negative): UFixBi
 	}
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>::SFixBigInt(const UFixBigInt<S>& value, bool negative): UFixBigInt<S>(value) {
 	if(UFixBigInt<S>::isZero()) {
 		this->signum = 0;
@@ -146,8 +146,12 @@ SFixBigInt<S>::SFixBigInt(const UFixBigInt<S>& value, bool negative): UFixBigInt
 	}
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>::SFixBigInt(const SFixBigInt<S>& value): UFixBigInt<S>(value), signum(value.signum) {}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE OS>
+SFixBigInt<S>::SFixBigInt(const SFixBigInt<OS>& src): UFixBigInt<S>(src), signum(src.signum) {}
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>::~SFixBigInt() {
@@ -156,7 +160,7 @@ SFixBigInt<S>::~SFixBigInt() {
 
 // ----- value export - toString / toUint64 -----
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 int64_t SFixBigInt<S>::toInt64() const {
 	int64_t res = UFixBigInt<S>::toUint64();
 	if(this->signum < 0) {
@@ -165,7 +169,7 @@ int64_t SFixBigInt<S>::toInt64() const {
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 std::string SFixBigInt<S>::toStringHex() const {
 	std::string res = UFixBigInt<S>::toStringHex();
 	if(this->signum < 0) {
@@ -174,7 +178,7 @@ std::string SFixBigInt<S>::toStringHex() const {
 	return res;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 std::string SFixBigInt<S>::toStringDec() const {
 	std::string res = UFixBigInt<S>::toStringDec();
 	if(this->signum < 0) {
@@ -185,25 +189,116 @@ std::string SFixBigInt<S>::toStringDec() const {
 
 // ----- bit utilities -----
 
+template<BIG_INT_WORD_COUNT_TYPE S>
+int SFixBigInt<S>::bitLength() const {
+	return UFixBigInt<S>::bitLength();
+}
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
+void SFixBigInt<S>::setZero() {
+	UFixBigInt<S>::setZero();
+	this->signum = 0;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+void SFixBigInt<S>::setOne() {
+	UFixBigInt<S>::setOne();
+	this->signum = +1;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+void SFixBigInt<S>::setAbs() {
+	this->signum = this->signum * this->signum;
+}
+
+
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::setNegate() {
 	this->signum = this->signum * -1;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::isMagnitudeZero() const {
 	return UFixBigInt<S>::isZero();
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::isMagnitudeOne() const {
 	return UFixBigInt<S>::isOne();
 }
 
+template<BIG_INT_WORD_COUNT_TYPE S>
+bool SFixBigInt<S>::isZero() const {
+	return this->signum == 0;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+bool SFixBigInt<S>::isOne() const {
+	if(this->signum <= 0) {
+		return false;
+	}
+	return UFixBigInt<S>::isOne();
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::abs() const {
+	SFixBigInt<S> res(*this);
+	res.setAbs();
+	return res;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::negate() const {
+	SFixBigInt<S> res(*this);
+	res.setNegate();
+	return res;
+}
+
+
+// ----- shift left -----
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE SFixBigInt<S>::rcl(const uint bits, const BIG_INT_WORD_TYPE c) {
+	return UFixBigInt<S>::rcl(bits, c);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::operator<< (const uint bits) const {
+	// copy tha magnitude array 2 times
+	//return SArbBigInt(BigInt::operator<<(bits), this->signum < 0);
+
+	// copy the magnitude array only once
+	SFixBigInt<S> res(*this);
+	res.rcl(bits, 0);
+	return res;
+}
+
+
+// ----- shift right -----
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+BIG_INT_WORD_TYPE SFixBigInt<S>::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
+	return UFixBigInt<S>::rcr(bits, c);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::operator>> (const uint bits) const {
+	// copy tha magnitude array 2 times
+	//return SArbBigInt(BigInt::operator>>(bits), this->signum < 0);
+
+	// copy the magnitude array only once
+	SFixBigInt<S> res(*this);
+	res.rcr(bits, 0);
+	if(res.isMagnitudeZero()) {
+		res.signum = 0;
+	}
+	return res;
+}
+
+
 // ----- addition -----
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::add(const SFixBigInt<S> &other, SFixBigInt<S> &result) const {
 	if(this->isZero()) {
 		result = other;
@@ -215,13 +310,13 @@ void SFixBigInt<S>::add(const SFixBigInt<S> &other, SFixBigInt<S> &result) const
 	}
 	if(this->signum > 0 && other.signum > 0) {
 		// +x + +y = +(+x + +y)
-		UArbBigInt::add(other, result);
+		UFixBigInt<S>::add(other, result);
 		result.signum = +1;
 		return;
 	}
 	if(this->signum < 0 && other.signum < 0) {
 		// -x + -y = -(+x + +y)
-		UArbBigInt::add(other, result);
+		UFixBigInt<S>::add(other, result);
 		result.signum = -1;
 		return;
 	}
@@ -241,12 +336,12 @@ void SFixBigInt<S>::add(const SFixBigInt<S> &other, SFixBigInt<S> &result) const
 	throw std::runtime_error(msg);
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::add(const SFixBigInt<S> &other) {
 	this->add(other, *this);
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::operator+ (const SFixBigInt<S>& other) const {
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = std::max(this->getWordSize(), other.getWordSize());
 	SFixBigInt<S> result(0);
@@ -254,13 +349,15 @@ SFixBigInt<S> SFixBigInt<S>::operator+ (const SFixBigInt<S>& other) const {
 	return result;
 }
 
+
 // ----- substraction -----
-template <BIG_INT_WORD_COUNT_TYPE S>
+
+template<BIG_INT_WORD_COUNT_TYPE S>
 BIG_INT_WORD_TYPE SFixBigInt<S>::subUFixBigInt(const SFixBigInt<S>& b, SFixBigInt<S>& restul) const {
 	return UFixBigInt<S>::sub(b, 0, restul);
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::subAsPositive(const SFixBigInt<S>& a, const SFixBigInt<S>& b, SFixBigInt<S>& restul) const {
 	// more readable version but requires a comparision of the magnitudes and therfore two casts.... probably slow
 
@@ -277,7 +374,7 @@ void SFixBigInt<S>::subAsPositive(const SFixBigInt<S>& a, const SFixBigInt<S>& b
 
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::sub(const SFixBigInt<S>& other, SFixBigInt<S> &result) const {
 	if(this->isZero()) {
 		result = other;
@@ -320,12 +417,12 @@ void SFixBigInt<S>::sub(const SFixBigInt<S>& other, SFixBigInt<S> &result) const
 	throw std::runtime_error(msg);
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 void SFixBigInt<S>::sub(const SFixBigInt<S>& other) {
 	this->sub(other, *this);
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::operator- (const SFixBigInt<S>& other) const {
 	SFixBigInt<S> result(0);
 	this->sub(other, result);
@@ -333,13 +430,364 @@ SFixBigInt<S> SFixBigInt<S>::operator- (const SFixBigInt<S>& other) const {
 }
 
 
+// ----- multiplication -----
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+void SFixBigInt<S>::mul(const SFixBigInt<S>& b, SFixBigInt<S>& result) const {
+	if(this->isZero() || b.isZero()) {
+		result.setZero();
+		return;
+	}
+
+	UFixBigInt<S>::mul(b, result);
+	result.signum = ((this->signum < 0) ^ (b.signum < 0)) ? -1 : +1;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+void SFixBigInt<S>::mul(const SFixBigInt<S>& b) {
+	SFixBigInt result{0};
+	this->mul(b, result);
+	*this = result;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::operator* (const SFixBigInt<S>& other) const {
+	SFixBigInt<S> result{0};
+	this->mul(other, result);
+	return result;
+}
 
 
+// ----- division -----
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::operator/ (const SFixBigInt<S>& other) const {
+	SFixBigInt<S> res(UFixBigInt<S>::operator/(other), (this->signum < 0) ^ (other.signum < 0) );
+	//if(res.isZero()) {
+	//	res.signum = 0;
+	//}
+	return res;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::operator% (const SFixBigInt<S>& other) const {
+	SFixBigInt<S> res(UFixBigInt<S>::operator%(other), false);
+
+	if(!res.isZero()) {
+		if(this->signum >= 0 && other.signum >= 0) {
+			res.signum = +1;
+		} else if(this->signum < 0 && other.signum < 0) {
+			res.signum = -1;
+		} else if(this->signum >= 0 && other.signum < 0) {
+			res = res + other; // 1 mod -5 = -4 => +1 + -5
+		} else if (this->signum < 0 && other.signum >= 0) {
+			res = other - res; // -1 mod 5 = 4 => +5 - +1
+		} else {
+			std::string msg = "ERROR mod SFixBigInt unexpected case!";
+			std::cerr << msg << std::endl;
+			throw std::runtime_error(msg);
+		}
+	}
+	return res;
+}
+
+
+// ----- pow(), sqrt() -----
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::pow(SFixBigInt<S> pow) const {
+	return SFixBigInt<S>(UFixBigInt<S>::pow(pow), pow.isOdd() && this->signum < 0);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::sqrt() const {
+	if (this->signum < 0) {
+		//throw new ArithmeticException("BigInteger: modulus not positive");
+		std::string msg = "ERROR SFixBigInt: can not claculate sqrt from negative number (no imaginary suport)!";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	return SFixBigInt<S>(UFixBigInt<S>::sqrt(), false);
+}
+
+
+/* ---------- modInverse / gcd ---------- */
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcdExtended(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const {
+	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
+	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
+
+	// Implementing the Extended Euclidean Algorithm with Unsigned Inputs
+	// https://jeffhurchalla.com/2018/10/09/analysis-of-bounds-in-the-extended-euclidean-algorithm/
+	// https://jeffhurchalla.com/2018/10/13/implementing-the-extended-euclidean-algorithm-with-unsigned-inputs/
+
+	int_fast8_t signumA = a.signum;
+	int_fast8_t signumB = b.signum;
+
+	SFixBigInt<S> absA = a;
+	SFixBigInt<S> absB = b;
+	absA.setAbs();
+	absB.setAbs();
+
+	//SFixBigInt<S> gcd = this->gcdExtended_internRecursive(absA, absB, u, v);
+	SFixBigInt<S> gcd = this->gcdExtended_internIterative(absA, absB, u, v);
+
+	u.signum = u.signum * signumA;
+	v.signum = v.signum * signumB;
+
+	//assert((a*u + b*v) == gcd);
+	assert((SFixBigInt<S*2>(a)*SFixBigInt<S*2>(u) + SFixBigInt<S*2>(b)*SFixBigInt<S*2>(v)) == SFixBigInt<S*2>(gcd));
+
+	return gcd;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcdExtended_internRecursive(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const {
+	// Base Case
+	if (a.isZero()) {
+		u.setZero();
+		v.setOne();
+		return b;
+	}
+
+	SFixBigInt<S> u1(0, u.getWordSize()), v1(0, v.getWordSize()); // To store results of recursive call
+	//SFixBigInt<S> gcd = gcdExtended(b % a, a, u1, v1);
+	SFixBigInt<S> gcd = gcdExtended_internRecursive(b % a, a, u1, v1);
+
+	// Update u and v using results of recursive call
+	u = v1 - (b/a) * u1;
+	v = u1;
+
+	return gcd;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcdExtended_internIterative(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const {
+	// https://rosettacode.org/wiki/Modular_inverse#C.2B.2B
+
+	// https://cp-algorithms.com/algebra/extended-euclid-algorithm.html
+	/*
+	u.setOne();
+	v.setZero();
+	SArbBigInt u1(0), v1(1), a1(a), b1(b);
+	while (!b1.isZero()) {
+		SArbBigInt q = a1 / b1;
+		//tie(u, u1) = make_tuple(u1, u - q * u1);
+		u = u1, u1 = u - q * u1;
+		//tie(v, v1) = make_tuple(v1, v - q * v1);
+		v = v1, v1 = v - q * v1;
+		//tie(a1, b1) = make_tuple(b1, a1 - q * b1);
+		a1 = b1, b1 = a1 - q * b1;
+
+		assert((a*u  + b*v ) == SArbBigInt(a1));
+		assert((a*u1 + b*v1) == SArbBigInt(b1));
+	}
+	return a1;
+	 */
+
+	// https://cp-algorithms.com/algebra/extended-euclid-algorithm.html
+	if( a.isZero()) {
+		u.setZero();
+		v.setOne();
+		return b;
+	}
+
+	u.setOne();
+	v.setZero();
+	SFixBigInt<S> unCur(0);
+	SFixBigInt<S> vnCur(1);
+	SFixBigInt<S> a1(a);
+	SFixBigInt<S> b1(b);
+
+	SFixBigInt<S> q, newB, unNew, vnNew;
+
+	while( !b1.isZero() ) {
+		q = a1 / b1;
+		newB = a1 % b1;
+		a1 = b1;
+		b1 = newB;
+
+		// Update coefficients
+		unNew = u - q * unCur;
+		vnNew = v - q * vnCur;
+
+		// Shift coefficients
+		u = unCur;
+		v = vnCur;
+		unCur = unNew;
+		vnCur = vnNew;
+	}
+	return a1;
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b) const {
+	if (a.isZero()) {
+		return b;
+	}
+	return gcd(b % a, a);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::modInverse(const SFixBigInt<S> & m) const {
+	if (m.isZero()) {
+		std::string msg = "ERROR BigInt: modulus not positive!";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	if (m.isOne()) {
+		return SFixBigInt<S>(0);
+	}
+
+	// all the hard work will be done by gcd.
+	SFixBigInt<S> u, v;
+	SFixBigInt<S> gcd = this->gcdExtended(*this, m, u, v);
+	if(!gcd.isOne()) {
+		std::string msg = "ERROR BigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+		//std::cerr << msg << std::endl;
+		throw NoMultiplicativeInverse(msg);
+	}
+
+	//if (u < 0) {
+	//	u = u + m;
+	//}
+	return u % m;
+}
+
+
+/* ---------- modPow ---------- */
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &m) const {
+	if (m.signum <= 0) {
+		//throw new ArithmeticException("BigInteger: modulus not positive");
+		std::string msg = "ERROR SArbBigInt: modulus not positive!";
+		std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	// Trivial cases: exponent = 0
+	if (exponent.isZero()) {
+		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
+	}
+
+	// Trivial cases: base = 1
+	if (this->isOne()) {
+		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
+	}
+
+	// Trivial cases: base = 0
+	if (this->isZero() &&  exponent.signum >= 0) {
+		return SFixBigInt<S>(0);
+	}
+
+	// Trivial cases: base = -1 && (exponent % 2 = 0)
+	if (*this == SFixBigInt<S>(1, true) && exponent.isEven()) {
+		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
+	}
+
+
+	return this->modPow_naiv(exponent, m);
+
+	// faster version from java BigInt ....
+	/*
+	bool invertResult = exponent.signum < 0;
+	SArbBigInt absExponent(exponent); // TODO performance, unessesery copy if exponent is positive
+	if (invertResult) {
+		absExponent.setAbs();
+	}
+
+	//BigInteger base = (this.signum < 0 || this.compareTo(m) >= 0
+	//				   ? this.mod(m) : this);
+	SArbBigInt base = (this->signum < 0 || *this >= m) ? *this % m : *this;
+
+	SArbBigInt result(0);
+	if(m.isOdd()) { // odd modulus
+		result = base.oddModPow(exponent, m);
+	} else {
+		/ *
+		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
+		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
+		 * use Chinese Remainder Theorem to combine results.
+		 * /
+
+		// Tear m apart into odd part (m1) and power of 2 (m2)
+		int p = m.findLowestSetBit();   // Max pow of 2 that divides m
+
+		//BigInteger m1 = m .shiftRight(p);  // m/2**p
+		SArbBigInt m1 = m >> p; // m/2**p
+		//BigInteger m2 = ONE.shiftLeft(p); // 2**p
+		SArbBigInt m2 = SArbBigInt(1) << p; // 2**p
+
+		// Calculate new base from m1
+		//BigInteger base2 = (this.signum < 0 || this.compareTo(m1) >= 0 ? this.mod(m1) : this);
+		SArbBigInt base2 = (this->signum < 0 || *this >= m1) ? *this % m1 : *this;
+
+		// Caculate (base ** exponent) mod m1.
+		//BigInteger a1 = (m1.equals(ONE) ? ZERO : base2.oddModPow(exponent, m1));
+		SArbBigInt a1 = m1.isOne() ? BigInt(0) : base2.oddModPow(exponent, m1);
+
+		// Calculate (this ** exponent) mod m2
+		SArbBigInt a2 = base.modPow2(exponent, p);
+
+		// Combine results using Chinese Remainder Theorem
+		SArbBigInt y1 = m2.modInverse(m1);
+		SArbBigInt y2 = m1.modInverse(m2);
+
+		//if (m.mag.length < MAX_MAG_LENGTH / 2) {
+			// result = a1.multiply(m2).multiply(y1).add(a2.multiply(m1).multiply(y2)).mod(m);
+			result = (a1 * m2 * y1 + a2 * m1 * y2) % m;
+		//} else {
+		//	MutableBigInteger t1 = new MutableBigInteger();
+		//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
+		//	MutableBigInteger t2 = new MutableBigInteger();
+		//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
+		//	t1.add(t2);
+		//	MutableBigInteger q = new MutableBigInteger();
+		//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
+		//}
+	}
+
+	return (invertResult ? result.modInverse(m) : result);
+	 */
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::modPow_naiv(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const {
+	if(modulus.UFixBigInt<S>::isOne()) {
+		return SFixBigInt<S>(1);
+	}
+
+	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
+
+	// ensure that the base is < modulus
+	SFixBigInt<S*2> base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+
+	bool invertResult = exponent.signum < 0;
+	SFixBigInt<S> absExponent(exponent);
+	if (invertResult) {
+		absExponent.setAbs();
+	}
+
+	SFixBigInt<S*2> result(1);
+	while ( !absExponent.isZero() > 0) {
+		if (absExponent.isOdd()) {
+			result = (result * base) % modulus;
+		}
+		absExponent = absExponent >> 1;
+		base = base.pow(2) % modulus;
+	}
+
+	return (invertResult ? result.modInverse(modulus) : result);
+}
 
 
 
 /* ---------- comparisons ---------- */
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator< (const SFixBigInt<S>& other) const {
 	if(this->signum < other.signum) {
 		return true;
@@ -356,7 +804,7 @@ bool SFixBigInt<S>::operator< (const SFixBigInt<S>& other) const {
 	}
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator<= (const SFixBigInt<S>& other) const {
 	if (*this < other) {
 		return true;
@@ -369,17 +817,17 @@ bool SFixBigInt<S>::operator<= (const SFixBigInt<S>& other) const {
 	return false;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator> (const SFixBigInt<S>& other) const {
 	return (!(*this <= other));
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator>= (const SFixBigInt<S>& other) const {
 	return (!(*this < other));
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator== (const SFixBigInt<S>& other) const {
 	if (*this < other) {
 		return false;
@@ -392,7 +840,7 @@ bool SFixBigInt<S>::operator== (const SFixBigInt<S>& other) const {
 	return true;
 }
 
-template <BIG_INT_WORD_COUNT_TYPE S>
+template<BIG_INT_WORD_COUNT_TYPE S>
 bool SFixBigInt<S>::operator!= (const SFixBigInt<S>& other) const {
 	return (!(*this == other));
 }

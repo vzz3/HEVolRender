@@ -11,6 +11,9 @@ namespace ppvr {
 		 */
 		template <BIG_INT_WORD_COUNT_TYPE S>
 		class SFixBigInt: protected UFixBigInt<S> {
+			// make every version of this template classe a frend of every other version
+			template<BIG_INT_WORD_COUNT_TYPE OS>
+			friend class SFixBigInt;
 		
 		// ----- statics -----
 		public:
@@ -164,7 +167,20 @@ namespace ppvr {
 			SFixBigInt(const BIG_INT_WORD_TYPE& value, bool negative = false);
 			//SFixBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity, bool negative = false);
 			SFixBigInt(const UFixBigInt<S>& value, bool negative = false);
+			
+			/**
+			 * copy constructor
+			 */
 			SFixBigInt(const SFixBigInt<S>& value);
+		
+		protected:
+			/*
+			 * convert between different word counts/sizes
+			 */
+			template<BIG_INT_WORD_COUNT_TYPE OS>
+			SFixBigInt(const SFixBigInt<OS>& src);
+			
+		public:
 			~SFixBigInt();
 
 		// ----- value export - toString / toUint64 -----
@@ -187,7 +203,7 @@ namespace ppvr {
 			 * Copy assignment operator
 			 * /
 			SArbBigInt& operator= (const SArbBigInt& other);
-
+*/
 		// ----- bit utilities -----
 		public:
 			int bitLength() const;
@@ -195,13 +211,13 @@ namespace ppvr {
 		protected:
 			void setZero();
 			void setOne();
-			void setAbs(); */
+			void setAbs();
 			void setNegate();
 
 		private:
 			bool isMagnitudeZero() const;
 			bool isMagnitudeOne() const;
-/*
+
 		public:
 			bool isZero() const;
 			bool isOne() const;
@@ -211,27 +227,27 @@ namespace ppvr {
 			 * BigInteger.
 			 *
 			 * @return {@code abs(this)}
-			 * /
-			SArbBigInt abs() const;
+			 */
+			SFixBigInt<S> abs() const;
 
 			/**
 			 * Returns a BigInteger whose value is {@code (-this)}.
 			 *
 			 * @return {@code -this}
-			 * /
-			SArbBigInt negate() const;
+			 */
+			SFixBigInt<S> negate() const;
 
 		// ----- shift left -----
 		protected:
-			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0, const bool resize=false);
+			BIG_INT_WORD_TYPE rcl(const uint bits, const BIG_INT_WORD_TYPE c=0);
 		public:
-			SArbBigInt operator<< (const uint bits) const;
+			SFixBigInt<S> operator<< (const uint bits) const;
 
 		// ----- shift right -----
 		protected:
 			BIG_INT_WORD_TYPE rcr(const uint bits, const BIG_INT_WORD_TYPE c=0);
 		public:
-			SArbBigInt operator>> (const uint bits) const;
+			SFixBigInt<S> operator>> (const uint bits) const;
 
 		// ----- addition -----
 		protected:
@@ -269,16 +285,16 @@ namespace ppvr {
 
 			/**
 			 * result = this * b
-			 * /
-			void mul(const SArbBigInt& b, SArbBigInt& result) const;
+			 */
+			void mul(const SFixBigInt<S>& b, SFixBigInt<S>& result) const;
 
 			/**
 			 * this = this * b
-			 * /
-			void mul(const SArbBigInt& b);
+			 */
+			void mul(const SFixBigInt<S>& b);
 
 		public:
-			SArbBigInt operator* (const SArbBigInt& other) const;
+			SFixBigInt<S> operator* (const SFixBigInt<S>& other) const;
 
 		// ----- division -----
 		protected:
@@ -301,34 +317,34 @@ namespace ppvr {
 
 			/**
 			 * result = this / divisor
-			 * /
-			void div(const SArbBigInt& divisor, SArbBigInt &result, SArbBigInt& remainder) const;
+			 */
+			//void div(const SFixBigInt<S>& divisor, SFixBigInt<S> &result, SFixBigInt<S>& remainder) const;
 
 			/**
 			 * this = this / divisor
-			 * /
-			void div(const SArbBigInt& divisor, SArbBigInt& remainder);
+			 */
+			//void div(const SFixBigInt<S>& divisor, SFixBigInt<S>& remainder);
 
 		public:
-			SArbBigInt operator/ (const SArbBigInt& other) const;
-			SArbBigInt operator% (const SArbBigInt& other) const;
+			SFixBigInt<S> operator/ (const SFixBigInt<S>& other) const;
+			SFixBigInt<S> operator% (const SFixBigInt<S>& other) const;
 
 		// ----- pow(), sqrt() -----
 		public:
 			/**
 			 * power this = this ^ pow
 			 * binary algorithm (r-to-l)
-			 * /
-			SArbBigInt pow(SArbBigInt pow) const;
+			 */
+			SFixBigInt<S> pow(SFixBigInt<S> pow) const;
 
 			/**
 			 * square root
 			 * e.g. BigInt(9).sqrt() = 3
 			 * ('digit-by-digit' algorithm)
-			 * /
-			SArbBigInt sqrt() const;
+			 */
+			SFixBigInt<S> sqrt() const;
 
-*/
+
 		// ----- Comparison operators -----
 		public:
 			bool operator< (const SFixBigInt<S>& other) const;
@@ -350,17 +366,17 @@ namespace ppvr {
 			 *	The Bézout coefficients are useful for solving Diophantine equations.
 			 * https://www.mathworks.com/help/matlab/ref/gcd.html
 			 * https://www.geeksforgeeks.org/euclidean-algorithms-basic-and-extended/
-			 * /
-			SArbBigInt gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
+			 */
+			SFixBigInt<S> gcdExtended(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const;
 
-			SArbBigInt gcdExtended_internRecursive(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
-			SArbBigInt gcdExtended_internIterative(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
+			SFixBigInt<S> gcdExtended_internRecursive(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const;
+			SFixBigInt<S> gcdExtended_internIterative(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const;
 
 			/**
 			 * Basic Euclidean Algorithm
 			 * returns the gcd of a and b
-			 * /
-			SArbBigInt gcd(const SArbBigInt & a, const SArbBigInt & b) const;
+			 */
+			SFixBigInt<S> gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b) const;
 
 		public:
 			/**
@@ -371,24 +387,23 @@ namespace ppvr {
 			 * @throws ArithmeticException {@code  m} &le; 0, or this BigInteger
 			 *         has no multiplicative inverse mod m (that is, this BigInteger
 			 *         is not <i>relatively prime</i> to m).
-			 * /
-			SArbBigInt modInverse(const SArbBigInt &m) const;
-
+			 */
+			SFixBigInt<S> modInverse(const SFixBigInt<S> &m) const;
 
 
 		// ----- modPow -----
 		private:
-			SArbBigInt modPow_naiv(const SArbBigInt &exponent, const UArbBigInt &modulus) const;
+			SFixBigInt<S> modPow_naiv(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const;
 
 			/**
 			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 * /
+			 */
 			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
 
 			/**
 			 * Returns a BigInteger whose value is this mod(2**p).
 			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 * /
+			 */
 			//SArbBigInt mod2(int p) const;
 
 		public:
@@ -404,9 +419,8 @@ namespace ppvr {
 			 *         negative and this BigInteger is not <i>relatively
 			 *         prime</i> to {@code m}.
 			 * @see    #modInverse
-			 * /
-			SArbBigInt modPow(const SArbBigInt &exponent, const SArbBigInt &m) const;
-*/
+			 */
+			SFixBigInt<S> modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &m) const;
 		};
 	}
 }

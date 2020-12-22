@@ -8,6 +8,7 @@
 
 using ppvr::math::UArbBigInt;
 using ppvr::math::UFixBigInt;
+using ppvr::math::FixBigIntOverflow;
 
 TEST_CASE( "Test macro that calculates the minumum word count for a given bit size", "[UFBigint]" ) {
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
@@ -612,15 +613,15 @@ TEST_CASE( "unsigned fixed big integer from std:string", "[UFBigint]" ) {
 	
 	// ---- test overflow dedection
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("256", 10) ); // 2^8 => requires 9 bit
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("256", 10), FixBigIntOverflow ); // 2^8 => requires 9 bit
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint16_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("65536", 10) ); // 2^16 => requires 17 bit
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("65536", 10), FixBigIntOverflow ); // 2^16 => requires 17 bit
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("4294967296", 10) ); // 2^32 => requires 33 bit
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("4294967296", 10), FixBigIntOverflow ); // 2^32 => requires 33 bit
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint64_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("18446744073709551616", 10) ); // 2^64 => requires 65 bit
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("18446744073709551616", 10), FixBigIntOverflow ); // 2^64 => requires 65 bit
 	}
-	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("340282366920938463463374607431768211456", 10) ); // 2^128 => requires 129 bit
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("340282366920938463463374607431768211456", 10), FixBigIntOverflow ); // 2^128 => requires 129 bit
 }
 
 TEST_CASE( "unsigned fixed big integer comparisons", "[UFBigint]" ) {
@@ -1153,11 +1154,11 @@ TEST_CASE( "unsigned fixed big integer addition", "[UFBigint]" ) {
 	
 	// test overflow exception
 	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("80000000 00000000 00000000 00000000", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("80000000 00000000 00000000 00000000", 16)).toStringHex()                                           == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000 00000000 00000000", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000 00000000 00000000", 16)).toStringHex()                                           == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000 00000000 00000000", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000 00000000 00000000", 16)).toStringHex()                                           == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex(), FixBigIntOverflow );
 	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>(2) + UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>(2) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>(2) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex(), FixBigIntOverflow );
 	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(129)>(2)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>(2)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("7FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) + UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>(2)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000", 16).toStringHex(), FixBigIntOverflow );
 	
 	
 
@@ -1263,33 +1264,33 @@ TEST_CASE( "unsigned fixed big integer multiplication", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(320)>::fromString("987654321000000000000000000000000000009876543210", 10) *  UFixBigInt<BIG_INT_BIT_TO_SIZE(320)>::fromString("123456789000000000000000000000000000001234567890", 10) == UFixBigInt<BIG_INT_BIT_TO_SIZE(320)>::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
 	
 	// --- overflow test ---
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000", 16)).toStringHex() == UArbBigInt::fromString(" 1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 16).toStringHex() ); // "mulSchool not posible without overflow (aSize + bSize >= S)"
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000", 16)).toStringHex() == UArbBigInt::fromString(" 1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 16).toStringHex(), FixBigIntOverflow ); // "mulSchool not posible without overflow (aSize + bSize >= S)"
 	
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(    0xFFFFFFFFFFFFFFFFull) * UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0x0ull).toUint64() ==  UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0x0ull) );
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(    0xFFFFFFFFFFFFFFFFull) * UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0x1ull).toUint64() ==  UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0xFFFFFFFFFFFFFFFFull) );
 	REQUIRE( (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromUint64(    0xFFFFFFFFFFFFFFFFull) * UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromUint64( 0x2ull)).toStringHex() == "1FFFFFFFFFFFFFFFE" );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(    0xFFFFFFFFFFFFFFFFull) * UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0x2ull)).toStringHex() == "1FFFFFFFFFFFFFFFE" ); // "mulSchool not posible without overflow (r2)"
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(    0xFFFFFFFFFFFFFFFFull) * UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64( 0x2ull)).toStringHex() == "1FFFFFFFFFFFFFFFE", FixBigIntOverflow ); // "mulSchool not posible without overflow (r2)"
 	
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
-		REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("1 01", 16)).toStringHex() == UArbBigInt::fromString("1 00 FE FF", 16).toStringHex() );
-		REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("1 01", 16)).toStringHex() == UArbBigInt::fromString("1 00 FE FF", 16).toStringHex() ); // "mulSchool not posible without overflow (r1)"
-		REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("1 FF", 16)).toStringHex() == UArbBigInt::fromString("1 FE FE 01", 16).toStringHex() );
-		REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("1 FF", 16)).toStringHex() == UArbBigInt::fromString("1 FE FE 01", 16).toStringHex() ); // "mulSchool not posible without overflow (r1)"
+		REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("1 01", 16)).toStringHex() == UArbBigInt::fromString("1 00 FE FF", 16).toStringHex() );
+		REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("1 01", 16)).toStringHex() == UArbBigInt::fromString("1 00 FE FF", 16).toStringHex(), FixBigIntOverflow ); // "mulSchool not posible without overflow (r1)"
+		REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("1 FF", 16)).toStringHex() == UArbBigInt::fromString("1 FE FE 01", 16).toStringHex() );
+		REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("FF FF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(24)>::fromString("1 FF", 16)).toStringHex() == UArbBigInt::fromString("1 FE FE 01", 16).toStringHex(), FixBigIntOverflow ); // "mulSchool not posible without overflow (r1)"
 	}
 	
 	//std::cout << (UArbBigInt::fromString("FFFFFFFFF FFFFFFF FFFFFFFF FFFFFFFF", 16) * UArbBigInt::fromString("1 FFFFFFFF FFFFFFFF", 16)).toStringHex() << std::endl;
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString(" 10000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 00000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 00000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 80000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 10000000 00000000 00000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 1FFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("8FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  11FFFFFF FFFFFFFF FFFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  1FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("  FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF 00000000 00000001", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 00000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 00000000 00000000", 16).toStringHex() );
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000001", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF", 16).toStringHex() );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 00000000 00000001", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF", 16).toStringHex() ); // "mulSchool not posible without overflow (r1)"
-	REQUIRE(        (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFE 00000000 00000001", 16).toStringHex() );
-	REQUIRE_THROWS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFE 00000000 00000001", 16).toStringHex() ); // "mulSchool not posible without overflow (r1)" for 64 bit words "mulSchool not posible without overflow (loop)" for all shorter word types
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("80000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString(" 10000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 00000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 00000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 80000000 00000000", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 10000000 00000000 00000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("80000000 00000000 FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  10000000 00000000 1FFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("8FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  11FFFFFF FFFFFFFF FFFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  20000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  1FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF E0000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("  FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("  FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF 00000000 00000001", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 00000000 00000000", 16)).toStringHex() == UArbBigInt::fromString("  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 00000000 00000000", 16).toStringHex() );
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 00000000 00000001", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF", 16).toStringHex() );
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 00000000 00000001", 16)).toStringHex() == UArbBigInt::fromString("1 00000000 00000000 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFF", 16).toStringHex(), FixBigIntOverflow ); // "mulSchool not posible without overflow (r1)"
+	REQUIRE(           (UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("1 FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFE 00000000 00000001", 16).toStringHex() );
+	REQUIRE_THROWS_AS( (UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16) * UFixBigInt<BIG_INT_BIT_TO_SIZE(192)>::fromString("1 FFFFFFFF FFFFFFFF", 16)).toStringHex() == UArbBigInt::fromString("1 FFFFFFFF FFFFFFFE FFFFFFFF FFFFFFFE 00000000 00000001", 16).toStringHex(), FixBigIntOverflow ); // "mulSchool not posible without overflow (r1)" for 64 bit words "mulSchool not posible without overflow (loop)" for all shorter word types
 }
 
 TEST_CASE( "unsigned fixed big integer division", "[UFBigint]" ) {
@@ -1476,7 +1477,7 @@ TEST_CASE( "unsigned fixed big integer pow", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromUint64(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("ffffffffffffffffffffffffffffff0100000000000000000000000000007e80ffffffffffffffffffffffffffd653810000000000000000000000000a417340fffffffffffffffffffffffdfd2a6641000000000000000000000053cb6eb0c0fffffffffffffffffffff45b4de7b9c10000000000000000000168f190f081a0ffffffffffffffffffd94e1a59c5a8a1000000000000000003b7e5115f9b3220ffffffffffffffffad2eb4f168c52f21000000000000000693f4f628adabec60ffffffffffffff850af5b7f3ef374761000000000000084d671f6fabfd8d9be0ffffffffffff7a9bdc7e6434afd88ce1000000000007d0de149820e9b24fbed0ffffffffff921e2829c35e75cbbcfdd10000000005ace30966053b78b3043950ffffffffb93525e914e727a52c0eae51000000034359a70e6fbec5c95e85f710ffffffdb7c088dfcecc18b6f88e7ea1100000184645f31096f984c2f21460090fffff0a16b5d0f3c3c73980c4ac0699100009492477c6cb9b7a297892d66ae30fffaa333428250d117880cedc2e4d531002f6fff7892e6502fd6528da6667ab0fe6da8e80ad638ad3adcbf15b59157b10ccc32e7a7c1e958d78cc773cbce35f09bd3456648cb852e1950ef98e80150f3f2a64a85fdbe8c2d4148f308a3b1d15b9ab4673bbdca8ab789411c0b9df56306c5112d5dcf7634fb3f383baeae4a4af4eb559ee328f87af192d9556b56b49fb94ab2d471038b73d6aa930e7f6073b66a5b88304c5754f15cc3a1455f5d253a7d25f89ff494f8e7aca9d11f2affab76737932926d189f9dd19653bd2416b1e7e98c13c5732f5ed4ef50c149aa3a85fe65f4988dfbd10a9a49246a10c98bf324463d950149ca6058750829a55941e44baafb823ded709ca087908345834f745486849925fd0b5bda41137b856f5cbf74b015dfb4f0df8c5bb7b15aa68fd77035e3f3b2de0310b8d1b97aee234ff07ea962cd972d969ad64ac2204e1061b5045bd3340b0e7cfa5a3b686163f8611198b6521892eb25f2fc5f508564204230eacf2195835a5b8dba62f868a37afcb13c21765e966829a40bf56936480bfd732ca21d700f34213d68549634d7978286b9c4aa4c9fc006f01156a93faad284916995065d3e84d1171e70f1dede33e75c2aff7c26eebad57bfa7fb3b3f1d5a9f710d6defc95efc4f756f2e4851f192914da61b2d49f8a71578113f95e2f70ffee8ad36151c6362210a0b8a9fcad07d2ada1af5bf478e92f3f362ef1da7f865605871d346df94de31f61830d2711b71887d55e601ffc52b7336c4ec22e05688b1c4e8c52cab6ad876915a96546fff0d3bf13aeacd88178f2cd7368c37a994070bfe8d894b5629e5295e97630b21e028a53a7fe8bbbf2641f71b2c26f7d6996d7b72d5a40cc28d3a1aae7b93d8de75a8c17bd1b3635deadb2bb085055bcfe428fa020e7a5e10a97989fc14ba18cd45d661e86416ef02ab7b4ce8aa0a5425ce00bf130e91c58f34f6679ae0980c4b59b61da2753cfed8a467eaecef6307c8470f050646ddb29bc77e295e98d2cbdf5cac623445c85d7c1fdb534de3310e60e801154b077f49fbae969ce3f48cecabbd69e6626113d650f62b4217e63a2e1155a9b497111196f3b0652d05717100e705264994537e675452e2de6c91d981178fd832da75409f7ba77ae3c613628c87d3858f59eb1f6f54e860a89694818c6a40ab9736aba2b9baf4443dd71f73c44a867c40698ce41f0f5b195496195537ba93fdc338ff7e55449dfb7a16190c6e9a885dcc2444dc47c7684f4b8246b1ee86b5332dd585dd8d26ea76f9e37b9c4d55826f469c3457836e1d7704116b50b3297c3acae359a6e6b0cfdb9b4a98213faf55c8d88c75c4843beb6430114e5b14bd96603f2cd0d1ad3634a55fcb214cc14b413fc57ec767515ecbc135e6f2eff030fc03fd45241d1ed6a9900dcce93c9e1593356db0d24be5c6600709981f1730239d9a029038bba7d65ff6086e6e7821f5d48c0c24c8b79d0ac5530ea154f9e9bb93c97227b47083e1ab6a223c8022526eb7040ae6bc35295e732839ae21f63ea1706e1a9c06b33088ccb4f9974808d6b902e1d825e468fe96d0043a79e0f68145bf208d54fd972d04a5975e03bc268b04fe6cdeda49b6ec4f795878f1243d10125865fcda3ed6f5f2cf5efa4c2c9b55e64428801ef9a1006cd50b39493ae79bfa2ff07969e47313d11bc5bd14aa90f76281e3d9e8598141e7a2a1a8c53ef2f8c5ae5700b859d70aed95d222e739a0b883a023dce5e041e356fb8e3c1cd19e7c3ba8198c2c6c4a5145d36cc95cbae92e1e742ef4af84bae554d5b8931f3c2ce27e06a894207b792f66335d56774cf6c798253a6377f020bdfec223010f24b082a7247550f59dee89dbe3650177c98fb65013256a406480649c96b381855c8c4f452148d0953d3983c54dd3202a28d7d030d5bf1d78bd76f54ebb57ef215e00beefde920654263456e43b357d3626aec2dc1a6d01eae8ccad3967747f80b1689af784a626c4c65d8b09d17105231773e29396157d757ecb4a64ea3690109b838a14710233e7d0e5451cf5db9aa089c8fb0e9a778058f62df1b798e131bea9ee1d2eb41562daddaaace91ec07c9da45ca67b803bf69b4c0ddc6d32b66fcca262bf8aaa4465801562063011e99b5c739c9aafcf04fe6b741f8b1324bf57cdd695ceb7bc2600b26e73c7c6946f93971bf107998af426b3e918985decae13f3458636466b21ae82ffd4661129bce134348b66925bd1b6c51cbf01925196392f1724a6bb5f7ec909d4f5b94e32e351821cb73708e460fd1a397d2588a9ec81e21bb19f1d304f092f7c8e7a78eb07d46dcc13f465dd7d3424505246ad20f05cd4d044210d9847a854a468fe753b293e626be6c7ae4c560345a34799e4bf687cae9305e79f4334d1cc086367ae44625ce72b7cefc636988df11504382ba19ab29bdc62dd7fa7348b28bf3874fbb433021a4f27a5a6ab9451e35553f9c08fd9841aa508ffafec6bab851d0823a22f5aa6458f10a6ce60ae7d49ba3d5307edf890a2849f3a2423f0357f2d9a0e568c9d431f611cf5bf53e733ba5e2ebad5fb08ffc2344aecad2c5a89b792a8b5a6dd13e122c3f0c86eb76f01c603ba74ebca4ebecc24200233aff3f3fe692b52cf9260fcfb96eb7d9b694a440c4906a9142c3750fb27e0e040912e2819df240ab791da795968aee0fcbb37eacda4ce7c3591a732185d2414fc2c1e710427679b678105459f3f83cde78c9ebbbc477d7620e7ccfe79d65b0fdcdd3a391e21ab4203b51c3879996b5b17a291f8e0d5bed097eff78a53a49ac3e946fa8cfc5a5d1aac8bc2d096710b840fb441b5575d87aeb92b1cac1118700f6b31dbfe5fa9f01ca9bca74950925c15bc518f961394d0f511e8b35cfad68a2d7d43f378331706be18b6c881331fa769a7f0d5ab93d670ec2ea78ed62facd659b533bb83db09a2ff935367a8b0311c9694d2c6e51553010a0d16215805cb2a6d9391212d0d160113b097b681cb1c2a9369462ae3e6060452fb4f9e290a524b84476749d7ccd212816936b0f46964ee01654f27dba62554cf772f321fe2da95720a68f1579bbab2d6a18f4d5871754b2845bd7e3d70792b7c1e53228e249b2a587d4f9b80eb864462f53b841f61437cf59ffa3d37926efc58299f8f718b9ca7da106df492eaf44c1a39a03d81d95101fbd79304a0cae150e129564a459df1412f06b75a34f64766aea1345321c849951f4d843143304ad652c9cb4fd5e703fb1c75bc4c4e7390c37bc414a16f2e0a1038c9911ac2484ead194f302184270ef321aca08d4957395c7c91e28a6e249be40ea72714f0ad757a72d915884f5f6196b974ffd2e6df9d5bb83897b10d10fd091ca661b6c24ae0c2aabb62045bc21823c6ba74a469c54dbce0f0a4e6bf1c7efa6d94d39fb1097a2546450bbbb91fd0534c312e594419278890ab179f5b7ae46e77c375aa612c0eab608458851a6daece81567467347a73cd98abad1d225b06810690440738ffe366690c4f9ad2a59f33aa48c309debe244429af09d4be0b8f8c9a44cfae0268faaab6045169630d859ddc15eb26206f6bc1a283e024acb7f24739bdcf128a44e48a4d643881d69f1ad3b983fc331c946b0b01275b981513f3e1d46aecf0c97724923a70cb099864c9568e7c0fe566a8fe6d10fd5484b31775e8cd3160d82aedaf9da1ef56867603dfa64038ab2afcbfed449ca21524d44f7f1f6ddce83a3b0227ba333d72c5e55182f9ac374d74571284958440d9be08e4d457c5192ecd771dec1eb4a9d61ad6a168727f701be5bb4ba91d3277e870d328c981b59cd774484dd1e6d3549527896ea56532cfe9519bedffa5fe003ad48cc93b1544d74376dc98d844b9206b21ce09e7cebef62e8e4378dd8240b8716d0c0c9d11039b07db56ee0917eae39c9ddef5f475566ccf1e75b40b12d2b60758ea87eec06ced29ffb18d0e5a1036a103b08a90d1b6e3a9b6955366303d911452a8405804c4f87790d337b6f39a2c17b2ee8e18f0e20333b87302b2d95b3603ff90feea956c093ac1b959861628ff0cbdec297ab69cb186d361fe94809a16997d65bf40a96c9bbf103379ab60e6a7ca5a472459d07975b8c73fbec6cdde76d14da0d03a0af7a9c1abfcf483aaccbf4f18305a5c4979e9bf9f73d39731d3268d2696529b53ddfb1f2b2822025dc0c4d21fcef472e468511dc02f5aa750fea204b0f2073a4484ea559952ac2d8f97b66da02f4a425beec847a88f03ba7d5047dc2128f635f786f7cba7e3f5c2759c26afeb6359fa78af7d65aa66faa1b3a0b6772042ef565b6db95ef36830a709673ec3a8cd0a12b10af3eb655c2b1e80c86cd6d92e760622e69ac42dbe9ce52c2da07600b6b071853562ee0d5003e24d5a477cfb3a8ab0ea33c5ebaa0a2de8fc6b54d2b8efc748c29556cf1809f8baa8b14aa611cd707850e6d26aa94a94b79813aeed2a23089cb04c0c7c45151b5b12c654b98c44235754876bee3f4620a9d8c0d59b57a024173d2beb70cf75c4e2e8f642cba99b7347ad1e6af106717feaf0ef333cd18583e16a72873388c3431ca0f01925717f529c752c52340ea4a6ea84effd09000876d19afd029ad725999854f00055cccbd7daf2ee877f3123d1b2aceffff6b6db8839346485d6876d29951cf00000f5e94a2f0c3c38c67f3b53f966efffffe7b9ba0cef69067b3d0deb9ff6f0000002483f77203133e7490771815eefffffffcbca658f190413a36a17a08ef0000000046cada16eb18d85ad3f151aefffffffffa531cf699fac4874cfbc6af00000000006de1d7d63ca18a3443022efffffffffff82f21eb67df164db0412f000000000000856423819bcb5027731efffffffffffff7b298e090540272641f000000000000007af50a480c10c8b89efffffffffffffff96c0b09d75254139f000000000000000052d14b0e973ad0defffffffffffffffffc481aeea064cddf00000000000000000026b1e5a63a575efffffffffffffffffffe970e6f0f7e5f000000000000000000000ba4b218463effffffffffffffffffffffac34914f3f00000000000000000000000202d599befffffffffffffffffffffffff5be8cbf0000000000000000000000000029ac7effffffffffffffffffffffffffff817f000000000000000000000000000000feffffffffffffffffffffffffffffffff", 16) );
 	
 	// 128 bit -> 32768 bit
-	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromUint64(256)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("0", 16) ); // not posible without overflow
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromUint64(256)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("0", 16), FixBigIntOverflow ); // not posible without overflow
 }
 
 TEST_CASE( "unsigned fixed big integer sqrt", "[UFBigint]" ) {
@@ -1603,7 +1604,7 @@ TEST_CASE( "unsigned fixed big integer bitLength", "[UFBigint]" ) {
 TEST_CASE( "unsigned fixed big integer randomNumber", "[UFBigint]" ) {
 	ppvr::math::Random rnd{};
 
-	REQUIRE_THROWS (UArbBigInt::randomNumber(0, rnd));
+	REQUIRE_THROWS_AS (UArbBigInt::randomNumber(0, rnd), std::invalid_argument);
 
 	// randomNumber must return 1 or more
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::randomNumber(  1, rnd) >= UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>(1) );
@@ -1731,15 +1732,15 @@ TEST_CASE( "unsigned fixed big integer setBit", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("88  77 66 55 44 33 22 11 00", 16).withBit(193) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
 	
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(10) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withBit(10), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint16_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withBit(18) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withBit(18), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withBit(34) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withBit(34), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint64_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withBit(66) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withBit(66), FixBigIntOverflow );
 	}
-	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withBit(129) );
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withBit(129), FixBigIntOverflow );
 }
 
 TEST_CASE( "unsigned fixed big integer clearBit", "[UFBigint]" ) {
@@ -1776,15 +1777,15 @@ TEST_CASE( "unsigned fixed big integer clearBit", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("03  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16).withoutBit(192) == UFixBigInt<BIG_INT_BIT_TO_SIZE(256)>::fromString("02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 88  77 66 55 44 33 22 11 00", 16) );
 	
 	if (typeid(BIG_INT_WORD_TYPE) == typeid(uint8_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(10) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(8)>::fromString("10101010", 2).withoutBit(10), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint16_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withoutBit(18) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(16)>::fromString("10101010", 2).withoutBit(18), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withoutBit(34) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32)>::fromString("10101010", 2).withoutBit(34), FixBigIntOverflow );
 	} else if (typeid(BIG_INT_WORD_TYPE) == typeid(uint64_t)) {
-		REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withoutBit(66) );
+		REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10101010", 2).withoutBit(66), FixBigIntOverflow );
 	}
-	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withoutBit(129) );
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromString("10101010", 2).withoutBit(129), FixBigIntOverflow );
 }
 
 TEST_CASE( "unsigned fixed big integer isEven", "[UFBigint]" ) {
@@ -1825,5 +1826,5 @@ TEST_CASE( "unsigned fixed big integer fromUArbBigInt", "[UFBigint]" ) {
 	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(1024)>::fromUArbBigInt(UArbBigInt::fromString("1 FF", 16)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(1024)>::fromString("1 FF", 16) );
 	
 
-	REQUIRE_THROWS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromUArbBigInt(UArbBigInt::fromString("1  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00", 16)) );
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(128)>::fromUArbBigInt(UArbBigInt::fromString("1  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00", 16)), FixBigIntOverflow );
 }

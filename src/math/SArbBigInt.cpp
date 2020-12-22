@@ -593,6 +593,7 @@ SArbBigInt SArbBigInt::negate() const {
 	return res;
 }
 
+
 // ----- shift left -----
 BIG_INT_WORD_TYPE SArbBigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, const bool resize) {
 	return UArbBigInt::rcl(bits, c, resize);
@@ -607,6 +608,7 @@ SArbBigInt SArbBigInt::operator<< (const uint bits) const {
 	res.rcl(bits, 0, true);
 	return res;
 }
+
 
 // ----- shift right -----
 BIG_INT_WORD_TYPE SArbBigInt::rcr(const uint bits, const BIG_INT_WORD_TYPE c) {
@@ -625,6 +627,7 @@ SArbBigInt SArbBigInt::operator>> (const uint bits) const {
 	}
 	return res;
 }
+
 
 // ----- addition -----
 
@@ -676,7 +679,9 @@ SArbBigInt SArbBigInt::operator+ (const SArbBigInt& other) const {
 	return result;
 }
 
+
 // ----- substraction -----
+
 BIG_INT_WORD_TYPE SArbBigInt::subUArbBigInt(const SArbBigInt& b, SArbBigInt& restul) const {
 	return UArbBigInt::sub(b, 0, restul);
 }
@@ -749,6 +754,7 @@ SArbBigInt SArbBigInt::operator- (const SArbBigInt& other) const {
 	return result;
 }
 
+
 // ----- multiplication -----
 
 void SArbBigInt::mul(const SArbBigInt& b, SArbBigInt& result) const {
@@ -762,16 +768,19 @@ void SArbBigInt::mul(const SArbBigInt& b, SArbBigInt& result) const {
 }
 
 void SArbBigInt::mul(const SArbBigInt& b) {
-	SArbBigInt result = UArbBigInt(0, this->getWordSize() + b.getWordSize());
+	SArbBigInt result{0, this->getWordSize() + b.getWordSize()};
 	this->mul(b, result);
 	*this = result;
 }
 
 SArbBigInt SArbBigInt::operator* (const SArbBigInt& other) const {
-	SArbBigInt result = UArbBigInt(0, this->getWordSize() + other.getWordSize());
+	SArbBigInt result{0, this->getWordSize() + other.getWordSize()};
 	this->mul(other, result);
 	return result;
 }
+
+
+// ----- division -----
 
 SArbBigInt SArbBigInt::operator/ (const SArbBigInt& other) const {
 	SArbBigInt res(UArbBigInt::operator/(other), (this->signum < 0) ^ (other.signum < 0) );
@@ -802,15 +811,17 @@ SArbBigInt SArbBigInt::operator% (const SArbBigInt& other) const {
 	return res;
 }
 
+// ----- pow(), sqrt() -----
+
 SArbBigInt SArbBigInt::pow(SArbBigInt pow) const {
 	return SArbBigInt(UArbBigInt::pow(pow), pow.isOdd() && this->signum < 0);
 }
 
 SArbBigInt SArbBigInt::sqrt() const {
-	if (this->signum <= 0) {
+	if (this->signum < 0) {
 		//throw new ArithmeticException("BigInteger: modulus not positive");
 		std::string msg = "ERROR SArbBigInt: can not claculate sqrt from negative number (no imaginary suport)!";
-		std::cerr << msg << std::endl;
+		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
 
@@ -818,33 +829,6 @@ SArbBigInt SArbBigInt::sqrt() const {
 }
 
 /* ---------- modInverse / gcd ---------- */
-
-SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
-	if (m.isZero()) {
-		std::string msg = "ERROR BigInt: modulus not positive!";
-		//std::cerr << msg << std::endl;
-		throw std::invalid_argument(msg);
-	}
-
-	if (m.isOne()) {
-		return SArbBigInt(0);
-	}
-
-	// all the hard work will be done by gcd.
-	SArbBigInt u, v;
-	SArbBigInt gcd = this->gcdExtended(*this, m, u, v);
-	if(!gcd.isOne()) {
-		std::string msg = "ERROR BigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
-		std::cerr << msg << std::endl;
-		throw std::runtime_error(msg);
-	}
-
-	//if (u < 0) {
-	//	u = u + m;
-	//}
-	return u % m;
-}
-
 
 SArbBigInt SArbBigInt::gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const {
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
@@ -882,7 +866,8 @@ SArbBigInt SArbBigInt::gcdExtended_internRecursive(const SArbBigInt &a, const SA
 	}
 
 	SArbBigInt u1(0, u.getWordSize()), v1(0, v.getWordSize()); // To store results of recursive call
-	SArbBigInt gcd = gcdExtended(b % a, a, u1, v1);
+	//SArbBigInt gcd = gcdExtended(b % a, a, u1, v1);
+	SArbBigInt gcd = gcdExtended_internRecursive(b % a, a, u1, v1);
 
 	// Update u and v using results of recursive call
 	u = v1 - (b/a) * u1;
@@ -954,6 +939,32 @@ SArbBigInt SArbBigInt::gcd(const SArbBigInt & a, const SArbBigInt & b) const {
 		return b;
 	}
 	return gcd(b % a, a);
+}
+
+SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
+	if (m.isZero()) {
+		std::string msg = "ERROR BigInt: modulus not positive!";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	if (m.isOne()) {
+		return SArbBigInt(0);
+	}
+
+	// all the hard work will be done by gcd.
+	SArbBigInt u, v;
+	SArbBigInt gcd = this->gcdExtended(*this, m, u, v);
+	if(!gcd.isOne()) {
+		std::string msg = "ERROR BigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+		//std::cerr << msg << std::endl;
+		throw NoMultiplicativeInverse(msg);
+	}
+
+	//if (u < 0) {
+	//	u = u + m;
+	//}
+	return u % m;
 }
 
 /* ---------- modPow ---------- */

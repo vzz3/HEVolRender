@@ -99,6 +99,10 @@ namespace ppvr {
 			UArbBigInt();
 			UArbBigInt(const BIG_INT_WORD_TYPE& value);
 			UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity);
+			
+			/**
+			 * copy constructor
+			 */
 			UArbBigInt(const UArbBigInt &src);
 			UArbBigInt(const UArbBigInt &src, BIG_INT_WORD_COUNT_TYPE minCapacity);
 		private:

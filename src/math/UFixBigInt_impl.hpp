@@ -112,9 +112,9 @@ template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S>& UFixBigInt<S>::fromUArbBigInt(const UArbBigInt& src, UFixBigInt<S> &target) {
 	BIG_INT_WORD_COUNT_TYPE srcWordCount = src.getWordSize();
 	if(srcWordCount > S ) {
-		std::string msg = "overflow error, provided UArbBigInt (" + std::to_string(srcWordCount) +  " wordes) does not fit  not the target UFixBigInt<S> (" + std::to_string(S) +  " wordes).";
+		std::string msg = "overflow error, provided UArbBigInt (" + std::to_string(srcWordCount) +  " wordes) does not fit into the target UFixBigInt<S> (" + std::to_string(S) +  " wordes).";
 		//std::cerr << msg << std::endl;
-		throw std::invalid_argument(msg);
+		throw FixBigIntOverflow(msg);
 	}
 	
 	//const BIG_INT_WORD_TYPE *test = src.getData();
@@ -208,14 +208,14 @@ UFixBigInt<S>::UFixBigInt(const BIG_INT_WORD_TYPE& value) {
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-UFixBigInt<S>::UFixBigInt(const UFixBigInt<S> &src) {
+UFixBigInt<S>::UFixBigInt(const UFixBigInt<S>& src) {
 	//std::copy(&src.value[0], &src.value[0] + S, this->value);
 	std::copy_n(&src.value[0], S, &value[0]);
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 template<BIG_INT_WORD_COUNT_TYPE OS>
-UFixBigInt<S>::UFixBigInt(const UFixBigInt<OS> &src) {
+UFixBigInt<S>::UFixBigInt(const UFixBigInt<OS>& src) {
 	BIG_INT_WORD_COUNT_TYPE nThis = S;
 	BIG_INT_WORD_COUNT_TYPE nSrc = OS;
 	BIG_INT_WORD_COUNT_TYPE n = std::min(nThis, nSrc);

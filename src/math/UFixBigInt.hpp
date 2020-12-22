@@ -21,7 +21,7 @@ namespace ppvr {
 	
 		template <BIG_INT_WORD_COUNT_TYPE S>
 		class UFixBigInt {
-			// make every version of this template classe a frend of ervery other version
+			// make every version of this template classe a frend of every other version
 			template<BIG_INT_WORD_COUNT_TYPE OS>
 			friend class UFixBigInt;
 
@@ -68,12 +68,18 @@ namespace ppvr {
 		public:
 			UFixBigInt();
 			UFixBigInt(const BIG_INT_WORD_TYPE& value);
-			UFixBigInt(const UFixBigInt<S> &src);
-		private:
-			//UFixBigInt(BIG_INT_WORD_TYPE* value, BIG_INT_WORD_COUNT_TYPE wordCapacity, BIG_INT_WORD_COUNT_TYPE wordSize);
 			
+			/**
+			 * copy constructor
+			 */
+			UFixBigInt(const UFixBigInt<S>& src);
+			
+		protected:
+			/*
+			 * convert between different word counts/sizes
+			 */
 			template<BIG_INT_WORD_COUNT_TYPE OS>
-			UFixBigInt(const UFixBigInt<OS> &src);
+			UFixBigInt(const UFixBigInt<OS>& src);
 		public:
 			~UFixBigInt();
 

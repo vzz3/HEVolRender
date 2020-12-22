@@ -163,6 +163,10 @@ namespace ppvr {
 			SArbBigInt(const BIG_INT_WORD_TYPE& value, bool negative = false);
 			SArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity, bool negative = false);
 			SArbBigInt(const UArbBigInt& value, bool negative = false);
+			
+			/**
+			 * copy constructor
+			 */
 			SArbBigInt(const SArbBigInt& value);
 			~SArbBigInt();
 
@@ -301,12 +305,12 @@ namespace ppvr {
 			/**
 			 * result = this / divisor
 			 */
-			void div(const SArbBigInt& divisor, SArbBigInt &result, SArbBigInt& remainder) const;
+			//void div(const SArbBigInt& divisor, SArbBigInt &result, SArbBigInt& remainder) const;
 
 			/**
 			 * this = this / divisor
 			 */
-			void div(const SArbBigInt& divisor, SArbBigInt& remainder);
+			//void div(const SArbBigInt& divisor, SArbBigInt& remainder);
 
 		public:
 			SArbBigInt operator/ (const SArbBigInt& other) const;
