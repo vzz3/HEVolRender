@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 #include "PublicKey.hpp"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
@@ -22,7 +22,7 @@ namespace ppvr {
 				static SecureKey create(uint modulusBitLength);
 
 			public:
-				SecureKey(const SArbBigInt& yP, const SArbBigInt& yQ, const PublicKey& yPublicKey);
+				SecureKey(const PaillierInt& yP, const PaillierInt& yQ, const PublicKey& yPublicKey);
 				~SecureKey();
 
 				/**
@@ -32,20 +32,20 @@ namespace ppvr {
 				 * @param ciphertext to be decrypted.
 				 * @return the decrypted plaintext.
 				 */
-				SArbBigInt decrypt(SArbBigInt ciphertext) const;
+				PaillierInt decrypt(PaillierInt ciphertext) const;
 
 			private:
 				/**
 				 * Computes the L function as defined in Paillier's paper. That is: L(x,p) =
 				 * (x-1)/p
 				 */
-				static SArbBigInt lFunction(const SArbBigInt& x, const SArbBigInt& p);
+				static PaillierInt lFunction(const PaillierInt& x, const PaillierInt& p);
 
 				/**
 				 * Computes the h-function as defined in Paillier's paper page 12,
 				 * 'Decryption using Chinese-remaindering'.
 				 */
-				static SArbBigInt hFunction(const SArbBigInt& x, const SArbBigInt& xSquared, const PublicKey& yPublicKey);
+				static PaillierInt hFunction(const PaillierInt& x, const PaillierInt& xSquared, const PublicKey& yPublicKey);
 
 				/**
 				 * The Chinese Remainder Theorem as needed for decryption.
@@ -54,7 +54,7 @@ namespace ppvr {
 				 * @param mq the solution modulo q.
 				 * @return the solution modulo n=pq.
 				 */
-				SArbBigInt crt(const SArbBigInt& mp, const SArbBigInt& mq ) const;
+				PaillierInt crt(const PaillierInt& mp, const PaillierInt& mq ) const;
 
 			// ----- member variables -----
 			public:
@@ -62,13 +62,13 @@ namespace ppvr {
 				 * The first prime number, {@code p} such that
 				 * {@code p*q = publicKey.modulus}.
 				 */
-				const SArbBigInt p;
+				const PaillierInt p;
 
 				/**
 				 * The first prime number, {@code q} such that
 				 * {@code p*q = publicKey.modulus}.
 				 */
-				const SArbBigInt q;
+				const PaillierInt q;
 
 				const PublicKey publicKey;
 
@@ -76,29 +76,29 @@ namespace ppvr {
 				/**
 				 * The value <code>p<sup>2</sup></code>
 				 */
-				const SArbBigInt _pSquared;
+				const PaillierInt _pSquared;
 
 				/**
 				 * The value <code>q<sup>2</sup></code>
 				 */
-				const SArbBigInt _qSquared;
+				const PaillierInt _qSquared;
 
 				/**
 				 * The modular inverse of <code>p modulo q</code>
 				 */
-				const SArbBigInt _pInverse;
+				const PaillierInt _pInverse;
 
 				/**
 				 * Precomputed <code>hp</code> as defined in Paillier's paper page 12:
 				 * Decryption using Chinese-remaindering.
 				 */
-				const SArbBigInt _hp;
+				const PaillierInt _hp;
 
 				/**
 				 * Precomputed <code>hq</code> as defined in Paillier's paper page 12:
 				 * Decryption using Chinese-remaindering.
 				 */
-				const SArbBigInt _hq;
+				const PaillierInt _hq;
 			};
 		}
 	}

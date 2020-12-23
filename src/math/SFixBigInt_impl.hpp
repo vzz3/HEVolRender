@@ -136,6 +136,18 @@ SFixBigInt<S>& SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rand
 	return target;
 }
 
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::probablePrime(const uint& bitLength, Random& rnd) {
+	if(bitLength > (S * BIG_INT_BITS_PER_WORD) ) {
+		std::string msg = "ERROR probablePrime: the bitLength can not be greater then the bit length of the magnitude store (S * BIG_INT_BITS_PER_WORD).";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+	
+	const SArbBigInt arbPrime = SArbBigInt::probablePrime(bitLength, rnd);
+	const SFixBigInt fixPrim = SFixBigInt<S>::fromSArbBigInt(arbPrime);
+	return fixPrim;
+}
 
 // ----- constructors -----
 

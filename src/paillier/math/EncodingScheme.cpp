@@ -24,7 +24,7 @@ EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedE
 		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-	const SArbBigInt& modulus = yPK.modulus;
+	const PaillierInt& modulus = yPK.modulus;
 	//if (value.compareTo(context.getPublicKey().getModulus()) >= 0) {
 	//	throw new IllegalArgumentException("value must be less than modulus");
 	//}
@@ -39,17 +39,17 @@ EncodingScheme::EncodingScheme(const crypto::PublicKey& yPK, const bool ySignedE
 		throw std::invalid_argument(msg);
 	}
 
-	SArbBigInt encSpace = modulus.bitLength() == precision ? modulus : SArbBigInt(1) << precision;
+	PaillierInt encSpace = modulus.bitLength() == precision ? modulus : PaillierInt(1) << precision;
 	if(signedEncoding) {
-		maxEncoded = ((encSpace + SArbBigInt(1)) >> 1) - SArbBigInt(1);
+		maxEncoded = ((encSpace + PaillierInt(1)) >> 1) - PaillierInt(1);
 		minEncoded = modulus - maxEncoded;
 		maxSignificand = maxEncoded;
 		minSignificand = maxEncoded.negate();
 	} else {
-		maxEncoded = encSpace - SArbBigInt(1);
-		minEncoded = SArbBigInt(0);
+		maxEncoded = encSpace - PaillierInt(1);
+		minEncoded = PaillierInt(0);
 		maxSignificand = maxEncoded;
-		minSignificand = SArbBigInt(0);
+		minSignificand = PaillierInt(0);
 	}
 }
 
@@ -65,7 +65,7 @@ int_fast8_t EncodingScheme::signum(const EncodedNumber& yNumber) const {
 	}
 	//if this context is signed, then a negative significant is strictly greater
 	//than modulus/2.
-	SArbBigInt halfModulus = pk.modulus >> 1;
+	PaillierInt halfModulus = pk.modulus >> 1;
 	return yNumber.mantissa > halfModulus ? -1 : 1;
 }
 
@@ -74,19 +74,19 @@ int_fast32_t EncodingScheme::getPrecExponent(double yPrecision) const {
 }
 
 EncodedNumber EncodingScheme::encode(const int64_t yValue) const {
-	return encode(SArbBigInt::fromInt64(yValue));
+	return encode(PaillierInt::fromInt64(yValue));
 }
 
-EncodedNumber EncodingScheme::encode(SArbBigInt yValue) const {
-	if (yValue < SArbBigInt(0) && isUnsigned()) {
+EncodedNumber EncodingScheme::encode(PaillierInt yValue) const {
+	if (yValue < PaillierInt(0) && isUnsigned()) {
 		std::string msg = "Input value cannot be encoded using this EncodingScheme.";
 		//std::cerr << msg << std::endl;
 		throw EncodeException(msg);
 	}
 	int exponent = 0;
 	if (!yValue.isZero()) {
-		while ((yValue % SArbBigInt::fromInt64(base)).isZero()) {
-			yValue = yValue / SArbBigInt::fromInt64(base);
+		while ((yValue % PaillierInt::fromInt64(base)).isZero()) {
+			yValue = yValue / PaillierInt::fromInt64(base);
 			exponent++;
 		}
 	}
@@ -118,7 +118,7 @@ EncodedNumber EncodingScheme::encode(const double yValue, const double yPrecisio
 	return EncodedNumber(innerEncode(yValue, exponent), exponent);
 }
 
-SArbBigInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t yExponent) const {
+PaillierInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t yExponent) const {
 	// Compute BASE^(-exponent)
 	//BigDecimal bigDecBaseExponent = (new BigDecimal(base)).pow(-exponent, MathContext.DECIMAL128);
 	//double baseExponent = std::pow(base, -exponent);
@@ -127,7 +127,7 @@ SArbBigInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t y
 	//BigInteger bigIntRep = ((value.multiply(bigDecBaseExponent)).setScale(0, BigDecimal.ROUND_HALF_UP)).toBigInteger();
 
 	// value * (BASE^-exponent) = v * b^-e = v * (1 / b^e) = v / b^e
-	SArbBigInt bigIntRep = SArbBigInt::fromInt64((int64_t)(yValue / std::pow(base, yExponent)));
+	PaillierInt bigIntRep = PaillierInt::fromInt64((int64_t)(yValue / std::pow(base, yExponent)));
 
 
 	if (bigIntRep > maxSignificand || (yValue < 0 && bigIntRep < minSignificand)) {
@@ -141,9 +141,9 @@ SArbBigInt EncodingScheme::innerEncode(const double yValue, const int_fast32_t y
 	return bigIntRep;
 }
 
-SArbBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) const {
+PaillierInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) const {
 	//context.checkSameContext(encoded);
-	//const SArbBigInt& mantissa = encoded.mantissa;
+	//const PaillierInt& mantissa = encoded.mantissa;
 
 	if (yEncoded.mantissa > pk.modulus) {
 		throw DecodeException("The significand of the encoded number is corrupted");
@@ -162,9 +162,9 @@ SArbBigInt EncodingScheme::getSignificand(const EncodedNumber& yEncoded) const {
 	throw DecodeException("Detected overflow. " + yEncoded.toString() );
 }
 
-SArbBigInt EncodingScheme::decodeBigInt(const EncodedNumber& yEncoded) const {
-	SArbBigInt significand = getSignificand(yEncoded);
-	return significand * SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(yEncoded.exponent));
+PaillierInt EncodingScheme::decodeBigInt(const EncodedNumber& yEncoded) const {
+	PaillierInt significand = getSignificand(yEncoded);
+	return significand * PaillierInt::fromInt64(base).pow(PaillierInt::fromInt64(yEncoded.exponent));
 }
 
 double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
@@ -176,21 +176,21 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 	static const size_t doubleExpBitLen = 11;
 	static const size_t doubleManBitLen = 52;
 
-	SArbBigInt significand = getSignificand(yEncoded);
+	PaillierInt significand = getSignificand(yEncoded);
 	int32_t exponent = yEncoded.exponent;
 
 	size_t mantissaBitLen = significand.bitLength();
 
 	if(mantissaBitLen > doubleManBitLen) {
 		size_t mantissaOverflowLen = mantissaBitLen - doubleManBitLen;
-		//SArbBigInt overflowFactor = SArbBigInt(2).pow(mantissaOverflowLen);
-		//SArbBigInt overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5; // meine int classe kann aber kein log...
+		//PaillierInt overflowFactor = PaillierInt(2).pow(mantissaOverflowLen);
+		//PaillierInt overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5; // meine int classe kann aber kein log...
 		// overflowFactor = 2^mantissaOverflowLen
 		// overflowRadixLen = LOG(overflowFactor) / LOG(base) + 0.5 = LOG(2^mantissaOverflowLen) / LOG(base) + 0.5
 		//					= LOG2(2^mantissaOverflowLen) / LOG2(base) + 0.5 = mantissaOverflowLen / LOG2(base) + 0.5
 		//					= mantissaOverflowLen / ( LOG(base) / LOG(2) ) + 0.5
 		size_t overflowRadixLen = (size_t)((double)mantissaOverflowLen / std::log2(base));// + 0.5);
-		SArbBigInt scale = SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(overflowRadixLen));
+		PaillierInt scale = PaillierInt::fromInt64(base).pow(PaillierInt::fromInt64(overflowRadixLen));
 		//std::cout << "scale: " << scale << std::endl;
 		significand = significand / scale;
 		//std::cout <<  "significand: " << significand << std::endl;
@@ -213,7 +213,7 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 
 	/*
 	//BigDecimal exp = BigDecimal.valueOf(base).pow(Math.abs(encoded.getExponent()));
-	SArbBigInt exp = SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(std::abs(yEncoded.exponent)));
+	PaillierInt exp = PaillierInt::fromInt64(base).pow(PaillierInt::fromInt64(std::abs(yEncoded.exponent)));
 	BigDecimal bigDecoded;
 	if (encoded.getExponent() < 0) {
 		bigDecoded = new BigDecimal(significand).divide(exp, MathContext.DECIMAL128);
@@ -229,18 +229,18 @@ double EncodingScheme::decodeDouble(const EncodedNumber& yEncoded) const {
 }
 
 int64_t EncodingScheme::decodeInt64(const EncodedNumber& yEncoded) const {
-	static const SArbBigInt uint64Min = SArbBigInt::fromInt64(std::numeric_limits<int64_t>::min());
-	static const SArbBigInt uint64Max = SArbBigInt::fromInt64(std::numeric_limits<int64_t>::max());
+	static const PaillierInt uint64Min = PaillierInt::fromInt64(std::numeric_limits<int64_t>::min());
+	static const PaillierInt uint64Max = PaillierInt::fromInt64(std::numeric_limits<int64_t>::max());
 
-	SArbBigInt decoded = decodeBigInt(yEncoded);
+	PaillierInt decoded = decodeBigInt(yEncoded);
 	if (decoded < uint64Min || decoded > uint64Max ) {
 		throw new DecodeException("Decoded value cannot be represented as long.");
 	}
 	return decoded.toInt64();
 }
 
-SArbBigInt EncodingScheme::getRescalingFactor(const int32_t expDiff) const {
-	return SArbBigInt::fromInt64(base).pow(SArbBigInt::fromInt64(expDiff));
+PaillierInt EncodingScheme::getRescalingFactor(const int32_t expDiff) const {
+	return PaillierInt::fromInt64(base).pow(PaillierInt::fromInt64(expDiff));
 }
 
 bool EncodingScheme::operator== (const EncodingScheme& other) const {

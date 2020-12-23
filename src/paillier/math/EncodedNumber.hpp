@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 using namespace ppvr::math;
@@ -15,7 +15,7 @@ namespace ppvr {
 				/**
 				 * The value of the encoded number. Must be a non-negative integer less than modulus of the public key.
 				 */
-				const SArbBigInt mantissa;
+				const PaillierInt mantissa;
 
 				/**
 				 * The exponent of the encoded number.
@@ -29,7 +29,7 @@ namespace ppvr {
 				 * @param value of the encoded number must be a non-negative integer less than the modulus of the public key.
 				 * @param exponent of the encoded number.
 				 */
-				EncodedNumber(const SArbBigInt& yMantissa, const int32_t yExponent);
+				EncodedNumber(const PaillierInt& yMantissa, const int32_t yExponent);
 				~EncodedNumber();
 
 				std::string toString() const;

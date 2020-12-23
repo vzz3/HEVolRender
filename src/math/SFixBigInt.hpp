@@ -50,17 +50,15 @@ namespace ppvr {
 			static const SArbBigInt SmallPrimeProduct;
 
 			static const SArbBigInt FirstPrimes[];
-
+*/
 		public:
-			/*
-			 https://crypto.stackexchange.com/questions/1970/how-are-primes-generated-for-rsa
-			 https://www.geeksforgeeks.org/how-to-generate-large-prime-numbers-for-rsa-algorithm/
-			 */
 
 			/**
 			 * Returns a positive BigInteger that is probably prime, with the
 			 * specified bitLength. The probability that a BigInteger returned
 			 * by this method is composite does not exceed 2<sup>-100</sup>.
+			 * This method uses the probablePrime() function of SArbBigInt,
+			 * and, therefore, alocates some hep memory.
 			 *
 			 * @param  bitLength bitLength of the returned BigInteger.
 			 * @param  rnd source of random bits used to select candidates to be
@@ -69,11 +67,12 @@ namespace ppvr {
 			 * @throws ArithmeticException {@code bitLength < 2} or {@code bitLength} is too large.
 			 * @see    #bitLength()
 			 * @since 1.4
-			 * /
-			static SArbBigInt probablePrime(const uint& bitLength, Random& rnd);
+			 */
+			static SFixBigInt<S> probablePrime(const uint& bitLength, Random& rnd);
 
+/*
 		private:
-			/**
+			/ **
 			 * Find a random number of the specified bitLength that is probably prime.
 			 * This method is used for smaller primes, its performance degrades on
 			 * larger bitlengths.
@@ -83,7 +82,7 @@ namespace ppvr {
 			static SArbBigInt smallPrime(const uint& bitLength, const uint& certainty, Random& rnd);
 
 
-			/**
+			/ **
 			 * Find a random number of the specified bitLength that is probably prime.
 			 * This method is more appropriate for larger bitlengths since it uses
 			 * a sieve to eliminate most composites before using a more expensive
@@ -91,7 +90,7 @@ namespace ppvr {
 			 * /
 			static SArbBigInt largePrime(const uint& bitLength, const uint& certainty, Random& rnd);
 
-			/**
+			/ **
 			 * This step is a a low level primality test which requires the pre-calculation of the first few hundred primes (using Sieve of Eratosthenes).
 			 * The prime candidate is divided by the pre-generated primes to check for divisibility. If the prime candidate is perfectly divisible by any of these pre-generated primes, the test fails and a new prime candidate must be picked and tested. This is repeated as long as a value which is coprime to all the primes in our generated primes list is found
 			 * /
@@ -99,7 +98,7 @@ namespace ppvr {
 
 			//static int getPrimeSearchLen(int bitLength);
 
-			/**
+			/ **
 			 * Returns {@code true} if this BigInteger is probably prime,
 			 * {@code false} if it's definitely composite.
 			 *
@@ -115,7 +114,7 @@ namespace ppvr {
 			 * /
 			bool primeToCertainty(const uint certainty, Random& rnd);
 
-			/**
+			/ **
 			 * Returns true if this BigInteger is a Lucas-Lehmer probable prime.
 			 *
 			 * The following assumptions are made:
@@ -123,7 +122,7 @@ namespace ppvr {
 			 * /
 			bool passesLucasLehmer();
 
-			/**
+			/ **
 			 * Computes Jacobi(p,n).
 			 * Assumes n positive, odd, n>=3.
 			 * /
@@ -131,7 +130,7 @@ namespace ppvr {
 
 			static SArbBigInt lucasLehmerSequence(int z, const SArbBigInt& k, const SArbBigInt& n);
 
-			/**
+			/ **
 			 * Returns true iff this BigInteger passes the specified number of
 			 * Miller-Rabin tests. This test is taken from the DSA spec (NIST FIPS
 			 * 186-2).
@@ -143,7 +142,7 @@ namespace ppvr {
 			bool passesMillerRabin(int iterations, Random& rnd);
 
 		public:
-			/**
+			/ **
 			 * Returns {@code true} if this BigInteger is probably prime,
 			 * {@code false} if it's definitely composite.  If
 			 * {@code certainty} is &le; 0, {@code true} is
@@ -302,7 +301,7 @@ namespace ppvr {
 			 * /
 			//void mulInt(BIG_INT_WORD_TYPE ss2, BigInt& result) const;
 
-			/**
+			/ **
 			 * result = this * b
 			 */
 			void mul(const SFixBigInt<S>& b, SFixBigInt<S>& result) const;

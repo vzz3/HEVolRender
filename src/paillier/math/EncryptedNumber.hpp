@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 using namespace ppvr::math;
@@ -18,7 +18,7 @@ namespace ppvr {
 				/**
 				 * The mantissa as ciphertext.
 				 */
-				const SArbBigInt ciphertext;
+				const PaillierInt ciphertext;
 
 				/**
 				 * The exponent of the encoded number.
@@ -38,7 +38,7 @@ namespace ppvr {
 				 * @param exponent of the encrypted number.
 				 * @param isSafe set to true if ciphertext is obfuscated, false otherwise.
 				 */
-				EncryptedNumber(const SArbBigInt& yCiphertext, const int32_t yExponent);//, bool yIsSafe);
+				EncryptedNumber(const PaillierInt& yCiphertext, const int32_t yExponent);//, bool yIsSafe);
 				~EncryptedNumber();
 
 				//bool operator== (const EncodedNumber& other) const;

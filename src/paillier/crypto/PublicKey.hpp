@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 
 // see "The art of computer programming - volume 2" (4.3 Multiple-Pressision Arithmetic - page 250)
 using namespace ppvr::math;
@@ -16,19 +16,19 @@ namespace ppvr {
 				/**
 				 * The modulus (n) of the public key.
 				 */
-				 const SArbBigInt modulus;
+				 const PaillierInt modulus;
 
 			private:
 				/**
 				 * The modulus squared (n<sup>2</sup>) of the public key.
 				 */
-				const SArbBigInt _modulusSquared;
+				const PaillierInt _modulusSquared;
 
 			public:
 				/**
 				 * The generator (g) of the public key
 				 */
-				const SArbBigInt generator;
+				const PaillierInt generator;
 
 			public:
 				/**
@@ -36,19 +36,19 @@ namespace ppvr {
 				 *
 				 * @param modulus of the public key
 				 */
-				PublicKey(const SArbBigInt & yModulus);
+				PublicKey(const PaillierInt & yModulus);
 				~PublicKey();
 
 				/*
-				const SArbBigInt & getModulus() const {
+				const PaillierInt & getModulus() const {
 					return modulus;
 				}
 
-				const SArbBigInt & getGenerator() const {
+				const PaillierInt & getGenerator() const {
 					return _generator;
 				}
 				*/
-				const SArbBigInt& getModulusSquared() const {
+				const PaillierInt& getModulusSquared() const {
 					return _modulusSquared;
 				}
 
@@ -59,7 +59,7 @@ namespace ppvr {
 				 * @param plaintext to be encrypted.
 				 * @return corresponding ciphertext.
 				 */
-				SArbBigInt encrypt(const SArbBigInt & plaintext) const;
+				PaillierInt encrypt(const PaillierInt & plaintext) const;
 
 				/**
 				 * The encryption function of the Paillier encryption scheme can be divided
@@ -77,7 +77,7 @@ namespace ppvr {
 				 * @param plaintext to be encrypted.
 				 * @return corresponding unobfuscated ciphertext.
 				 */
-				SArbBigInt encryptWithoutObfuscation(const SArbBigInt & plaintext) const;
+				PaillierInt encryptWithoutObfuscation(const PaillierInt & plaintext) const;
 
 				/**
 				 * Implements the obfuscation function of the Paillier encryption scheme. It
@@ -87,14 +87,14 @@ namespace ppvr {
 				 * @param ciphertext to be ofuscated
 				 * @return obfuscated ciphertext.
 				 */
-				SArbBigInt obfuscate(const SArbBigInt & ciphertext) const;
+				PaillierInt obfuscate(const PaillierInt & ciphertext) const;
 
 			private:
 				/**
 				 * returns a rendom number that is greater the 0 and less then the modulus.
 				 * @return
 				 */
-				SArbBigInt getNewRandomNumber() const;
+				PaillierInt getNewRandomNumber() const;
 
 			public:
 				/**
@@ -106,7 +106,7 @@ namespace ppvr {
 				 * @return ciphertext of the sum of the two plaintexts corresponding to
 				 * {@code ciphertext1} and {@code ciphertext2}.
 				 */
-				SArbBigInt add(const SArbBigInt & ciphertext1, const SArbBigInt & ciphertext2) const;
+				PaillierInt add(const PaillierInt & ciphertext1, const PaillierInt & ciphertext2) const;
 
 				/**
 				 * Implements the multiplication function of the Paillier encryption scheme.
@@ -117,7 +117,7 @@ namespace ppvr {
 				 * @param plainfactor b.
 				 * @return product a*b.
 				 */
-				SArbBigInt multiply(const SArbBigInt & ciphertext, const SArbBigInt & plainfactor) const;
+				PaillierInt multiply(const PaillierInt & ciphertext, const PaillierInt & plainfactor) const;
 
 				/*
 				public BigInteger dotProduct(BigInteger[] xPlain, BigInteger[] yEncrypted, SecureKey privateKey4Debug) {

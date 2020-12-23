@@ -6,7 +6,7 @@
 
 using namespace ppvr::paillier::math;
 
-EncodedNumber::EncodedNumber(const SArbBigInt& yMantissa, const int32_t yExponent)
+EncodedNumber::EncodedNumber(const PaillierInt& yMantissa, const int32_t yExponent)
 	: mantissa (yMantissa)
 	, exponent(yExponent)
 {

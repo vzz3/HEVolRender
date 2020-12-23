@@ -4,19 +4,19 @@
 
 using namespace ppvr::paillier::crypto;
 
-PublicKey::PublicKey(const SArbBigInt & yModulus)
+PublicKey::PublicKey(const PaillierInt & yModulus)
 	: modulus(yModulus)
-	, _modulusSquared(yModulus.pow(SArbBigInt(2)))
-	, generator(yModulus + SArbBigInt(1)) //the generator is always set to modulus+1, as this allows a significantly more efficient encryption function.
+	, _modulusSquared(yModulus.pow(PaillierInt(2)))
+	, generator(yModulus + PaillierInt(1)) //the generator is always set to modulus+1, as this allows a significantly more efficient encryption function.
 {}
 
 PublicKey::~PublicKey() {}
 
-SArbBigInt PublicKey::encrypt(const SArbBigInt & plaintext) const {
+PaillierInt PublicKey::encrypt(const PaillierInt & plaintext) const {
 	return obfuscate(encryptWithoutObfuscation(plaintext));
 }
 
-SArbBigInt PublicKey::encryptWithoutObfuscation(const SArbBigInt & plaintext) const {
+PaillierInt PublicKey::encryptWithoutObfuscation(const PaillierInt & plaintext) const {
 	// we chose g = N + 1, so that we can exploit the fact that
 	// (N+1)^plaintext = N*plaintext + 1 mod N^2
 	// Advances in Cryptology - ASIACRYPT 2003: 9th International Conference on the ... Page 275 (4.1 The CGHN Public Key Cryptosystem)
@@ -30,25 +30,25 @@ SArbBigInt PublicKey::encryptWithoutObfuscation(const SArbBigInt & plaintext) co
 	// :...
 	// (1+mN+(m-1)N^2   mod N^2 = 1+mN		=> N*m + 1	mod N^2
 
-	return (modulus * plaintext + SArbBigInt(1)) % _modulusSquared;
+	return (modulus * plaintext + PaillierInt(1)) % _modulusSquared;
 }
 
-SArbBigInt PublicKey::obfuscate(const SArbBigInt & ciphertext) const {
+PaillierInt PublicKey::obfuscate(const PaillierInt & ciphertext) const {
 	//return BigIntegerUtil.modPow(randomPositiveNumber(modulus), modulus, _modulusSquared).multiply(ciphertext).mod(_modulusSquared);
-	SArbBigInt r = getNewRandomNumber();
+	PaillierInt r = getNewRandomNumber();
 	return r.modPow(modulus, _modulusSquared) * ciphertext % _modulusSquared;
 }
 
-SArbBigInt PublicKey::getNewRandomNumber() const {
+PaillierInt PublicKey::getNewRandomNumber() const {
 	Random& rnd = Random::getForLocalThread();
-	return SArbBigInt::randomNumber(modulus, rnd);
+	return PaillierInt::randomNumber(modulus, rnd);
 }
 
-SArbBigInt PublicKey::add(const SArbBigInt & ciphertext1, const SArbBigInt & ciphertext2) const {
+PaillierInt PublicKey::add(const PaillierInt & ciphertext1, const PaillierInt & ciphertext2) const {
 	return ciphertext1 * ciphertext2 % _modulusSquared;
 }
 
-SArbBigInt PublicKey::multiply(const SArbBigInt & ciphertext, const SArbBigInt & plainfactor) const {
+PaillierInt PublicKey::multiply(const PaillierInt & ciphertext, const PaillierInt & plainfactor) const {
 	return ciphertext.modPow(plainfactor, _modulusSquared);
 }
 

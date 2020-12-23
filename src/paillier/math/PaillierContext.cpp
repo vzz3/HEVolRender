@@ -20,15 +20,15 @@ PaillierContext::PaillierContext(const PublicKey& yPublicKey, const bool ySigned
 PaillierContext::~PaillierContext() {}
 
 EncodedNumber PaillierContext::decreaseExponentTo(const EncodedNumber& yEncodedNumber, const int32_t yNewExp) const {
-	//SArbBigInt significand = encodedNumber.getValue();
+	//PaillierInt significand = encodedNumber.getValue();
 	//int32_t exponent = encodedNumber.getExponent();
 	if (yNewExp > yEncodedNumber.exponent) {
 		throw std::invalid_argument("New exponent: " + std::to_string(yNewExp) + "should be more negative than old exponent: " + std::to_string(yEncodedNumber.exponent) + ".");
 	}
 
 	const int32_t expDiff = yEncodedNumber.exponent - yNewExp;
-	const SArbBigInt bigFactor = encoder.getRescalingFactor(expDiff);
-	const SArbBigInt newEnc = (yEncodedNumber.mantissa * bigFactor) % getPublicKey().modulus;
+	const PaillierInt bigFactor = encoder.getRescalingFactor(expDiff);
+	const PaillierInt newEnc = (yEncodedNumber.mantissa * bigFactor) % getPublicKey().modulus;
 	return EncodedNumber(newEnc, yNewExp);
 }
 
@@ -38,8 +38,8 @@ EncryptedNumber PaillierContext::decreaseExponentTo(const EncryptedNumber& yEncr
 	}
 
 	const int32_t expDiff = yEncryptedNumber.exponent - yNewExp;
-	const SArbBigInt bigFactor = encoder.getRescalingFactor(expDiff);
-	const SArbBigInt newEnc = encoder.getPublicKey().multiply(yEncryptedNumber.ciphertext, bigFactor);
+	const PaillierInt bigFactor = encoder.getRescalingFactor(expDiff);
+	const PaillierInt newEnc = encoder.getPublicKey().multiply(yEncryptedNumber.ciphertext, bigFactor);
 	return EncryptedNumber(newEnc, yNewExp);
 }
 
@@ -48,12 +48,12 @@ EncryptedNumber PaillierContext::obfuscate(const EncryptedNumber& yEncryptedNumb
 }
 
 EncryptedNumber PaillierContext::encrypt(const EncodedNumber& yEncodedNumber, const bool yObfuscate) const {
-	const SArbBigInt& mantissa = yEncodedNumber.mantissa;
-	const SArbBigInt ciphertext = yObfuscate ? encoder.getPublicKey().encrypt(mantissa) : encoder.getPublicKey().encryptWithoutObfuscation(mantissa);
+	const PaillierInt& mantissa = yEncodedNumber.mantissa;
+	const PaillierInt ciphertext = yObfuscate ? encoder.getPublicKey().encrypt(mantissa) : encoder.getPublicKey().encryptWithoutObfuscation(mantissa);
 	return EncryptedNumber(ciphertext, yEncodedNumber.exponent);
 }
 
-EncryptedNumber PaillierContext::encrypt(const SArbBigInt& yValue, const bool yObfuscate) const {
+EncryptedNumber PaillierContext::encrypt(const PaillierInt& yValue, const bool yObfuscate) const {
 	return encrypt(encode(yValue), yObfuscate);
 }
 
@@ -76,8 +76,8 @@ EncodedNumber PaillierContext::decrypt(const SecureKey& ySecureKey, const Encryp
 EncryptedNumber PaillierContext::add(const EncryptedNumber& yOperand1, const EncryptedNumber& yOperand2) const {
 	//checkSameContext(operand1);
 	//checkSameContext(operand2);
-	SArbBigInt mantissa1 = yOperand1.ciphertext;
-	SArbBigInt mantissa2 = yOperand2.ciphertext;
+	PaillierInt mantissa1 = yOperand1.ciphertext;
+	PaillierInt mantissa2 = yOperand2.ciphertext;
 	int32_t exponent1 = yOperand1.exponent;
 	int32_t exponent2 = yOperand2.exponent;
 	if (exponent1 > exponent2) {
@@ -86,7 +86,7 @@ EncryptedNumber PaillierContext::add(const EncryptedNumber& yOperand1, const Enc
 	} else if (exponent1 < exponent2) {
 		mantissa2 = getPublicKey().multiply(mantissa2, encoder.getRescalingFactor(exponent2 - exponent1));
 	} // else do nothing
-	const SArbBigInt result = getPublicKey().add(mantissa1, mantissa2);
+	const PaillierInt result = getPublicKey().add(mantissa1, mantissa2);
 	return EncryptedNumber(result, exponent1);
 }
 
@@ -100,7 +100,7 @@ EncryptedNumber PaillierContext::add(const EncryptedNumber& yOperand1, const Enc
 	//encryption as we only need to do a modular multiplication.
 	int32_t exponent1 = yOperand1.exponent;
 	int32_t exponent2 = yOperand2.exponent;
-	SArbBigInt mantissa2 = yOperand2.mantissa;
+	PaillierInt mantissa2 = yOperand2.mantissa;
 	if (exponent1 < exponent2) {
 		mantissa2 = (mantissa2 * encoder.getRescalingFactor(exponent2 - exponent1)) % getPublicKey().modulus;
 		return add(yOperand1, encrypt(EncodedNumber(mantissa2, exponent1)));
@@ -125,8 +125,8 @@ EncodedNumber PaillierContext::add(const EncodedNumber& yOperand1, const Encoded
 	//checkSameContext(operand1);
 	//checkSameContext(operand2);
 	//final BigInteger modulus = publicKey.getModulus();
-	SArbBigInt mantissa1 = yOperand1.mantissa;
-	SArbBigInt mantissa2 = yOperand2.mantissa;
+	PaillierInt mantissa1 = yOperand1.mantissa;
+	PaillierInt mantissa2 = yOperand2.mantissa;
 	int exponent1 = yOperand1.exponent;
 	int exponent2 = yOperand2.exponent;
 	if (exponent1 > exponent2) {
@@ -135,7 +135,7 @@ EncodedNumber PaillierContext::add(const EncodedNumber& yOperand1, const Encoded
 	} else if (exponent1 < exponent2) {
 		mantissa2 = mantissa2 * encoder.getRescalingFactor(exponent2 - exponent1);
 	}
-	const SArbBigInt result = (mantissa1 + mantissa2) % getPublicKey().modulus;
+	const PaillierInt result = (mantissa1 + mantissa2) % getPublicKey().modulus;
 	return EncodedNumber(result, exponent1);
 }
 
@@ -172,15 +172,15 @@ EncodedNumber PaillierContext::subtract(const EncodedNumber& yOperand1, const En
 EncryptedNumber PaillierContext::multiply(const EncryptedNumber& yOperand1, const EncodedNumber& yOperand2) const {
 	//checkSameContext(operand1);
 	//checkSameContext(operand2);
-	SArbBigInt encMantissa = yOperand1.ciphertext;
-	SArbBigInt mantissa = yOperand2.mantissa;
-	SArbBigInt negMantissa = getPublicKey().modulus - mantissa;
+	PaillierInt encMantissa = yOperand1.ciphertext;
+	PaillierInt mantissa = yOperand2.mantissa;
+	PaillierInt negMantissa = getPublicKey().modulus - mantissa;
 	// If the plaintext is large, exponentiate using its negative instead.
 	if (negMantissa <= encoder.getMaxEncoded()) {
 		encMantissa = encMantissa.modInverse(getPublicKey().getModulusSquared());
 		mantissa = negMantissa;
 	}
-	const SArbBigInt result = getPublicKey().multiply(encMantissa, mantissa);
+	const PaillierInt result = getPublicKey().multiply(encMantissa, mantissa);
 	const int32_t exponent = yOperand1.exponent + yOperand2.exponent;
 	return EncryptedNumber(result, exponent);
 }
@@ -192,7 +192,7 @@ EncryptedNumber PaillierContext::multiply(const EncodedNumber& yOperand1, const 
 EncodedNumber PaillierContext::multiply(const EncodedNumber& yOperand1, const EncodedNumber& yOperand2) const {
 	//checkSameContext(operand1);
 	//checkSameContext(operand2);
-	const  SArbBigInt result = (yOperand1.mantissa * yOperand2.mantissa) % getPublicKey().modulus;
+	const  PaillierInt result = (yOperand1.mantissa * yOperand2.mantissa) % getPublicKey().modulus;
 	const int32_t exponent = yOperand1.exponent + yOperand2.exponent;
 	return EncodedNumber(result, exponent);
 }

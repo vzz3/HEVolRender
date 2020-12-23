@@ -13,13 +13,13 @@ SecureKey SecureKey::create(uint modulusBitLength) {
 
 	// Find two primes p and q whose multiple has the same number of bits
 	// as modulusLength
-	SArbBigInt p, q, modulus;
+	PaillierInt p, q, modulus;
 	uint primeLength = modulusBitLength / 2;
 	Random rnd{};
 	do {
-		p = SArbBigInt::probablePrime(primeLength, rnd);
+		p = PaillierInt::probablePrime(primeLength, rnd);
 		do {
-			q = SArbBigInt::probablePrime(primeLength, rnd);
+			q = PaillierInt::probablePrime(primeLength, rnd);
 		} while (p == q); //p and q must not be equal
 		modulus = p * q;
 	} while (modulus.bitLength() != modulusBitLength);
@@ -29,7 +29,7 @@ SecureKey SecureKey::create(uint modulusBitLength) {
 	return privateKey;
 }
 
-SecureKey::SecureKey(const SArbBigInt& yP, const SArbBigInt& yQ, const PublicKey & yPublicKey)
+SecureKey::SecureKey(const PaillierInt& yP, const PaillierInt& yQ, const PublicKey & yPublicKey)
 	: p(yP)
 	, q(yQ)
 	, publicKey(yPublicKey)
@@ -42,26 +42,26 @@ SecureKey::SecureKey(const SArbBigInt& yP, const SArbBigInt& yQ, const PublicKey
 
 SecureKey::~SecureKey() {}
 
-SArbBigInt SecureKey::lFunction(const SArbBigInt& x, const SArbBigInt& p) {
-	return (x - SArbBigInt(1) ) / p;
+PaillierInt SecureKey::lFunction(const PaillierInt& x, const PaillierInt& p) {
+	return (x - PaillierInt(1) ) / p;
 }
 
-SArbBigInt SecureKey::hFunction(const SArbBigInt& x, const SArbBigInt& xSquared, const PublicKey& yPublicKey) {
-	return lFunction(yPublicKey.generator.modPow(x - SArbBigInt(1), xSquared), x).modInverse(x);
+PaillierInt SecureKey::hFunction(const PaillierInt& x, const PaillierInt& xSquared, const PublicKey& yPublicKey) {
+	return lFunction(yPublicKey.generator.modPow(x - PaillierInt(1), xSquared), x).modInverse(x);
 }
 
-SArbBigInt SecureKey::crt(const SArbBigInt& mp, const SArbBigInt& mq) const {
-	SArbBigInt u = ((mq - mp) * _pInverse) % q;
+PaillierInt SecureKey::crt(const PaillierInt& mp, const PaillierInt& mq) const {
+	PaillierInt u = ((mq - mp) * _pInverse) % q;
 	u = u * p + mp;
 	return u;
 }
 
 
-SArbBigInt SecureKey::decrypt(SArbBigInt ciphertext) const {
+PaillierInt SecureKey::decrypt(PaillierInt ciphertext) const {
 	//return c.modPow(this.lambda,this.pubkey.n2).subtract(BigInteger.ONE).divide(this.pubkey.n).multiply(this.x).mod(this.pubkey.n);
 
-	SArbBigInt decryptedToP = (lFunction(ciphertext.modPow(p - 1, _pSquared), p) * _hp) % p;
-	SArbBigInt decryptedToQ = (lFunction(ciphertext.modPow(q - 1, _qSquared), q) * _hq) % q;
-	SArbBigInt decryptedValue = crt(decryptedToP, decryptedToQ);
+	PaillierInt decryptedToP = (lFunction(ciphertext.modPow(p - 1, _pSquared), p) * _hp) % p;
+	PaillierInt decryptedToQ = (lFunction(ciphertext.modPow(q - 1, _qSquared), q) * _hq) % q;
+	PaillierInt decryptedValue = crt(decryptedToP, decryptedToQ);
 	return decryptedValue;
 }

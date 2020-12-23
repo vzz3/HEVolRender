@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 #include "../crypto/PublicKey.hpp"
 #include "EncodedNumber.hpp"
 
@@ -41,25 +41,25 @@ namespace ppvr {
 				 * The maximum {@code value} of the {@code EncodedNumber} that can be
 				 * encrypted using the associated {@code publicKey}.
 				 */
-				SArbBigInt maxEncoded;
+				PaillierInt maxEncoded;
 
 				/**
 				 * The minimum {@code value} of the {@code EncodedNumber} that can be
 				 * encrypted using the associated {@code publicKey}.
 				 */
-				SArbBigInt minEncoded;
+				PaillierInt minEncoded;
 
 				/**
 				 * The maximum value that can be encoded and encrypted using the associated
 				 * {@code publicKey}.
 				 */
-				SArbBigInt maxSignificand;
+				PaillierInt maxSignificand;
 
 				/**
 				 * The minimum value that can be encoded and encrypted using the associated
 				 * {@code publicKey}.
 				 */
-				SArbBigInt minSignificand;
+				PaillierInt minSignificand;
 
 
 
@@ -109,19 +109,19 @@ namespace ppvr {
 					return precision;
 				}
 
-				const SArbBigInt& getMaxEncoded() const {
+				const PaillierInt& getMaxEncoded() const {
 					return maxEncoded;
 				}
 
-				const SArbBigInt& getMinEncoded() const {
+				const PaillierInt& getMinEncoded() const {
 					return minEncoded;
 				}
 
-				const SArbBigInt& getMaxSignificand() const {
+				const PaillierInt& getMaxSignificand() const {
 					return maxSignificand;
 				}
 
-				const SArbBigInt& getMinSignificand() const {
+				const PaillierInt& getMinSignificand() const {
 					return minSignificand;
 				}
 
@@ -162,7 +162,7 @@ namespace ppvr {
 				 * @return the encoding result - {@code EncodedNumber}
 				 * @throws EncodeException if the {@code value} is not valid.
 				 */
-				EncodedNumber encode(SArbBigInt yValue) const;
+				EncodedNumber encode(PaillierInt yValue) const;
 
 				/**
 				 * Encodes a {@code double} given a {@code precision} using this
@@ -189,7 +189,7 @@ namespace ppvr {
 				 * @param exponent the exponent to encode the number.
 				 * @return the integer representation of the input floating point number.
 				 */
-				SArbBigInt innerEncode(const double yValue, const int_fast32_t yExponent) const;
+				PaillierInt innerEncode(const double yValue, const int_fast32_t yExponent) const;
 
 			private:
 				/**
@@ -205,7 +205,7 @@ namespace ppvr {
 				 * @param encoded the input {@code EncodedNumber}.
 				 * @return the significand of the {@code EncodedNumber}.
 				 */
-				SArbBigInt getSignificand(const EncodedNumber& yEncoded) const;
+				PaillierInt getSignificand(const EncodedNumber& yEncoded) const;
 
 			public:
 
@@ -216,7 +216,7 @@ namespace ppvr {
 				 * @return the decoding result.
 				 * @throws DecodeException if the {@code encoded} cannot be decoded.
 				 */
-				SArbBigInt decodeBigInt(const EncodedNumber& yEncoded) const;
+				PaillierInt decodeBigInt(const EncodedNumber& yEncoded) const;
 
 				/**
 				 * Decodes to the exact {@code double} representation. Throws
@@ -248,7 +248,7 @@ namespace ppvr {
 				 * @param expDiff the exponent to for the new rescaling factor.
 				 * @return the rescaling factor.
 				 */
-				SArbBigInt getRescalingFactor(const int32_t expDiff) const;
+				PaillierInt getRescalingFactor(const int32_t expDiff) const;
 
 
 

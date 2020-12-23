@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../math/SArbBigInt.hpp"
+#include "../Paillier_typeDev.h"
 #include "EncodingScheme.hpp"
 #include "EncodedNumber.hpp"
 #include "EncryptedNumber.hpp"
@@ -74,14 +74,14 @@ namespace ppvr {
 				EncodedNumber encode(const int64_t yValue) const {
 					return encoder.encode(yValue);
 				}
-				EncodedNumber encode(SArbBigInt yValue) const {
+				EncodedNumber encode(PaillierInt yValue) const {
 					return encoder.encode(yValue);
 				}
 				EncodedNumber encode(const double yValue, const double yPrecision) const {
 					return encoder.encode(yValue, yPrecision);
 				}
 
-				SArbBigInt decodeBigInt(const EncodedNumber& yEncoded) const {
+				PaillierInt decodeBigInt(const EncodedNumber& yEncoded) const {
 					return encoder.decodeBigInt(yEncoded);
 				}
 
@@ -154,7 +154,7 @@ namespace ppvr {
 				 * @param yObfuscate The encrypted value will be obfuscated (add randome noice) if true.
 				 * @return the encryption result.
 				 */
-				EncryptedNumber encrypt(const SArbBigInt& yValue, const bool yObfuscate = false) const;
+				EncryptedNumber encrypt(const PaillierInt& yValue, const bool yObfuscate = false) const;
 
 				/**
 				 * Encrypts a {@code double}.
@@ -162,7 +162,7 @@ namespace ppvr {
 				 * @param value to be encrypted.
 				 * @return the encryption result.
 				 */
-				//EncryptedNumber encrypt(const SArbBigInt& yValue, const bool yObfuscate = false) const {
+				//EncryptedNumber encrypt(const PaillierInt& yValue, const bool yObfuscate = false) const {
 				//	return encrypt(encode(yValue), yObfuscate);
 				//}
 
