@@ -7,6 +7,16 @@
 
 #include "Random.hpp"
 
+//#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
+
+#ifdef FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
+	#define FBI_WC_Sp1 (S+1)
+	#define FBI_WC_Sm2 (S*2)
+#else
+	#define FBI_WC_Sp1 (S)
+	#define FBI_WC_Sm2 (S)
+#endif
+
 /*
 namespace utils {
 	template<std::size_t Alpha = 8>
@@ -409,8 +419,8 @@ namespace ppvr {
 			// -- divKnuth
 
 			void divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, uint m, uint n) const;
-			void divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
-			void divKnuth_copyNewU(const UFixBigInt<S+1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
+			void divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const;
+			void divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n);
 
 			/**
 			 * D1. [Normaliez]
@@ -433,7 +443,7 @@ namespace ppvr {
 			 *		includes also: D5. [Test Remainder] and D6. [add back]
 			 *
 			 */
-			void divKnuth_multiplySubtract(UFixBigInt<S+1> & uu,  const UFixBigInt<S+1> & vv, BIG_INT_WORD_TYPE & qp) const;
+			void divKnuth_multiplySubtract(UFixBigInt<FBI_WC_Sp1> & uu,  const UFixBigInt<FBI_WC_Sp1> & vv, BIG_INT_WORD_TYPE & qp) const;
 
 			/**
 			 * the third division algorithm

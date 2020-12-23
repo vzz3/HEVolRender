@@ -973,7 +973,7 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 	
 	//UInt<value_size+1> uu, vv;
 	//UArbBigInt uu(0, maxWordCount+1);
-	UFixBigInt<S+1> uu(0);
+	UFixBigInt<FBI_WC_Sp1> uu(0);
 	//UArbBigInt vv(*this, maxWordCount+1);
 	
 	//UInt<value_size> q;
@@ -993,7 +993,7 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 	
 	//Div3_MakeBiggerV(v, vv);
 	//UArbBigInt vv(divisor, maxWordCount+1);
-	UFixBigInt<S+1> vv(divisor);
+	UFixBigInt<FBI_WC_Sp1> vv(divisor);
 	//std::copy(&divisor.value[0], (&divisor.value[0] + divisor.wordSize), vv);
 	//vv[divisor.wordSize] = 0;
 	
@@ -1051,13 +1051,13 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
+void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	//for(i=0 ; i<n ; ++i, ++j)
 	//	uu.table[i] = table[j];
 	//uu.reserveWords(n);
-	assert( (j+n) <= (S+1) );
+	assert( (j+n) <= (FBI_WC_Sp1) );
 	std::copy_n(&this->value[j], n, &uu.value[0]);
 	i = n;
 	
@@ -1069,22 +1069,22 @@ void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<S+1> &uu, BIG_INT_WORD_COUNT_TY
 	//for( ++i ; i<value_size+1 ; ++i)
 	//	uu.table[i] = 0;
 	//uu.wordSize = i+1;
-	assert( ((i+1) + ((S+1) - (i+1))) == (S+1) );
+	assert( ((i+1) + ((FBI_WC_Sp1) - (i+1))) == (FBI_WC_Sp1) );
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<S+1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
+void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	for(i=0 ; i<n ; ++i) {
 		assert( (i+j) < S );
-		assert( i < (S+1) ) ;
+		assert( i < (FBI_WC_Sp1) ) ;
 		this->value[i+j] = uu.value[i];
 	}
 	
 	if( i+j < S ) {
 		assert( (i+j) < S );
-		assert( i < (S+1) ) ;
+		assert( i < (FBI_WC_Sp1) ) ;
 		this->value[i+j] = uu.value[i];
 	}
 }
@@ -1182,10 +1182,10 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_IN
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_multiplySubtract(UFixBigInt<S+1> & uu,  const UFixBigInt<S+1> & vv, BIG_INT_WORD_TYPE & qp) const {
+void UFixBigInt<S>::divKnuth_multiplySubtract(UFixBigInt<FBI_WC_Sp1> & uu,  const UFixBigInt<FBI_WC_Sp1> & vv, BIG_INT_WORD_TYPE & qp) const {
 	// D4 (in the book)
 	
-	UFixBigInt<S+1> vv_temp(0);
+	UFixBigInt<FBI_WC_Sp1> vv_temp(0);
 	//UArbBigInt vv_temp(vv);
 	vv.mulInt(qp, vv_temp);
 	

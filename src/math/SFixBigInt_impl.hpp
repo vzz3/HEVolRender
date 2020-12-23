@@ -575,7 +575,7 @@ SFixBigInt<S> SFixBigInt<S>::gcdExtended(const SFixBigInt<S> &a, const SFixBigIn
 	v.signum = v.signum * signumB;
 
 	//assert((a*u + b*v) == gcd);
-	assert((SFixBigInt<S*2>(a)*SFixBigInt<S*2>(u) + SFixBigInt<S*2>(b)*SFixBigInt<S*2>(v)) == SFixBigInt<S*2>(gcd));
+	assert((SFixBigInt<FBI_WC_Sm2>(a)*SFixBigInt<FBI_WC_Sm2>(u) + SFixBigInt<FBI_WC_Sm2>(b)*SFixBigInt<FBI_WC_Sm2>(v)) == SFixBigInt<FBI_WC_Sm2>(gcd));
 
 	return gcd;
 }
@@ -801,7 +801,7 @@ SFixBigInt<S> SFixBigInt<S>::modPow_naiv(const SFixBigInt<S> &exponent, const SF
 	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
 
 	// ensure that the base is < modulus
-	SFixBigInt<S*2> base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	SFixBigInt<FBI_WC_Sm2> base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 
 	bool invertResult = exponent.signum < 0;
 	SFixBigInt<S> absExponent(exponent);
@@ -809,7 +809,7 @@ SFixBigInt<S> SFixBigInt<S>::modPow_naiv(const SFixBigInt<S> &exponent, const SF
 		absExponent.setAbs();
 	}
 
-	SFixBigInt<S*2> result(1);
+	SFixBigInt<FBI_WC_Sm2> result(1);
 	while ( !absExponent.isZero() > 0) {
 		if (absExponent.isOdd()) {
 			result = (result * base) % modulus;
