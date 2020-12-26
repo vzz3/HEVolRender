@@ -48,65 +48,39 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QPlainTextEdit>
-#include <QVulkanInstance>
-#include <QLibraryInfo>
-#include <QLoggingCategory>
-#include <QPointer>
-#include "hellovulkanwidget.h"
+#include <QVulkanWindow>
+#include <QVulkanWindowRenderer>
 
-Q_LOGGING_CATEGORY(lcVk, "qt.vulkan")
-
-static QPointer<QPlainTextEdit> messageLogWidget;
-static QtMessageHandler oldMessageHandler = nullptr;
-
-static void messageHandler(QtMsgType msgType, const QMessageLogContext &logContext, const QString &text)
+class TriangleRenderer : public QVulkanWindowRenderer
 {
-    if (!messageLogWidget.isNull())
-        messageLogWidget->appendPlainText(text);
-    if (oldMessageHandler)
-        oldMessageHandler(msgType, logContext, text);
-}
+public:
+    TriangleRenderer(QVulkanWindow *w, bool msaa = false);
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
+    void initResources() override;
+    void initSwapChainResources() override;
+    void releaseSwapChainResources() override;
+    void releaseResources() override;
 
-    messageLogWidget = new QPlainTextEdit(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
-    messageLogWidget->setReadOnly(true);
+    void startNextFrame() override;
 
-    oldMessageHandler = qInstallMessageHandler(messageHandler);
+protected:
+    VkShaderModule createShader(const QString &name);
 
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
+    QVulkanWindow *m_window;
+    QVulkanDeviceFunctions *m_devFuncs;
 
-    QVulkanInstance inst;
+    VkDeviceMemory m_bufMem = VK_NULL_HANDLE;
+    VkBuffer m_buf = VK_NULL_HANDLE;
+    VkDescriptorBufferInfo m_uniformBufInfo[QVulkanWindow::MAX_CONCURRENT_FRAME_COUNT];
 
-#ifndef Q_OS_ANDROID
-    inst.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-#else
-    inst.setLayers(QByteArrayList()
-                   << "VK_LAYER_GOOGLE_threading"
-                   << "VK_LAYER_LUNARG_parameter_validation"
-                   << "VK_LAYER_LUNARG_object_tracker"
-                   << "VK_LAYER_LUNARG_core_validation"
-                   << "VK_LAYER_LUNARG_image"
-                   << "VK_LAYER_LUNARG_swapchain"
-                   << "VK_LAYER_GOOGLE_unique_objects");
-#endif
+    VkDescriptorPool m_descPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_descSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet m_descSet[QVulkanWindow::MAX_CONCURRENT_FRAME_COUNT];
 
-    if (!inst.create()) {
-        qFatal("Failed to create Vulkan instance: %d", inst.errorCode());
-	}
-    VulkanWindow *vulkanWindow = new VulkanWindow;
-    vulkanWindow->setVulkanInstance(&inst);
+    VkPipelineCache m_pipelineCache = VK_NULL_HANDLE;
+    VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+    VkPipeline m_pipeline = VK_NULL_HANDLE;
 
-    MainWindow mainWindow(vulkanWindow, messageLogWidget.data());
-    QObject::connect(vulkanWindow, &VulkanWindow::vulkanInfoReceived, &mainWindow, &MainWindow::onVulkanInfoReceived);
-    QObject::connect(vulkanWindow, &VulkanWindow::frameQueued, &mainWindow, &MainWindow::onFrameQueued);
-
-    mainWindow.resize(1024, 768);
-    mainWindow.show();
-
-    return app.exec();
-}
+    QMatrix4x4 m_proj;
+    float m_rotation = 0.0f;
+};

@@ -1,0 +1,23 @@
+--- a/qtbase/src/corelib/kernel/qcore_mac_objc.mm	2019-06-12 23:59:13.000000000 +0300
++++ b/qtbase/src/corelib/kernel/qcore_mac_objc.mm	2019-06-26 14:59:58.000000000 +0300
+@@ -142,6 +142,7 @@
+ 
+ #ifdef QT_DEBUG
+     void *poolFrame = nullptr;
++#if QT_DARWIN_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_14, __IPHONE_12_0, __TVOS_12_0, __WATCHOS_5_0)
+     if (__builtin_available(macOS 10.14, iOS 12.0, tvOS 12.0, watchOS 5.0, *)) {
+         void *frame;
+         if (backtrace_from_fp(__builtin_frame_address(0), &frame, 1))
+@@ -152,6 +153,12 @@
+         if (backtrace(callstack, maxFrames) == maxFrames)
+             poolFrame = callstack[maxFrames - 1];
+     }
++#else
++    static const int maxFrames = 3;
++    void *callstack[maxFrames];
++    if (backtrace(callstack, maxFrames) == maxFrames)
++        poolFrame = callstack[maxFrames - 1];
++#endif
+ 
+     if (poolFrame) {
+         Dl_info info;

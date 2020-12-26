@@ -48,65 +48,53 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QPlainTextEdit>
-#include <QVulkanInstance>
-#include <QLibraryInfo>
-#include <QLoggingCategory>
-#include <QPointer>
-#include "hellovulkanwidget.h"
+#include "./trianglerenderer.h"
+#include <QWidget>
 
-Q_LOGGING_CATEGORY(lcVk, "qt.vulkan")
+class VulkanWindow;
 
-static QPointer<QPlainTextEdit> messageLogWidget;
-static QtMessageHandler oldMessageHandler = nullptr;
+QT_BEGIN_NAMESPACE
+class QTabWidget;
+class QPlainTextEdit;
+class QLCDNumber;
+QT_END_NAMESPACE
 
-static void messageHandler(QtMsgType msgType, const QMessageLogContext &logContext, const QString &text)
+class MainWindow : public QWidget
 {
-    if (!messageLogWidget.isNull())
-        messageLogWidget->appendPlainText(text);
-    if (oldMessageHandler)
-        oldMessageHandler(msgType, logContext, text);
-}
+    Q_OBJECT
 
-int main(int argc, char *argv[])
+public:
+    explicit MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget);
+
+public slots:
+    void onVulkanInfoReceived(const QString &text);
+    void onFrameQueued(int colorValue);
+    void onGrabRequested();
+
+private:
+    VulkanWindow *m_window;
+    QTabWidget *m_infoTab;
+    QPlainTextEdit *m_info;
+    QLCDNumber *m_number;
+};
+
+class VulkanRenderer : public TriangleRenderer
 {
-    QApplication app(argc, argv);
+public:
+    VulkanRenderer(VulkanWindow *w);
 
-    messageLogWidget = new QPlainTextEdit(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
-    messageLogWidget->setReadOnly(true);
+    void initResources() override;
+    void startNextFrame() override;
+};
 
-    oldMessageHandler = qInstallMessageHandler(messageHandler);
+class VulkanWindow : public QVulkanWindow
+{
+    Q_OBJECT
 
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
+public:
+    QVulkanWindowRenderer *createRenderer() override;
 
-    QVulkanInstance inst;
-
-#ifndef Q_OS_ANDROID
-    inst.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-#else
-    inst.setLayers(QByteArrayList()
-                   << "VK_LAYER_GOOGLE_threading"
-                   << "VK_LAYER_LUNARG_parameter_validation"
-                   << "VK_LAYER_LUNARG_object_tracker"
-                   << "VK_LAYER_LUNARG_core_validation"
-                   << "VK_LAYER_LUNARG_image"
-                   << "VK_LAYER_LUNARG_swapchain"
-                   << "VK_LAYER_GOOGLE_unique_objects");
-#endif
-
-    if (!inst.create()) {
-        qFatal("Failed to create Vulkan instance: %d", inst.errorCode());
-	}
-    VulkanWindow *vulkanWindow = new VulkanWindow;
-    vulkanWindow->setVulkanInstance(&inst);
-
-    MainWindow mainWindow(vulkanWindow, messageLogWidget.data());
-    QObject::connect(vulkanWindow, &VulkanWindow::vulkanInfoReceived, &mainWindow, &MainWindow::onVulkanInfoReceived);
-    QObject::connect(vulkanWindow, &VulkanWindow::frameQueued, &mainWindow, &MainWindow::onFrameQueued);
-
-    mainWindow.resize(1024, 768);
-    mainWindow.show();
-
-    return app.exec();
-}
+signals:
+    void vulkanInfoReceived(const QString &text);
+    void frameQueued(int colorValue);
+};
