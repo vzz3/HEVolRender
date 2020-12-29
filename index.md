@@ -22,7 +22,7 @@ cd external
 curl 'https://sdk.lunarg.com/sdk/download/1.2.162.0/mac/vulkansdk-macos-1.2.162.0.dmg' > vulkansdk-macos-1.2.162.0.dmg
 ```
 
-The next commands basically copies the header and dynamic libraries to `/usr/local/` and some demo applications to `/Applications/`. The line which copies the directory `MoltenVK` from the Image to the project directory `external` is needed because the script `./install_vulkan.py` installs the MoltonVK libraries (e.g. `libMoltenVK.dylib`) in `/usr/local` but not the header files (e.g. `<MoltenVK/mvk_vulkan.h>`). However, the QT Vulkan-Window-Cocoa base classes requires this Classes requires this.
+The next commands basically copies the header and dynamic libraries to `/usr/local/` and some demo applications to `/Applications/`. The line which copies the directory `MoltenVK` from the Image to the project directory `external` is needed because the script `./install_vulkan.py` installs the MoltonVK libraries (e.g. `libMoltenVK.dylib`) in `/usr/local` but not the header files (e.g. `<MoltenVK/mvk_vulkan.h>`). However, the QT Vulkan-Window-Cocoa base classes requires this Classes.
 ```
 hdiutil attach vulkansdk-macos-1.2.162.0.dmg
 cp -r /Volumes/vulkansdk-macos-1.2.162.0/MoltenVK ./

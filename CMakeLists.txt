@@ -134,12 +134,13 @@ file(GLOB TEST_FILES
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SRC_FILES}
-	"${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/app/hellovulkanwidget.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/app/trianglerenderer.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/app/hellovulkanwidget.qrc"
-	#${APP_FILES}
-	${SHADER_RSC_ADDED}
+	${APP_FILES}
+	#"${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp"
+	#"${CMAKE_CURRENT_SOURCE_DIR}/app/hellovulkanwidget.cpp"
+	#"${CMAKE_CURRENT_SOURCE_DIR}/app/trianglerenderer.cpp"
+	#"${CMAKE_CURRENT_SOURCE_DIR}/app/hellovulkanwidget.qrc"
+
+	#${SHADER_RSC_ADDED}
 )
 #add_framework(Security ppvr)
 

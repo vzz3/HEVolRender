@@ -64,6 +64,7 @@ MainWindow::MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget)
 {
     QWidget *wrapper = QWidget::createWindowContainer(w);
 
+	/*
     m_info = new QPlainTextEdit;
     m_info->setReadOnly(true);
 
@@ -90,16 +91,29 @@ MainWindow::MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget)
     layout->addWidget(grabButton, 1);
     layout->addWidget(quitButton, 1);
     setLayout(layout);
+    */
+	
+    m_Ui = new Ui_MainWindow();
+	m_Ui->setupUi(this);
+	//QLayout *layout = m_Ui->controls->layout();
+	//layout->setAlignment(Qt::AlignTop);
+	//m_Ui->controls->setLayout(layout);
+	
+	//m_glWidget = new GLWidget(this, this);
+	m_Ui->vlLayout->addWidget(wrapper);
+	
+	m_Ui->infoPlainTextEdit->setReadOnly(true);
 }
 
 void MainWindow::onVulkanInfoReceived(const QString &text)
 {
-    m_info->setPlainText(text);
+   //m_info->setPlainText(text);
+   m_Ui->infoPlainTextEdit->setPlainText(text);
 }
 
 void MainWindow::onFrameQueued(int colorValue)
 {
-    m_number->display(colorValue);
+    //m_number->display(colorValue);
 }
 
 void MainWindow::onGrabRequested()

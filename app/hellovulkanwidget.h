@@ -49,7 +49,9 @@
 ****************************************************************************/
 
 #include "./trianglerenderer.h"
-#include <QWidget>
+#include <QMainWindow>
+
+#include "ui_MainWindow.h"
 
 class VulkanWindow;
 
@@ -59,7 +61,7 @@ class QPlainTextEdit;
 class QLCDNumber;
 QT_END_NAMESPACE
 
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -72,6 +74,7 @@ public slots:
     void onGrabRequested();
 
 private:
+	Ui_MainWindow *m_Ui;
     VulkanWindow *m_window;
     QTabWidget *m_infoTab;
     QPlainTextEdit *m_info;
