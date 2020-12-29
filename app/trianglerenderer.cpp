@@ -284,8 +284,10 @@ void TriangleRenderer::initResources()
         qFatal("Failed to create pipeline layout: %d", err);
 
     // Shaders
-    VkShaderModule vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
-    VkShaderModule fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
+    //VkShaderModule vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
+    //VkShaderModule fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
+    VkShaderModule vertShaderModule = createShader(QStringLiteral("shaders/color.vert.spv"));
+    VkShaderModule fragShaderModule = createShader(QStringLiteral("shaders/color.frag.spv"));
 
     // Graphics pipeline
     VkGraphicsPipelineCreateInfo pipelineInfo;

@@ -106,6 +106,28 @@ ENDIF()
 #qt5_add_resources(SHADER_RSC_ADDED
 #    hellovulkanwidget.qrc
 #)
+function(add_shader TARGET SHADER)
+    find_program(GLSLC glslc)
+
+    set(current-shader-path ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/${SHADER})
+    #set(current-output-path ${CMAKE_BINARY_DIR}/shaders/${SHADER}.spv)
+	set(current-output-path ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SHADER}.spv)
+
+    # Add a custom command to compile GLSL to SPIR-V.
+    get_filename_component(current-output-dir ${current-output-path} DIRECTORY)
+    file(MAKE_DIRECTORY ${current-output-dir})
+
+    add_custom_command(
+           OUTPUT ${current-output-path}
+           COMMAND ${GLSLC} -o ${current-output-path} ${current-shader-path}
+           DEPENDS ${current-shader-path}
+           IMPLICIT_DEPENDS CXX ${current-shader-path}
+           VERBATIM)
+
+    # Make sure our build depends on this output.
+    set_source_files_properties(${current-output-path} PROPERTIES GENERATED TRUE)
+    target_sources(${TARGET} PRIVATE ${current-output-path})
+endfunction(add_shader)
 
 
 #include_directories(src)
@@ -158,6 +180,9 @@ IF(APPLE)
 	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARY} "-framework AppKit" "-framework QuartzCore")
 ENDIF()
 target_compile_definitions(${PROJECT_NAME} PRIVATE MVK_LOG_LEVEL_INFO=1)
+
+add_shader(${PROJECT_NAME} "color.frag")
+add_shader(${PROJECT_NAME} "color.vert")
 
 # for Xcode file tree
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})

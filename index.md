@@ -4,6 +4,11 @@ download: http://download.qt.io/official_releases/qt/5.12/5.12.9/submodules/
 list of examples: https://doc.qt.io/qt-5/qtexamples.html
 used example: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hellovulkanwidget
 
+## important Vulkan links
+vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
+examples: https://github.com/KhronosGroup/Vulkan-Samples
+https://developer.nvidia.com/blog/vulkan-dos-donts/
+
 ## Build on mac OS
 Blog Post about Vulkan support in QT under mac OS: https://www.qt.io/blog/2018/05/30/vulkan-for-qt-on-macos
 (https://forum.qt.io/topic/104553/vulkan-on-macos)
