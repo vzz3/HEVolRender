@@ -52,6 +52,7 @@
 #include <QMainWindow>
 
 #include "ui_MainWindow.h"
+#include "../src/rendering/PlainVulkanRenderer.hpp"
 
 class VulkanWindow;
 
@@ -61,27 +62,35 @@ class QPlainTextEdit;
 class QLCDNumber;
 QT_END_NAMESPACE
 
+using ppvr::rendering::PlainVulkanRenderer;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget);
+    explicit MainWindow();
+    ~MainWindow();
+	
+    void initVulkanWindow();
 
 public slots:
     void onVulkanInfoReceived(const QString &text);
+    void onLogMessageReceived(const QString &text);
     void onFrameQueued(int colorValue);
     void onGrabRequested();
 
 private:
 	Ui_MainWindow *m_Ui;
-    VulkanWindow *m_window;
+    VulkanWindow *m_window = nullptr;
     QTabWidget *m_infoTab;
     QPlainTextEdit *m_info;
     QLCDNumber *m_number;
+	
+    QVulkanInstance *qvInstance;
 };
 
-class VulkanRenderer : public TriangleRenderer
+class VulkanRenderer : public PlainVulkanRenderer //TriangleRenderer
 {
 public:
     VulkanRenderer(VulkanWindow *w);
@@ -95,9 +104,28 @@ class VulkanWindow : public QVulkanWindow
     Q_OBJECT
 
 public:
+	//VulkanWindow();
     QVulkanWindowRenderer *createRenderer() override;
+	
+	//const ppvr::rendering::Camera& camera() const {
+	//	return m_camera;
+	//}
 
 signals:
     void vulkanInfoReceived(const QString &text);
     void frameQueued(int colorValue);
+	
+protected:
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+	void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+
+	//void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+	//void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+
+	void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
+	
+private:
+	//ppvr::rendering::Camera m_camera;
+	VulkanRenderer* m_vulkanRenderer = nullptr;
+	QPoint m_lastPos;
 };

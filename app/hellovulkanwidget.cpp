@@ -58,11 +58,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTabWidget>
+#include "../src/rendering/Camera.hpp"
 
-MainWindow::MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget)
-    : m_window(w)
-{
-    QWidget *wrapper = QWidget::createWindowContainer(w);
+using ppvr::rendering::PlainVulkanRenderer;
+using ppvr::rendering::Camera;
+
+MainWindow::MainWindow() {
 
 	/*
     m_info = new QPlainTextEdit;
@@ -99,16 +100,77 @@ MainWindow::MainWindow(VulkanWindow *w, QPlainTextEdit *logWidget)
 	//layout->setAlignment(Qt::AlignTop);
 	//m_Ui->controls->setLayout(layout);
 	
+	m_Ui->infoPlainTextEdit->setReadOnly(true);
+}
+
+MainWindow::~MainWindow() {
+	delete qvInstance;
+	qvInstance = nullptr;
+	delete m_Ui;
+	m_Ui = nullptr;
+}
+
+void MainWindow::initVulkanWindow() {
+	
+    qvInstance = new QVulkanInstance{};
+    qvInstance->setExtensions( QByteArrayList()
+    	//<< "VK_KHR_get_physical_device_properties2" // prevent validation error from QVulkanWindowPrivate::init():2021-01-03 23:58:27.397796+0100 ppvr_vulkan[91162:3916830] vkDebug: Validation: 0: Validation Error: [ VUID-vkCreateDevice-ppEnabledExtensionNames-01387 ] Object 0: VK_NULL_HANDLE, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x12537a2c | Missing extension required by the device extension VK_KHR_portability_subset: VK_KHR_get_physical_device_properties2. The Vulkan spec states: All required extensions for each extension in the VkDeviceCreateInfo::ppEnabledExtensionNames list must also be present in that list (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-vkCreateDevice-ppEnabledExtensionNames-01387)
+
+    );
+
+#ifdef NDEBUG
+#else
+#ifndef Q_OS_ANDROID
+    qvInstance->setLayers(QByteArrayList()
+    	<< "VK_LAYER_KHRONOS_validation"
+    	//<< "VK_LAYER_LUNARG_api_dump"
+    	<< "VK_LAYER_LUNARG_standard_validation"
+	);
+#else
+    inst->setLayers(QByteArrayList()
+                   << "VK_LAYER_GOOGLE_threading"
+                   << "VK_LAYER_LUNARG_parameter_validation"
+                   << "VK_LAYER_LUNARG_object_tracker"
+                   << "VK_LAYER_LUNARG_core_validation"
+                   << "VK_LAYER_LUNARG_image"
+                   << "VK_LAYER_LUNARG_swapchain"
+                   << "VK_LAYER_GOOGLE_unique_objects");
+#endif
+#endif
+
+    if (!qvInstance->create()) {
+        qFatal("Failed to create Vulkan instance: %d", qvInstance->errorCode());
+	}
+    m_window = new VulkanWindow;
+    m_window->setVulkanInstance(qvInstance);
+	
+	
+	m_window->setDeviceExtensions( QByteArrayList()
+ 		//<< "VK_KHR_portability_subset"  // prevent validation error from QVulkanWindowPrivate::init(): 2021-01-03 23:50:50.122671+0100 ppvr_vulkan[91036:3905482] vkDebug: Validation: 0: Validation Error: [ VUID-VkDeviceCreateInfo-pProperties-04451 ] Object 0: handle = 0x10efb65e0, type = VK_OBJECT_TYPE_PHYSICAL_DEVICE; | MessageID = 0x3a3b6ca0 | vkCreateDevice: VK_KHR_portability_subset must be enabled because physical device VkPhysicalDevice 0x10efb65e0[] supports it The Vulkan spec states: If the [VK_KHR_portability_subset] extension is included in pProperties of vkEnumerateDeviceExtensionProperties, ppEnabledExtensions must include "VK_KHR_portability_subset". (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-VkDeviceCreateInfo-pProperties-04451)
+	);
+	// QVulkanWindowPrivate::recreateSwapChain()
+	
+	
+	MainWindow* mainWindow = this;
+	VulkanWindow* vulkanWindow = m_window;
+    QObject::connect(vulkanWindow, &VulkanWindow::vulkanInfoReceived, mainWindow, &MainWindow::onVulkanInfoReceived);
+    QObject::connect(vulkanWindow, &VulkanWindow::frameQueued, mainWindow, &MainWindow::onFrameQueued);
+	
+    QWidget *wrapper = QWidget::createWindowContainer(m_window);
 	//m_glWidget = new GLWidget(this, this);
 	m_Ui->vlLayout->addWidget(wrapper);
 	
-	m_Ui->infoPlainTextEdit->setReadOnly(true);
+	//m_window->show();
 }
 
 void MainWindow::onVulkanInfoReceived(const QString &text)
 {
    //m_info->setPlainText(text);
-   m_Ui->infoPlainTextEdit->setPlainText(text);
+   m_Ui->infoPlainTextEdit->appendPlainText(text);
+}
+
+void MainWindow::onLogMessageReceived(const QString &text) {
+	 m_Ui->logPlainTextEdit->appendPlainText(text);
 }
 
 void MainWindow::onFrameQueued(int colorValue)
@@ -136,22 +198,65 @@ void MainWindow::onGrabRequested()
         img.save(fd.selectedFiles().first());
 }
 
-QVulkanWindowRenderer *VulkanWindow::createRenderer()
+
+//VulkanWindow::VulkanWindow(): m_camera(1,1) {}
+
+QVulkanWindowRenderer* VulkanWindow::createRenderer()
 {
-    return new VulkanRenderer(this);
+	m_vulkanRenderer = new VulkanRenderer(this);
+    return m_vulkanRenderer;
 }
 
+void VulkanWindow::mousePressEvent(QMouseEvent *event)
+{
+	m_lastPos = event->pos();
+}
+
+void VulkanWindow::wheelEvent(QWheelEvent *event)
+{
+	Camera& camera = m_vulkanRenderer->camera();
+	float zoomDelta = event->delta() / 300.0f;
+	qDebug() << "zoomDelta" << zoomDelta;
+	camera.zoom(zoomDelta);
+	//update(); // TODO render new frame
+}
+
+void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
+{
+	Camera& camera = m_vulkanRenderer->camera();
+
+	int dx = event->x() - m_lastPos.x();
+	int dy = event->y() - m_lastPos.y();
+
+	if (event->buttons() & Qt::LeftButton) {
+		camera.rotateAzimuth(dx / 100.0f);
+		camera.rotatePolar(dy / 100.0f);
+	}
+
+	if (event->buttons() & Qt::RightButton) {
+		camera.rotateAzimuth(dx / 100.0f);
+		camera.rotatePolar(dy / 100.0f);
+	}
+	m_lastPos = event->pos();
+	//update(); // TODO render new frame
+}
+
+
+
 VulkanRenderer::VulkanRenderer(VulkanWindow *w)
-    : TriangleRenderer(w)
+    :
+    //TriangleRenderer(w)
+    PlainVulkanRenderer(w)
 {
 }
 
 void VulkanRenderer::initResources()
 {
-    TriangleRenderer::initResources();
+    //TriangleRenderer::initResources();
+	PlainVulkanRenderer::initResources();
 
     QVulkanInstance *inst = m_window->vulkanInstance();
-    m_devFuncs = inst->deviceFunctions(m_window->device());
+    //m_devFuncs = inst->deviceFunctions(m_window->device());
 
     QString info;
     info += QString().sprintf("Number of physical devices: %d\n", m_window->availablePhysicalDevices().count());
@@ -194,6 +299,8 @@ void VulkanRenderer::initResources()
 
 void VulkanRenderer::startNextFrame()
 {
-    TriangleRenderer::startNextFrame();
-    emit static_cast<VulkanWindow *>(m_window)->frameQueued(int(m_rotation) % 360);
+    //TriangleRenderer::startNextFrame();
+    //emit static_cast<VulkanWindow *>(m_window)->frameQueued(int(m_rotation) % 360);
+	
+	PlainVulkanRenderer::startNextFrame();
 }

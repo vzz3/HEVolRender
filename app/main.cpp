@@ -58,28 +58,28 @@
 
 Q_LOGGING_CATEGORY(lcVk, "qt.vulkan")
 
-static QPointer<QPlainTextEdit> messageLogWidget;
+//static QPointer<QPlainTextEdit> messageLogWidget;
+static QPointer<MainWindow> mainWindow;
 static QtMessageHandler oldMessageHandler = nullptr;
 
 static void messageHandler(QtMsgType msgType, const QMessageLogContext &logContext, const QString &text)
 {
-    if (!messageLogWidget.isNull())
-        messageLogWidget->appendPlainText(text);
-    if (oldMessageHandler)
+	if (!mainWindow.isNull()) {
+        mainWindow->onLogMessageReceived(text);
+	}
+    if (oldMessageHandler) {
         oldMessageHandler(msgType, logContext, text);
+	}
 }
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    messageLogWidget = new QPlainTextEdit(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
-    messageLogWidget->setReadOnly(true);
-
     oldMessageHandler = qInstallMessageHandler(messageHandler);
 
     QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
-
+/*
     QVulkanInstance inst;
 
 #ifndef Q_OS_ANDROID
@@ -100,13 +100,15 @@ int main(int argc, char *argv[])
 	}
     VulkanWindow *vulkanWindow = new VulkanWindow;
     vulkanWindow->setVulkanInstance(&inst);
+*/
+    mainWindow = new MainWindow();
+    mainWindow->onLogMessageReceived(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
 
-    MainWindow mainWindow(vulkanWindow, messageLogWidget.data());
-    QObject::connect(vulkanWindow, &VulkanWindow::vulkanInfoReceived, &mainWindow, &MainWindow::onVulkanInfoReceived);
-    QObject::connect(vulkanWindow, &VulkanWindow::frameQueued, &mainWindow, &MainWindow::onFrameQueued);
+    mainWindow->resize(1024, 768);
+    mainWindow->show();
+	
+    mainWindow->initVulkanWindow();
 
-    mainWindow.resize(1024, 768);
-    mainWindow.show();
-
-    return app.exec();
+	int result = app.exec();
+    return result;
 }

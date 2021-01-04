@@ -1,0 +1,27 @@
+From 23fd7bdf01ae81ca6ae0bd741bb4d82784e762d0 Mon Sep 17 00:00:00 2001
+From: Laszlo Agocs <laszlo.agocs@qt.io>
+Date: Mon, 02 Mar 2020 10:09:48 +0100
+Subject: [PATCH] macOS: MoltenVK: Pass in the layer instead of the view
+
+Surface creation may be triggered on a thread other than the main thread.
+To enable this, MoltenVK also accepts the CAMetalLayer instead of the NSView.
+See https://github.com/KhronosGroup/MoltenVK/pull/258
+
+Task-number: QTBUG-82600
+Change-Id: I7b925210d05235baf04441682760f09fe58d8144
+Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+---
+
+diff --git a/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm b/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
+index 7ce78ee..94c0a11 100644
+--- a/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
++++ b/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
+@@ -81,7 +81,7 @@
+     surfaceInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+     surfaceInfo.pNext = nullptr;
+     surfaceInfo.flags = 0;
+-    surfaceInfo.pView = view;
++    surfaceInfo.pView = view.layer;
+ 
+     VkSurfaceKHR surface = nullptr;
+     VkResult err = m_createSurface(m_vkInst, &surfaceInfo, nullptr, &surface);

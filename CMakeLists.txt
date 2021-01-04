@@ -97,8 +97,19 @@ find_package(Vulkan) # Use FindVulkan module added with CMAKE 3.7
 IF (NOT Vulkan_FOUND)
 	message(FATAL_ERROR "Could not find Vulkan library!")
 ELSE()
-	message(STATUS ${Vulkan_LIBRARY})
+	message(STATUS "Vulkan library at \"${Vulkan_LIBRARY}\"")
 ENDIF()
+
+# GLM
+#set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/glm/cmake/")
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/glm/cmake/")
+find_package(GLM REQUIRED PATHS  "${CMAKE_CURRENT_SOURCE_DIR}/external/")
+IF (NOT GLM_FOUND)
+	message(FATAL_ERROR "Could not find GLM library!")
+ELSE()
+	message(STATUS "GLM included at \"${GLM_INCLUDE_DIRS}\"")
+ENDIF()
+
 
 
 # ## Shader
@@ -137,21 +148,21 @@ file(GLOB SRC_FILES
     #"src/*.cpp"
 	#"src/**/*.h"
     #"src/**/*.cpp"
-	"src/*"
-	"src/*/*"
-	"src/*/*/*"
+	"src/*.c" 		"src/*.cpp"			"src/*.h"		"src/*.hpp"
+	"src/*/*.c" 	"src/*/*.cpp"		"src/*/*.h"		"src/*/*.hpp"
+	"src/*/*/*.c"	"src/*/*/*.cpp"		"src/*/*/*.h"	"src/*/*/*.hpp"
 )
 
 file(GLOB APP_FILES
-	"app/*"
-	"app/*/*"
-	"app/*/*/*"
+	"app/*.c" 		"app/*.cpp"			"app/*.h"		"app/*.hpp"
+	"app/*/*.c" 	"app/*/*.cpp"		"app/*/*.h"		"app/*/*.hpp"
+	"app/*/*/*.c"	"app/*/*/*.cpp"		"app/*/*/*.h"	"app/*/*/*.hpp"
 )
 
 file(GLOB TEST_FILES
-	"test/*"
-	"test/*/*"
-	"test/*/*/*"
+	"test/*.c" 		"test/*.cpp"		"test/*.h"		"test/*.hpp"
+	"test/*/*.c" 	"test/*/*.cpp"		"test/*/*.h"	"test/*/*.hpp"
+	"test/*/*/*.c"	"test/*/*/*.cpp"	"test/*/*/*.h"	"test/*/*/*.hpp"
 )
 
 # add the executable
@@ -175,7 +186,7 @@ target_link_libraries(${PROJECT_NAME}
 	Qt5::Gui
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIR} ${GLM_INCLUDE_DIRS})
 IF(APPLE)
 	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARY} "-framework AppKit" "-framework QuartzCore")
 ENDIF()
@@ -183,6 +194,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE MVK_LOG_LEVEL_INFO=1)
 
 add_shader(${PROJECT_NAME} "color.frag")
 add_shader(${PROJECT_NAME} "color.vert")
+add_shader(${PROJECT_NAME} "axis.frag")
+add_shader(${PROJECT_NAME} "axis.vert")
+
+
 
 # for Xcode file tree
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})

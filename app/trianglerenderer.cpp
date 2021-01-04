@@ -51,6 +51,11 @@
 #include "trianglerenderer.h"
 #include <QVulkanFunctions>
 #include <QFile>
+#include "../src/rendering/VulkanDevice.hpp"
+#include "../src/rendering/VulkanUtility.hpp"
+
+using ppvr::rendering::VulkanUtility;
+using ppvr::rendering::VulkanDevice;
 
 // Note that the vertex data and the projection matrix assume OpenGL. With
 // Vulkan Y is negated in clip space and the near/far plane is at 0/1 instead
@@ -85,37 +90,14 @@ TriangleRenderer::TriangleRenderer(QVulkanWindow *w, bool msaa)
     }
 }
 
-VkShaderModule TriangleRenderer::createShader(const QString &name)
-{
-    QFile file(name);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning("Failed to read shader %s", qPrintable(name));
-        return VK_NULL_HANDLE;
-    }
-    QByteArray blob = file.readAll();
-    file.close();
-
-    VkShaderModuleCreateInfo shaderInfo;
-    memset(&shaderInfo, 0, sizeof(shaderInfo));
-    shaderInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    shaderInfo.codeSize = blob.size();
-    shaderInfo.pCode = reinterpret_cast<const uint32_t *>(blob.constData());
-    VkShaderModule shaderModule;
-    VkResult err = m_devFuncs->vkCreateShaderModule(m_window->device(), &shaderInfo, nullptr, &shaderModule);
-    if (err != VK_SUCCESS) {
-        qWarning("Failed to create shader module: %d", err);
-        return VK_NULL_HANDLE;
-    }
-
-    return shaderModule;
-}
-
 void TriangleRenderer::initResources()
 {
     qDebug("initResources");
 
     VkDevice dev = m_window->device();
     m_devFuncs = m_window->vulkanInstance()->deviceFunctions(dev);
+	VulkanDevice device{m_window->physicalDevice(), m_window->device(), m_devFuncs, m_window->graphicsCommandPool(), m_window->graphicsQueue()};
+
 
     // Prepare the vertex and uniform data. The vertex data will never
     // change so one buffer is sufficient regardless of the value of
@@ -286,8 +268,8 @@ void TriangleRenderer::initResources()
     // Shaders
     //VkShaderModule vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
     //VkShaderModule fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
-    VkShaderModule vertShaderModule = createShader(QStringLiteral("shaders/color.vert.spv"));
-    VkShaderModule fragShaderModule = createShader(QStringLiteral("shaders/color.frag.spv"));
+    VkShaderModule vertShaderModule = VulkanUtility::createShader(device, QStringLiteral("shaders/color.vert.spv"));
+    VkShaderModule fragShaderModule = VulkanUtility::createShader(device, QStringLiteral("shaders/color.frag.spv"));
 
     // Graphics pipeline
     VkGraphicsPipelineCreateInfo pipelineInfo;
@@ -465,7 +447,8 @@ void TriangleRenderer::startNextFrame()
     memset(&rpBeginInfo, 0, sizeof(rpBeginInfo));
     rpBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rpBeginInfo.renderPass = m_window->defaultRenderPass();
-    rpBeginInfo.framebuffer = m_window->currentFramebuffer();
+    rpBeginInfo.framebuffer = m_window->currentFramebuffer(); // draw to one of the swapChain images
+    rpBeginInfo.renderArea.offset = {0, 0};
     rpBeginInfo.renderArea.extent.width = sz.width();
     rpBeginInfo.renderArea.extent.height = sz.height();
     rpBeginInfo.clearValueCount = m_window->sampleCountFlagBits() > VK_SAMPLE_COUNT_1_BIT ? 3 : 2;

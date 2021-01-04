@@ -1,0 +1,64 @@
+From 7b8616859adcb0c8b38591b0e9c1165c986bad92 Mon Sep 17 00:00:00 2001
+From: Laszlo Agocs <laszlo.agocs@qt.io>
+Date: Mon, 02 Mar 2020 09:58:50 +0100
+Subject: [PATCH] Do not constantly create new surfaces with MoltenVK on macOS
+
+Querying the VkSurfaceKHR for a window is expected to create the surface once
+and then return the same value afterwards.
+
+Task-number: QTBUG-82600
+Change-Id: Ib3e99dfca4d940de1a14348eb1909d372a7dde04
+Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+---
+
+diff --git a/src/plugins/platforms/cocoa/qcocoanativeinterface.mm b/src/plugins/platforms/cocoa/qcocoanativeinterface.mm
+index d0e69bd..450329f 100644
+--- a/src/plugins/platforms/cocoa/qcocoanativeinterface.mm
++++ b/src/plugins/platforms/cocoa/qcocoanativeinterface.mm
+@@ -107,7 +107,7 @@
+ #if QT_CONFIG(vulkan)
+     } else if (resourceString == "vkSurface") {
+         if (QVulkanInstance *instance = window->vulkanInstance())
+-            return static_cast<QCocoaVulkanInstance *>(instance->handle())->createSurface(window);
++            return static_cast<QCocoaVulkanInstance *>(instance->handle())->surface(window);
+ #endif
+     }
+     return nullptr;
+diff --git a/src/plugins/platforms/cocoa/qcocoavulkaninstance.h b/src/plugins/platforms/cocoa/qcocoavulkaninstance.h
+index 5fe6a61..2a8d047 100644
+--- a/src/plugins/platforms/cocoa/qcocoavulkaninstance.h
++++ b/src/plugins/platforms/cocoa/qcocoavulkaninstance.h
+@@ -61,9 +61,11 @@
+ 
+     void createOrAdoptInstance() override;
+ 
+-    VkSurfaceKHR *createSurface(QWindow *window);
+-    VkSurfaceKHR createSurface(NSView *view);
++    VkSurfaceKHR *surface(QWindow *window);
++
+ private:
++    VkSurfaceKHR createSurface(NSView *view);
++
+     QVulkanInstance *m_instance = nullptr;
+     QLibrary m_lib;
+     VkSurfaceKHR m_nullSurface = nullptr;
+diff --git a/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm b/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
+index 94c0a11..9e71485 100644
+--- a/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
++++ b/src/plugins/platforms/cocoa/qcocoavulkaninstance.mm
+@@ -57,12 +57,11 @@
+     initInstance(m_instance, QByteArrayList() << QByteArrayLiteral("VK_MVK_macos_surface"));
+ }
+ 
+-VkSurfaceKHR *QCocoaVulkanInstance::createSurface(QWindow *window)
++VkSurfaceKHR *QCocoaVulkanInstance::surface(QWindow *window)
+ {
+     QCocoaWindow *cocoaWindow = static_cast<QCocoaWindow *>(window->handle());
+-    if (cocoaWindow->m_vulkanSurface)
+-        destroySurface(cocoaWindow->m_vulkanSurface);
+-    cocoaWindow->m_vulkanSurface = createSurface(cocoaWindow->m_view);
++    if (!cocoaWindow->m_vulkanSurface)
++        cocoaWindow->m_vulkanSurface = createSurface(cocoaWindow->m_view);
+     return &cocoaWindow->m_vulkanSurface;
+ }
+ 

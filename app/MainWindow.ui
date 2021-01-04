@@ -41,11 +41,11 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_5">
          <attribute name="title">
-          <string>Tab 1</string>
+          <string>Vulkan Info</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
@@ -55,8 +55,17 @@
         </widget>
         <widget class="QWidget" name="tab_6">
          <attribute name="title">
-          <string>Tab 2</string>
+          <string>QT Debug Log</string>
          </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QPlainTextEdit" name="logPlainTextEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </widget>
       </item>
