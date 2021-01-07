@@ -25,8 +25,7 @@ void PlainVulkanRenderer::initResources()
 	m_device.graphicsQueue = m_window->graphicsQueue();
 	
 	roAxis = new Axis(m_device);
-	roAxis->createVertexBuffer();
-	roAxis->createDescriptorSetLayout();
+	roAxis->initGpuResources();
 }
 
 void PlainVulkanRenderer::releaseResources()
@@ -51,8 +50,7 @@ void PlainVulkanRenderer::releaseResources()
         m_descPool = VK_NULL_HANDLE;
     }
 	*/
-	roAxis->cleanupDescriptorSetLayout();
-	roAxis->cleanupVertexBuffer();
+	roAxis->releaseGpuResources();
 	
 	delete roAxis;
 	roAxis = nullptr;
@@ -61,22 +59,18 @@ void PlainVulkanRenderer::releaseResources()
 void PlainVulkanRenderer::initSwapChainResources()
 {
     qDebug("PlainVulkanRenderer->initSwapChainResources()");
-    roAxis->createUniformBuffers(m_window->swapChainImageCount());
-    roAxis->createDescriptorPool(m_window->swapChainImageCount());
-	roAxis->createDescriptorSets(m_window->swapChainImageCount());
-	roAxis->createGraphicsPipeline(m_window->defaultRenderPass(), m_window->swapChainImageSize());
+    m_swapChain.swapChainImageCount = m_window->swapChainImageCount();
+	m_swapChain.renderPass = m_window->defaultRenderPass();
+	m_swapChain.targetSize = m_window->swapChainImageSize();
+    roAxis->initSwapChainResources(m_swapChain);
 	
-	const QSize sz = m_window->swapChainImageSize();
-	m_camera.setViewportSize(sz.width(), sz.height());
+	m_camera.setViewportSize(m_swapChain.targetSize.width(), m_swapChain.targetSize.height());
 }
 
 void PlainVulkanRenderer::releaseSwapChainResources()
 {
     qDebug("PlainVulkanRenderer->releaseSwapChainResources()");
-    roAxis->cleanupGraphicsPipeline();
-	roAxis->cleanupDescriptorSets();
-	roAxis->cleanupDescriptorPool();
-	roAxis->cleanupUniformBuffers();
+    roAxis->releaseSwapChainResources();
 }
 
 

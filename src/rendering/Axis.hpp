@@ -7,6 +7,7 @@
 #include "VulkanDevice.hpp"
 #include "Camera.hpp"
 #include <QSize>
+#include "VulkanSwapChain.hpp"
 
 namespace ppvr {
 	namespace rendering {
@@ -15,9 +16,15 @@ namespace ppvr {
 			Axis(VulkanDevice& yDev);
 			~Axis();
 			
+			void initGpuResources();
+			void releaseGpuResources();
+			
+			void initSwapChainResources(const VulkanSwapChain& ySwapChain);
+			void releaseSwapChainResources();
+			
+		private:
 			void cleanup();
-			
-			
+		
 			void createVertexBuffer();
 			void cleanupVertexBuffer();
 			

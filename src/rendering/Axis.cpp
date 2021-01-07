@@ -13,10 +13,35 @@ Axis::~Axis() {
 	this->cleanup();
 };
 
-void Axis::cleanup() {
-	this->cleanupVertexBuffer();
-	this->cleanupGraphicsPipeline();
+void Axis::initGpuResources() {
+	this->createVertexBuffer();
+	this->createDescriptorSetLayout();
 }
+void Axis::releaseGpuResources() {
+	this->cleanupDescriptorSetLayout();
+	this->cleanupVertexBuffer();
+}
+
+void Axis::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
+	this->createUniformBuffers(ySwapChain.swapChainImageCount);
+    this->createDescriptorPool(ySwapChain.swapChainImageCount);
+	this->createDescriptorSets(ySwapChain.swapChainImageCount);
+	this->createGraphicsPipeline(ySwapChain.renderPass, ySwapChain.targetSize);
+}
+
+void Axis::releaseSwapChainResources() {
+	this->cleanupGraphicsPipeline();
+	this->cleanupDescriptorSets();
+	this->cleanupDescriptorPool();
+	this->cleanupUniformBuffers();
+}
+
+void Axis::cleanup() {
+	this->releaseSwapChainResources();
+	this->releaseGpuResources();
+}
+
+
 
 void Axis::cleanupVertexBuffer() {
 	dev.funcs->vkDestroyBuffer(dev.vkDev, vertexBuffer, nullptr);
@@ -70,7 +95,9 @@ void Axis::createVertexBuffer() {
 void Axis::cleanupUniformBuffers() {
 	for (size_t i = 0; i < uniformBuffers.size(); i++) {
         dev.funcs->vkDestroyBuffer(dev.vkDev, uniformBuffers[i], nullptr);
+		uniformBuffers[i] = VK_NULL_HANDLE;
         dev.funcs->vkFreeMemory(dev.vkDev, uniformBuffersMemory[i], nullptr);
+        uniformBuffersMemory[i] = VK_NULL_HANDLE;
     }
 }
 
@@ -90,6 +117,7 @@ void Axis::createUniformBuffers(size_t ySwapChainImageCount) {
 
 void Axis::cleanupDescriptorPool() {
 	dev.funcs->vkDestroyDescriptorPool(dev.vkDev, descriptorPool, nullptr);
+	descriptorPool = VK_NULL_HANDLE;
 }
 
 void Axis::createDescriptorPool(size_t ySwapChainImageCount) {

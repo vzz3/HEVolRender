@@ -32,6 +32,7 @@ namespace ppvr {
 
 				QVulkanWindow *m_window;
 				VulkanDevice m_device;
+				VulkanSwapChain m_swapChain;
 				/*
 				QVulkanDeviceFunctions *m_devFuncs;
 
