@@ -51,6 +51,7 @@
 #include "trianglerenderer.h"
 #include <QVulkanFunctions>
 #include <QFile>
+#include "../src/rendering/VulkanInstance.hpp"
 #include "../src/rendering/VulkanDevice.hpp"
 #include "../src/rendering/VulkanUtility.hpp"
 
@@ -96,7 +97,8 @@ void TriangleRenderer::initResources()
 
     VkDevice dev = m_window->device();
     m_devFuncs = m_window->vulkanInstance()->deviceFunctions(dev);
-	VulkanDevice device{m_window->physicalDevice(), m_window->device(), m_devFuncs, m_window->graphicsCommandPool(), m_window->graphicsQueue()};
+    ppvr::rendering::VulkanInstance vkInstance{m_window->vulkanInstance()->functions()};
+	VulkanDevice device{&vkInstance, m_window->physicalDevice(), m_window->device(), m_devFuncs, m_window->graphicsCommandPool(), m_window->graphicsQueue()};
 
 
     // Prepare the vertex and uniform data. The vertex data will never
@@ -268,8 +270,8 @@ void TriangleRenderer::initResources()
     // Shaders
     //VkShaderModule vertShaderModule = createShader(QStringLiteral(":/color_vert.spv"));
     //VkShaderModule fragShaderModule = createShader(QStringLiteral(":/color_frag.spv"));
-    VkShaderModule vertShaderModule = VulkanUtility::createShader(device, QStringLiteral("shaders/color.vert.spv"));
-    VkShaderModule fragShaderModule = VulkanUtility::createShader(device, QStringLiteral("shaders/color.frag.spv"));
+    VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(device, QStringLiteral("shaders/color.vert.spv"));
+    VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(device, QStringLiteral("shaders/color.frag.spv"));
 
     // Graphics pipeline
     VkGraphicsPipelineCreateInfo pipelineInfo;

@@ -3,7 +3,18 @@
 #include "VulkanDevice.hpp"
 #include <vulkan/vulkan.h>
 #include <QString>
+#include <string>
+#include <sstream>
+#include <iostream>
 
+#define VK_CHECK_RESULT(f, msg) {																		\
+	VkResult res = (f);																					\
+	if (res != VK_SUCCESS) {																			\
+		std::stringstream msgStream;																	\
+		msgStream << msg << ": VkResult is \"" << ppvr::rendering::VulkanUtility::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << "\n"; \
+		throw std::runtime_error(msgStream.str());														\
+	}																									\
+}
 
 namespace ppvr {
 	namespace rendering {
@@ -14,7 +25,9 @@ namespace ppvr {
 			static inline VkDeviceSize aligned(VkDeviceSize v, VkDeviceSize byteAlign) {
 				return (v + byteAlign - 1) & ~(byteAlign - 1);
 			}
-			static VkShaderModule createShader(VulkanDevice& yDev, const QString& yPath);
+			static std::string errorString(VkResult yErrorCode);
+			
+			static VkShaderModule createShaderModule(VulkanDevice& yDev, const QString& yPath);
 			
 			static uint32_t findMemoryType(VulkanDevice& yDev, uint32_t yTypeFilter, VkMemoryPropertyFlags yProperties);
 			
@@ -28,6 +41,8 @@ namespace ppvr {
 			 *
 			 */
 			static void copyBuffer(VulkanDevice& yDev, VkBuffer ySrcBuffer, VkBuffer yDstBuffer, VkDeviceSize ySize);
+		
+			static VkFormat getSupportedDepthFormat(VulkanInstance& yVkInstance, VkPhysicalDevice yVkPhysicalDevice);
 		};
 	}
 }

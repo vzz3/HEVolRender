@@ -132,9 +132,7 @@ void Cube::createDescriptorPool(size_t ySwapChainImageCount) {
 	poolInfo.pPoolSizes = &poolSize;
 	poolInfo.maxSets = static_cast<uint32_t>(ySwapChainImageCount);
 
-	if (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
+	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
 }
 
 void Cube::cleanupDescriptorSets() {
@@ -150,9 +148,7 @@ void Cube::createDescriptorSets(size_t ySwapChainImageCount) {
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(ySwapChainImageCount);
-	if (dev.funcs->vkAllocateDescriptorSets(dev.vkDev, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate descriptor sets!");
-	}
+	VK_CHECK_RESULT (dev.funcs->vkAllocateDescriptorSets(dev.vkDev, &allocInfo, descriptorSets.data()), "failed to allocate descriptor sets!");
 
 	for (size_t i = 0; i < ySwapChainImageCount; i++) {
 		VkDescriptorBufferInfo bufferInfo{};
@@ -193,9 +189,7 @@ void Cube::createDescriptorSetLayout() {
 	layoutInfo.bindingCount = 1;
 	layoutInfo.pBindings = &uboLayoutBinding;
 
-	if (dev.funcs->vkCreateDescriptorSetLayout(dev.vkDev, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create descriptor set layout!");
-	}
+	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorSetLayout(dev.vkDev, &layoutInfo, nullptr, &descriptorSetLayout), "failed to create descriptor set layout!");
 }
 
 void Cube::cleanupGraphicsPipeline() {
@@ -209,8 +203,8 @@ void Cube::cleanupGraphicsPipeline() {
 
 void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& yTargetSize) {
 	// --- setup shaders ---
-	VkShaderModule vertShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/cube.vert.spv"));
-	VkShaderModule fragShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/cube.frag.spv"));
+	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/cube.vert.spv"));
+	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/cube.frag.spv"));
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -269,7 +263,7 @@ void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL; //VK_POLYGON_MODE_LINE; //VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_FRONT_BIT; //VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; //VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -300,9 +294,7 @@ void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-	if (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
+	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &pipelineLayout), "failed to create pipeline layout!");
 	
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
     memset(&depthStencilInfo, 0, sizeof(depthStencilInfo));
@@ -327,9 +319,7 @@ void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	if (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create graphics pipeline!");
-	}
+	VK_CHECK_RESULT (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline), "failed to create graphics pipeline!");
 
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, fragShaderModule, nullptr);
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, vertShaderModule, nullptr);

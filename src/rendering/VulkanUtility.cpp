@@ -6,7 +6,39 @@
 
 using namespace ppvr::rendering;
 
-VkShaderModule VulkanUtility::createShader(VulkanDevice& yDev, const QString& yPath) {
+std::string VulkanUtility::errorString(VkResult yErrorCode) {
+	switch (yErrorCode) {
+		#define STR(r) case VK_ ##r: return #r
+			STR(NOT_READY);
+			STR(TIMEOUT);
+			STR(EVENT_SET);
+			STR(EVENT_RESET);
+			STR(INCOMPLETE);
+			STR(ERROR_OUT_OF_HOST_MEMORY);
+			STR(ERROR_OUT_OF_DEVICE_MEMORY);
+			STR(ERROR_INITIALIZATION_FAILED);
+			STR(ERROR_DEVICE_LOST);
+			STR(ERROR_MEMORY_MAP_FAILED);
+			STR(ERROR_LAYER_NOT_PRESENT);
+			STR(ERROR_EXTENSION_NOT_PRESENT);
+			STR(ERROR_FEATURE_NOT_PRESENT);
+			STR(ERROR_INCOMPATIBLE_DRIVER);
+			STR(ERROR_TOO_MANY_OBJECTS);
+			STR(ERROR_FORMAT_NOT_SUPPORTED);
+			STR(ERROR_SURFACE_LOST_KHR);
+			STR(ERROR_NATIVE_WINDOW_IN_USE_KHR);
+			STR(SUBOPTIMAL_KHR);
+			STR(ERROR_OUT_OF_DATE_KHR);
+			STR(ERROR_INCOMPATIBLE_DISPLAY_KHR);
+			STR(ERROR_VALIDATION_FAILED_EXT);
+			STR(ERROR_INVALID_SHADER_NV);
+		#undef STR
+	default:
+		return "UNKNOWN_ERROR";
+	}
+}
+
+VkShaderModule VulkanUtility::createShaderModule(VulkanDevice& yDev, const QString& yPath) {
     QFile file(yPath);
     if (!file.open(QIODevice::ReadOnly)) {
         //qWarning("Failed to read shader %s", qPrintable(yPath));
@@ -53,9 +85,7 @@ void VulkanUtility::createBuffer(VulkanDevice& yDev, VkDeviceSize ySize, VkBuffe
 	bufferInfo.usage = yUsage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (yDev.funcs->vkCreateBuffer(yDev.vkDev, &bufferInfo, nullptr, &yBuffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create buffer!");
-	}
+	VK_CHECK_RESULT (yDev.funcs->vkCreateBuffer(yDev.vkDev, &bufferInfo, nullptr, &yBuffer), "failed to create buffer!");
 
 	// --- Memory requirements ---
 	VkMemoryRequirements memRequirements;
@@ -67,9 +97,7 @@ void VulkanUtility::createBuffer(VulkanDevice& yDev, VkDeviceSize ySize, VkBuffe
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = findMemoryType(yDev, memRequirements.memoryTypeBits, yProperties);
 
-	if (yDev.funcs->vkAllocateMemory(yDev.vkDev, &allocInfo, nullptr, &yBufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate buffer memory!");
-	}
+	VK_CHECK_RESULT (yDev.funcs->vkAllocateMemory(yDev.vkDev, &allocInfo, nullptr, &yBufferMemory), "failed to allocate buffer memory!");
 
 	yDev.funcs->vkBindBufferMemory(yDev.vkDev, yBuffer, yBufferMemory, 0);
 }
@@ -110,4 +138,27 @@ void VulkanUtility::copyBuffer(VulkanDevice& yDev, VkBuffer ySrcBuffer, VkBuffer
 	yDev.funcs->vkQueueWaitIdle(yDev.graphicsQueue); // We could use a fence and wait with vkWaitForFences, or simply wait for the transfer queue to become idle with vkQueueWaitIdle. A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time. That may give the driver more opportunities to optimize.
 
 	yDev.funcs->vkFreeCommandBuffers(yDev.vkDev, yDev.graphicsCommandPool, 1, &commandBuffer);
+}
+
+VkFormat VulkanUtility::getSupportedDepthFormat(VulkanInstance& yVkInstance, VkPhysicalDevice yVkPhysicalDevice) {
+	// Since all depth formats may be optional, we need to find a suitable depth format to use
+	// Start with the highest precision packed format
+	std::vector<VkFormat> depthFormats = {
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+		VK_FORMAT_D32_SFLOAT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM
+	};
+
+	for (auto& format : depthFormats) {
+		VkFormatProperties formatProps;
+		yVkInstance.funcs->vkGetPhysicalDeviceFormatProperties(yVkPhysicalDevice, format, &formatProps);
+		// Format must support depth stencil attachment for optimal tiling
+		if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+			return format;
+		}
+	}
+
+	throw std::runtime_error("failed to find suitable memory type!");
 }

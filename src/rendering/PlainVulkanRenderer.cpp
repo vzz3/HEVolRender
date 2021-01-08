@@ -17,18 +17,26 @@ PlainVulkanRenderer::PlainVulkanRenderer(QVulkanWindow *w/*, bool msaa = false*/
 void PlainVulkanRenderer::initResources()
 {
     qDebug("PlainVulkanRenderer->initResources()");
+	
+	m_vulkanInstance.funcs = m_window->vulkanInstance()->functions();
 
+	m_device.vkInstance = &m_vulkanInstance;
 	m_device.vkPhysicalDev = m_window->physicalDevice();
 	m_device.vkDev = m_window->device();
 	m_device.funcs = m_window->vulkanInstance()->deviceFunctions(m_device.vkDev);
 	m_device.graphicsCommandPool = m_window->graphicsCommandPool();
 	m_device.graphicsQueue = m_window->graphicsQueue();
 	
+	m_window->vulkanInstance();
+	
 	roAxis = new Axis(m_device);
 	roAxis->initGpuResources();
 	
 	roCube = new Cube(m_device);
 	roCube->initGpuResources();
+	
+	roFrontCubeMap = new CubeMap(m_device);
+	roFrontCubeMap->initGpuResources();
 }
 
 void PlainVulkanRenderer::releaseResources()
@@ -55,6 +63,7 @@ void PlainVulkanRenderer::releaseResources()
 	*/
 	roAxis->releaseGpuResources();
 	roCube->releaseGpuResources();
+	roFrontCubeMap->releaseGpuResources();
 	
 	delete roAxis;
 	roAxis = nullptr;
@@ -71,6 +80,7 @@ void PlainVulkanRenderer::initSwapChainResources()
 	
     roAxis->initSwapChainResources(m_swapChain);
     roCube->initSwapChainResources(m_swapChain);
+	roFrontCubeMap->initSwapChainResources(m_swapChain);
 }
 
 void PlainVulkanRenderer::releaseSwapChainResources()
@@ -78,6 +88,7 @@ void PlainVulkanRenderer::releaseSwapChainResources()
     qDebug("PlainVulkanRenderer->releaseSwapChainResources()");
     roAxis->releaseSwapChainResources();
     roCube->releaseSwapChainResources();
+    roFrontCubeMap->releaseSwapChainResources();
 }
 
 
@@ -89,6 +100,15 @@ void PlainVulkanRenderer::startNextFrame()
     VkCommandBuffer cmdBuf = cb;
     const QSize sz = m_window->swapChainImageSize();
 	
+	// ------ offscreen render pass ------
+	roFrontCubeMap->drawOffscreenFrame(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
+	
+	/*
+		Note: Explicit synchronization is not required between the render pass, as this is done implicit via sub pass dependencies
+		Is this correct?????
+	*/
+	
+	// ------ main render pass ------
 	// --- clear color ---
     VkClearColorValue clearColor = {{ 0, 0, 0, 1 }};
     VkClearDepthStencilValue clearDS = { 1, 0 };
@@ -148,6 +168,7 @@ void PlainVulkanRenderer::startNextFrame()
 	
 	roAxis->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
 	roCube->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
+	roFrontCubeMap->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
 	
     m_device.funcs->vkCmdEndRenderPass(cmdBuf);
 

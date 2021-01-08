@@ -2,11 +2,12 @@
 
 #include <QVulkanWindow>
 #include <QVulkanWindowRenderer>
-#include "./VulkanDevice.hpp"
 
+#include "./VulkanInstance.hpp"
 #include "./VulkanDevice.hpp"
 #include "./Axis.hpp"
 #include "./Cube.hpp"
+#include "./CubeMap.hpp"
 
 namespace ppvr {
 	namespace rendering {
@@ -31,8 +32,10 @@ namespace ppvr {
 				Camera m_camera;
 				Axis* roAxis = nullptr;
 				Cube* roCube = nullptr;
+				CubeMap* roFrontCubeMap = nullptr;
 
 				QVulkanWindow *m_window;
+				VulkanInstance m_vulkanInstance;
 				VulkanDevice m_device;
 				VulkanSwapChain m_swapChain;
 				/*
