@@ -26,6 +26,9 @@ void PlainVulkanRenderer::initResources()
 	
 	roAxis = new Axis(m_device);
 	roAxis->initGpuResources();
+	
+	roCube = new Cube(m_device);
+	roCube->initGpuResources();
 }
 
 void PlainVulkanRenderer::releaseResources()
@@ -51,6 +54,7 @@ void PlainVulkanRenderer::releaseResources()
     }
 	*/
 	roAxis->releaseGpuResources();
+	roCube->releaseGpuResources();
 	
 	delete roAxis;
 	roAxis = nullptr;
@@ -62,15 +66,18 @@ void PlainVulkanRenderer::initSwapChainResources()
     m_swapChain.swapChainImageCount = m_window->swapChainImageCount();
 	m_swapChain.renderPass = m_window->defaultRenderPass();
 	m_swapChain.targetSize = m_window->swapChainImageSize();
-    roAxis->initSwapChainResources(m_swapChain);
 	
 	m_camera.setViewportSize(m_swapChain.targetSize.width(), m_swapChain.targetSize.height());
+	
+    roAxis->initSwapChainResources(m_swapChain);
+    roCube->initSwapChainResources(m_swapChain);
 }
 
 void PlainVulkanRenderer::releaseSwapChainResources()
 {
     qDebug("PlainVulkanRenderer->releaseSwapChainResources()");
     roAxis->releaseSwapChainResources();
+    roCube->releaseSwapChainResources();
 }
 
 
@@ -140,6 +147,7 @@ void PlainVulkanRenderer::startNextFrame()
 	*/
 	
 	roAxis->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
+	roCube->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
 	
     m_device.funcs->vkCmdEndRenderPass(cmdBuf);
 

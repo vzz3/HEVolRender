@@ -1,49 +1,50 @@
 
-#include "Axis.hpp"
+#include "Cube.hpp"
 
 #include "VulkanUtility.hpp"
 #include "vertex/ColoredVertex.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 
 using namespace ppvr::rendering;
 
-Axis::Axis(VulkanDevice& yDev): dev(yDev) {
+Cube::Cube(VulkanDevice& yDev): dev(yDev) {
 }
-Axis::~Axis() {
+Cube::~Cube() {
 	this->cleanup();
 };
 
-void Axis::initGpuResources() {
+void Cube::initGpuResources() {
 	this->createVertexBuffer();
 	this->createDescriptorSetLayout();
 }
-void Axis::releaseGpuResources() {
+void Cube::releaseGpuResources() {
 	this->cleanupDescriptorSetLayout();
 	this->cleanupVertexBuffer();
 }
 
-void Axis::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
+void Cube::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
 	this->createUniformBuffers(ySwapChain.swapChainImageCount);
     this->createDescriptorPool(ySwapChain.swapChainImageCount);
 	this->createDescriptorSets(ySwapChain.swapChainImageCount);
 	this->createGraphicsPipeline(ySwapChain.renderPass, ySwapChain.targetSize);
 }
 
-void Axis::releaseSwapChainResources() {
+void Cube::releaseSwapChainResources() {
 	this->cleanupGraphicsPipeline();
 	this->cleanupDescriptorSets();
 	this->cleanupDescriptorPool();
 	this->cleanupUniformBuffers();
 }
 
-void Axis::cleanup() {
+void Cube::cleanup() {
 	this->releaseSwapChainResources();
 	this->releaseGpuResources();
 }
 
 
 
-void Axis::cleanupVertexBuffer() {
+void Cube::cleanupVertexBuffer() {
 	dev.funcs->vkDestroyBuffer(dev.vkDev, vertexBuffer, nullptr);
 	vertexBuffer = VK_NULL_HANDLE;
 	
@@ -51,7 +52,7 @@ void Axis::cleanupVertexBuffer() {
 	vertexBufferMemory = VK_NULL_HANDLE;
 }
 
-void Axis::createVertexBuffer() {
+void Cube::createVertexBuffer() {
 	constexpr bool useStagingBuffer = true;
 	
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
@@ -92,7 +93,7 @@ void Axis::createVertexBuffer() {
 	
 }
 
-void Axis::cleanupUniformBuffers() {
+void Cube::cleanupUniformBuffers() {
 	for (size_t i = 0; i < uniformBuffers.size(); i++) {
         dev.funcs->vkDestroyBuffer(dev.vkDev, uniformBuffers[i], nullptr);
 		uniformBuffers[i] = VK_NULL_HANDLE;
@@ -101,8 +102,8 @@ void Axis::cleanupUniformBuffers() {
     }
 }
 
-void Axis::createUniformBuffers(size_t ySwapChainImageCount) {
-	constexpr VkDeviceSize bufferSize = sizeof(uniform::CameraUniformBufferObject);
+void Cube::createUniformBuffers(size_t ySwapChainImageCount) {
+	constexpr VkDeviceSize bufferSize = sizeof(uniform::CubeUniformBufferObject);
 
     uniformBuffers.resize(ySwapChainImageCount);
     uniformBuffersMemory.resize(ySwapChainImageCount);
@@ -115,12 +116,12 @@ void Axis::createUniformBuffers(size_t ySwapChainImageCount) {
     }
 }
 
-void Axis::cleanupDescriptorPool() {
+void Cube::cleanupDescriptorPool() {
 	dev.funcs->vkDestroyDescriptorPool(dev.vkDev, descriptorPool, nullptr);
 	descriptorPool = VK_NULL_HANDLE;
 }
 
-void Axis::createDescriptorPool(size_t ySwapChainImageCount) {
+void Cube::createDescriptorPool(size_t ySwapChainImageCount) {
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	poolSize.descriptorCount = static_cast<uint32_t>(ySwapChainImageCount);
@@ -136,11 +137,11 @@ void Axis::createDescriptorPool(size_t ySwapChainImageCount) {
 	}
 }
 
-void Axis::cleanupDescriptorSets() {
+void Cube::cleanupDescriptorSets() {
 	// You don't need to explicitly clean up descriptor sets, because they will be automatically freed when the descriptor pool is destroyed.
 }
 
-void Axis::createDescriptorSets(size_t ySwapChainImageCount) {
+void Cube::createDescriptorSets(size_t ySwapChainImageCount) {
 	std::vector<VkDescriptorSetLayout> layouts(ySwapChainImageCount, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -157,7 +158,7 @@ void Axis::createDescriptorSets(size_t ySwapChainImageCount) {
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(uniform::CameraUniformBufferObject);
+		bufferInfo.range = sizeof(uniform::CubeUniformBufferObject);
 
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -174,12 +175,12 @@ void Axis::createDescriptorSets(size_t ySwapChainImageCount) {
 	}
 }
 
-void Axis::cleanupDescriptorSetLayout() {
+void Cube::cleanupDescriptorSetLayout() {
 	dev.funcs->vkDestroyDescriptorSetLayout(dev.vkDev, descriptorSetLayout, nullptr);
 	descriptorSetLayout = VK_NULL_HANDLE;
 }
 
-void Axis::createDescriptorSetLayout() {
+void Cube::createDescriptorSetLayout() {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0; // binding number in shader (layout(binding = 0) uniform...)
     uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -197,7 +198,7 @@ void Axis::createDescriptorSetLayout() {
 	}
 }
 
-void Axis::cleanupGraphicsPipeline() {
+void Cube::cleanupGraphicsPipeline() {
 	dev.funcs->vkDestroyPipeline(dev.vkDev, graphicsPipeline, nullptr);
 	graphicsPipeline = VK_NULL_HANDLE;
 	
@@ -206,10 +207,10 @@ void Axis::cleanupGraphicsPipeline() {
 	//vkDestroyRenderPass(device, renderPass, nullptr);
 }
 
-void Axis::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& yTargetSize) {
+void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& yTargetSize) {
 	// --- setup shaders ---
-	VkShaderModule vertShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/axis.vert.spv"));
-	VkShaderModule fragShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/axis.frag.spv"));
+	VkShaderModule vertShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/cube.vert.spv"));
+	VkShaderModule fragShaderModule = VulkanUtility::createShader(this->dev, QStringLiteral("shaders/cube.frag.spv"));
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -239,7 +240,7 @@ void Axis::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; //VK_PRIMITIVE_TOPOLOGY_LINE_LIST; // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 	VkViewport viewport{};
@@ -266,10 +267,10 @@ void Axis::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterizer.depthClampEnable = VK_FALSE;
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL; //VK_POLYGON_MODE_LINE; //VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; //VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
 	VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -334,26 +335,29 @@ void Axis::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, vertShaderModule, nullptr);
 }
 
-void Axis::updateUniformBuffer(const Camera& yCamera, uint32_t yCurrentSwapChainImageIndex) {
-//	static auto startTime = std::chrono::high_resolution_clock::now();
+void Cube::updateUniformBuffer(const Camera& yCamera, uint32_t yCurrentSwapChainImageIndex) {
+	static auto startTime = std::chrono::high_resolution_clock::now();
 //
-//	auto currentTime = std::chrono::high_resolution_clock::now();
-//	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 //
 //	UniformBufferObject ubo{};
-//	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//	ubo.model.modelMatrix = glm::mat4x4(1.0f);
+	ubo.model.modelMatrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 //	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 //	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
 //	ubo.proj[1][1] *= -1;
 
-	constexpr VkDeviceSize uboSize = sizeof(uniform::CameraUniformBufferObject);
+	ubo.camera = yCamera.getFinalData();
+
+	constexpr VkDeviceSize uboSize = sizeof(uniform::CubeUniformBufferObject);
 	void* data;
 	dev.funcs->vkMapMemory(dev.vkDev, uniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);
-		memcpy(data, &yCamera.getFinalData(), uboSize);
+		memcpy(data, &ubo, uboSize);
 	dev.funcs->vkUnmapMemory(dev.vkDev, uniformBuffersMemory[yCurrentSwapChainImageIndex]);
 }
 
-void Axis::draw(const Camera& yCamera,  VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+void Cube::draw(const Camera& yCamera,  VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
 	this->updateUniformBuffer(yCamera, yCurrentSwapChainImageIndex);
 
 	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);

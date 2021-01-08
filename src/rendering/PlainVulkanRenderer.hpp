@@ -6,6 +6,7 @@
 
 #include "./VulkanDevice.hpp"
 #include "./Axis.hpp"
+#include "./Cube.hpp"
 
 namespace ppvr {
 	namespace rendering {
@@ -29,6 +30,7 @@ namespace ppvr {
 			protected:
 				Camera m_camera;
 				Axis* roAxis = nullptr;
+				Cube* roCube = nullptr;
 
 				QVulkanWindow *m_window;
 				VulkanDevice m_device;

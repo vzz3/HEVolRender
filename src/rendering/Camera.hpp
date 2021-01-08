@@ -7,18 +7,14 @@
 #include <glm/vec4.hpp> // glm::vec4
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/trigonometric.hpp> // glm::vec4
+#include "uniform/CameraUniformBufferObject.hpp"
+
+using ppvr::rendering::uniform::CameraUniformBufferObject;
 
 namespace ppvr {
 	namespace rendering {
 		class Camera {
 		public:
-			struct CameraUniformBufferObject {
-				//float aspectRatio = 1.0f;
-				//float fieldOfView = glm::radians(40.0f); // Converts degrees to radians and returns the result.
-				alignas(16) glm::mat4x4 viewMatrix; // worldToCamera
-				alignas(16) glm::mat4x4 viewInvMatrix; // cameraToWorld
-				alignas(16) glm::mat4x4 vpMatrix;
-			};
 		
 			Camera(float width, float height);
 			~Camera();

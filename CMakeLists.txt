@@ -196,6 +196,8 @@ add_shader(${PROJECT_NAME} "color.frag")
 add_shader(${PROJECT_NAME} "color.vert")
 add_shader(${PROJECT_NAME} "axis.frag")
 add_shader(${PROJECT_NAME} "axis.vert")
+add_shader(${PROJECT_NAME} "cube.frag")
+add_shader(${PROJECT_NAME} "cube.vert")
 
 
 
