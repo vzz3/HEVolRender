@@ -4,6 +4,7 @@
 #include "VulkanUtility.hpp"
 #include "VulkanInitializers.hpp"
 #include <array>
+#include "uniform/DebugQuadUniformBufferObject.hpp"
 
 
 using namespace ppvr::rendering;
@@ -31,6 +32,7 @@ void CubeMap::releaseGpuResources() {
 void CubeMap::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
 	this->createOffscreen(ySwapChain);
 	//this->createCommandBuffers();
+	this->createDebugUniformBuffers(ySwapChain.swapChainImageCount);
 	this->createDebugDescriptorPool(ySwapChain.swapChainImageCount);
 	this->createDebugDescriptorSets(ySwapChain.swapChainImageCount);
 	this->createDebugPipeline(ySwapChain);
@@ -50,6 +52,7 @@ void CubeMap::releaseSwapChainResources() {
 	this->cleanupDebugPipeline();
 	this->cleanupDebugDescriptorSets();
 	this->cleanupDebugDescriptorPool();
+	this->cleanupDebugUniformBuffers();
 	//this->cleanupCommandBuffers();
 	this->cleanupOffscreen();
 	//this->cleanupGraphicsPipeline();
@@ -309,6 +312,29 @@ void CubeMap::createOffscreenFramebuffers(const VulkanSwapChain& ySwapChain) {
 	offscreenPass.descriptor.sampler = offscreenPass.sampler;
 }
 
+void CubeMap::cleanupDebugUniformBuffers() {
+	for (size_t i = 0; i < debugUniformBuffers.size(); i++) {
+        dev.funcs->vkDestroyBuffer(dev.vkDev, debugUniformBuffers[i], nullptr);
+		debugUniformBuffers[i] = VK_NULL_HANDLE;
+        dev.funcs->vkFreeMemory(dev.vkDev, debugUniformBuffersMemory[i], nullptr);
+        debugUniformBuffersMemory[i] = VK_NULL_HANDLE;
+    }
+}
+
+void CubeMap::createDebugUniformBuffers(size_t ySwapChainImageCount) {
+	constexpr VkDeviceSize bufferSize = sizeof(uniform::DebugQuadUniformBufferObject);
+
+    debugUniformBuffers.resize(ySwapChainImageCount);
+    debugUniformBuffersMemory.resize(ySwapChainImageCount);
+	
+    constexpr VkBufferUsageFlags usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+    for (size_t i = 0; i < ySwapChainImageCount; i++) {
+        VulkanUtility::createBuffer(dev, bufferSize, usage, properties, debugUniformBuffers[i], debugUniformBuffersMemory[i]);
+    }
+}
+
 void CubeMap::cleanupDebugDescriptorPool() {
 	dev.funcs->vkDestroyDescriptorPool(dev.vkDev, debugDescriptorPool, nullptr);
 	debugDescriptorPool = VK_NULL_HANDLE;
@@ -339,26 +365,26 @@ void CubeMap::createDebugDescriptorSets(size_t ySwapChainImageCount) {
 	VK_CHECK_RESULT(dev.funcs->vkAllocateDescriptorSets(dev.vkDev, &allocInfo, debugDescriptorSets.data()),  "failed to allocate descriptor sets!");
 
 	for (size_t i = 0; i < ySwapChainImageCount; i++) {
-	/*
+		
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.buffer = debugUniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(uniform::CameraUniformBufferObject);
-	*/
+		bufferInfo.range = sizeof(uniform::DebugQuadUniformBufferObject);
+	
 		std::vector<VkWriteDescriptorSet> writeDescriptorSets =
 		{
 			// Binding 0 : Vertex shader uniform buffer
-	/*		VulkanInitializers::writeDescriptorSet(
-				debugDescriptorSets[0],					// dstSet
+			VulkanInitializers::writeDescriptorSet(
+				debugDescriptorSets[i],					// dstSet
 				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,		// descriptorType
 				0,										// dstBinding
 				&bufferInfo								// pBufferInfo
-			), 		*/
+			),
 			// Binding 1 : Fragment shader texture sampler
 			VulkanInitializers::writeDescriptorSet(
 				debugDescriptorSets[i],						// dstSet
 				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// descriptorType
-				0,											// dstBinding
+				1,											// dstBinding
 				&offscreenPass.descriptor					// pImageInfo
 			),
 		};
@@ -377,17 +403,15 @@ void CubeMap::createDebugDescriptorSetLayout() {
 	//VkPipelineLayoutCreateInfo pipelineLayoutInfo;
 
 	// Binding 0 : Vertex shader uniform buffer
-	/*
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 		VK_SHADER_STAGE_VERTEX_BIT,
 		0));
-		*/
 	// Binding 1 : Fragment shader image sampler
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 		VK_SHADER_STAGE_FRAGMENT_BIT,
-		0));
+		1));
 	// Binding 2 : Fragment shader image sampler
 	//setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 	//	VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -490,11 +514,47 @@ void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf
 	vkCmdEndRenderPass(yCmdBuf);
 }
 
+void CubeMap::updateDebugUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
+//	static auto startTime = std::chrono::high_resolution_clock::now();
+//
+//	auto currentTime = std::chrono::high_resolution_clock::now();
+//	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+//
+//	UniformBufferObject ubo{};
+//	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
+//	ubo.proj[1][1] *= -1;
+
+	float scale = 0.3f;
+	float s =  2.0f 		* scale;
+	float x = -1.0f			+ 0.05f;
+	float y = x;
+	//glm::mat3x3 mm = glm::transpose(glm::mat3x3({ // I write in row major but glm/glsl uses column major
+	//			    s,	    s,	    x, // row 0
+	//			 0.0f,	 1.0f,	    y, // row 1
+	//			 0.0f,	 0.0f,	 1.0f, // row 2
+	//		})); // I was not able to get the alignment for vulkan shaders correct.
+	glm::mat3x3 mm = glm::transpose(glm::mat3x3({ // I write in row major but glm/glsl uses column major
+				    s,	 0.0f,	    x,	 0.0f, // row 0
+				 0.0f,	    s,	    y,	 0.0f, // row 1
+				 0.0f,	 0.0f,	 1.0f,	 0.0f, // row 2
+				 0.0f,	 0.0f,	 0.0f,	 1.0f, // row 3
+			}));
+	uniform::DebugQuadUniformBufferObject ubo{};
+	ubo.model.modelMatrix = mm;
+
+	constexpr VkDeviceSize uboSize = sizeof(uniform::DebugQuadUniformBufferObject);
+	void* data;
+	dev.funcs->vkMapMemory(dev.vkDev, debugUniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);
+		memcpy(data, &ubo, uboSize);
+	dev.funcs->vkUnmapMemory(dev.vkDev, debugUniformBuffersMemory[yCurrentSwapChainImageIndex]);
+}
 
 void CubeMap::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
-	/*
-	this->updateUniformBuffer(yCamera, yCurrentSwapChainImageIndex);
-
+	
+	this->updateDebugUniformBuffer(yCurrentSwapChainImageIndex);
+/*
 	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
     //dev.funcs->vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descSet[m_window->currentFrame()], 0, nullptr);
     VkBuffer vertexBuffers[] = {vertexBuffer};

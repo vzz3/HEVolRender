@@ -61,6 +61,9 @@ namespace ppvr {
 			//void createCommandBuffers();
 			//void cleanupCommandBuffers();
 			
+			void createDebugUniformBuffers(size_t ySwapChainImageCount);
+			void cleanupDebugUniformBuffers();
+			
 			void createDebugDescriptorPool(size_t ySwapChainImageCount);
 			void cleanupDebugDescriptorPool();
 			
@@ -74,7 +77,7 @@ namespace ppvr {
 			void cleanupDebugPipeline();
 			
 		private:
-			void updateUniformBuffer(const Camera& yCamera, uint32_t yCurrentSwapChainImageIndex);
+			void updateDebugUniformBuffer(uint32_t yCurrentSwapChainImageIndex);
 		public:
 			void drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
 			
@@ -105,12 +108,12 @@ namespace ppvr {
 			// from [xxx]VertexBuffer()
 			VkBuffer vertexBuffer;
 			VkDeviceMemory vertexBufferMemory;
+			*/
 			
 			// from [xxx]UniformBuffers()
-			std::vector<VkBuffer> uniformBuffers;
-			std::vector<VkDeviceMemory> uniformBuffersMemory;
+			std::vector<VkBuffer> debugUniformBuffers;
+			std::vector<VkDeviceMemory> debugUniformBuffersMemory;
 			
-			*/
 			// from [xxx]DescriptorPool()
 			VkDescriptorPool debugDescriptorPool;
 			
