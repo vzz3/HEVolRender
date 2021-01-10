@@ -6,21 +6,22 @@
 #include "Camera.hpp"
 #include "VulkanSwapChain.hpp"
 #include "Cube.hpp"
+#include "FrameBuffer.hpp"
 
 namespace ppvr {
 	namespace rendering {
 		class CubeMap {
 		private:
-			struct FrameBufferAttachment {
-				VkImage image;
-				VkDeviceMemory mem;
-				VkImageView view;
-			};
+//			struct FrameBufferAttachment {
+//				VkImage image;
+//				VkDeviceMemory mem;
+//				VkImageView view;
+//			};
 			struct OffscreenPass {
-				int32_t width, height;
-				VkFramebuffer frameBuffer;
-				FrameBufferAttachment color, depth;
-				VkRenderPass renderPass;
+//				int32_t width, height;
+//				VkFramebuffer frameBuffer;
+//				FrameBufferAttachment color, depth;
+//				VkRenderPass renderPass;
 				VkSampler sampler;
 				VkDescriptorImageInfo descriptor;
 			};
@@ -39,23 +40,23 @@ namespace ppvr {
 			void cleanup();
 		
 			// ---  Offscreen ---
-			void createOffscreen(const VulkanSwapChain& ySwapChain);
-			void cleanupOffscreen();
+			//void createOffscreen(const VulkanSwapChain& ySwapChain);
+			//void cleanupOffscreen();
 			
-			void createColorAttachment(const VulkanSwapChain& ySwapChain);
-			void cleanupColorAttachment();
+			//void createColorAttachment(const VulkanSwapChain& ySwapChain);
+			//void cleanupColorAttachment();
 			
 			void createSampler(const VulkanSwapChain& ySwapChain);
 			void cleanupSampler();
 			
-			void createDepthAttachment(const VulkanSwapChain& ySwapChain);
-			void cleanupDepthAttachment();
+			//void createDepthAttachment(const VulkanSwapChain& ySwapChain);
+			//void cleanupDepthAttachment();
 			
-			void createOffscreenRenderPass(const VulkanSwapChain& ySwapChain);
-			void cleanupOffscreenRenderPass();
+			//void createOffscreenRenderPass(const VulkanSwapChain& ySwapChain);
+			//void cleanupOffscreenRenderPass();
 			
-			void createOffscreenFramebuffers(const VulkanSwapChain& ySwapChain);
-			void cleanupOffscreenFramebuffers();
+			//void createOffscreenFramebuffers(const VulkanSwapChain& ySwapChain);
+			//void cleanupOffscreenFramebuffers();
 			
 			// --- CommandBuffers ---
 			//void createCommandBuffers();
@@ -89,6 +90,8 @@ namespace ppvr {
 			static constexpr bool useDepthTest = false;
 			
 			Cube cube;
+			FrameBuffer frontFBO;
+			
 			
 			// from constructor
 			VulkanDevice& dev;
