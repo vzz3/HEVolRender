@@ -7,6 +7,7 @@
 #include "VulkanSwapChain.hpp"
 #include "Cube.hpp"
 #include "FrameBuffer.hpp"
+#include "ImageDebugView.hpp"
 
 namespace ppvr {
 	namespace rendering {
@@ -38,47 +39,7 @@ namespace ppvr {
 			
 		private:
 			void cleanup();
-		
-			// ---  Offscreen ---
-			//void createOffscreen(const VulkanSwapChain& ySwapChain);
-			//void cleanupOffscreen();
 			
-			//void createColorAttachment(const VulkanSwapChain& ySwapChain);
-			//void cleanupColorAttachment();
-			
-			void createSampler(const VulkanSwapChain& ySwapChain);
-			void cleanupSampler();
-			
-			//void createDepthAttachment(const VulkanSwapChain& ySwapChain);
-			//void cleanupDepthAttachment();
-			
-			//void createOffscreenRenderPass(const VulkanSwapChain& ySwapChain);
-			//void cleanupOffscreenRenderPass();
-			
-			//void createOffscreenFramebuffers(const VulkanSwapChain& ySwapChain);
-			//void cleanupOffscreenFramebuffers();
-			
-			// --- CommandBuffers ---
-			//void createCommandBuffers();
-			//void cleanupCommandBuffers();
-			
-			void createDebugUniformBuffers(size_t ySwapChainImageCount);
-			void cleanupDebugUniformBuffers();
-			
-			void createDebugDescriptorPool(size_t ySwapChainImageCount);
-			void cleanupDebugDescriptorPool();
-			
-			void createDebugDescriptorSets(size_t ySwapChainImageCount);
-			void cleanupDebugDescriptorSets();
-			
-			void createDebugDescriptorSetLayout();
-			void cleanupDebugDescriptorSetLayout();
-			
-			void createDebugPipeline(const VulkanSwapChain& ySwapChain);
-			void cleanupDebugPipeline();
-			
-		private:
-			void updateDebugUniformBuffer(uint32_t yCurrentSwapChainImageIndex);
 		public:
 			void drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
 			
@@ -91,7 +52,7 @@ namespace ppvr {
 			
 			Cube cube;
 			FrameBuffer frontFBO;
-			
+			ImageDebugView offscreenImageView;
 			
 			// from constructor
 			VulkanDevice& dev;
@@ -100,28 +61,6 @@ namespace ppvr {
 			OffscreenPass offscreenPass;
 			VulkanSwapChain offscreenSwappChain;
 			
-			// from [xxx]DebugPipeline()
-			VkPipeline debugPipline;
-			VkPipelineLayout debugPiplineLayout;
-			
-			// from [xxx]DescriptorSetLayout()
-			VkDescriptorSetLayout debugDescriptorSetLayout; // beschreibt die uniforms in der pipline mit den shadern
-			
-			/*
-			// from [xxx]VertexBuffer()
-			VkBuffer vertexBuffer;
-			VkDeviceMemory vertexBufferMemory;
-			*/
-			
-			// from [xxx]UniformBuffers()
-			std::vector<VkBuffer> debugUniformBuffers;
-			std::vector<VkDeviceMemory> debugUniformBuffersMemory;
-			
-			// from [xxx]DescriptorPool()
-			VkDescriptorPool debugDescriptorPool;
-			
-			// from [xxx]descriptorSets()
-			std::vector<VkDescriptorSet> debugDescriptorSets;
 			
 			
 			
