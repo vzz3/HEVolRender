@@ -4,11 +4,12 @@
 #include "VulkanUtility.hpp"
 #include "vertex/ColoredVertex.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include "VulkanInitializers.hpp"
 
 
 using namespace ppvr::rendering;
 
-Cube::Cube(VulkanDevice& yDev): dev(yDev) {
+Cube::Cube(VulkanDevice& yDev, VkCullModeFlags yCullMode): dev(yDev), cullMode(yCullMode) {
 }
 Cube::~Cube() {
 	this->cleanup();
@@ -263,7 +264,7 @@ void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL; //VK_POLYGON_MODE_LINE; //VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_NONE; //VK_CULL_MODE_FRONT_BIT; //VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = cullMode; //VK_CULL_MODE_FRONT_BIT; //VK_CULL_MODE_NONE; //VK_CULL_MODE_BACK_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; //VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -302,6 +303,10 @@ void Cube::createGraphicsPipeline(const VkRenderPass& yRenderPass, const QSize& 
     depthStencilInfo.depthTestEnable = VK_TRUE;
     depthStencilInfo.depthWriteEnable = VK_TRUE;
     depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+	// requires VK_EXT_extended_dynamic_state wich is currently (2021-01-10) not suporten by MoltenVK [ https://github.com/KhronosGroup/MoltenVK/issues/214 ]
+	//std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_CULL_MODE_EXT};
+	//VkPipelineDynamicStateCreateInfo dynamicState = VulkanInitializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

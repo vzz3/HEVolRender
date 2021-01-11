@@ -286,8 +286,7 @@ void ImageDebugView::createPipeline(const VulkanSwapChain& ySwapChain) {
 	VkPipelineColorBlendStateCreateInfo colorBlendState = VulkanInitializers::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = VulkanInitializers::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL);
 	
-	std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-	VkPipelineDynamicStateCreateInfo dynamicState = VulkanInitializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
+	
 	
 	VkGraphicsPipelineCreateInfo pipelineInfo = VulkanInitializers::pipelineCreateInfo(debugPiplineLayout, ySwapChain.renderPass, 0);
 	pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
@@ -300,7 +299,26 @@ void ImageDebugView::createPipeline(const VulkanSwapChain& ySwapChain) {
 	pipelineInfo.pColorBlendState = &colorBlendState;
 	pipelineInfo.pDepthStencilState = &depthStencilState;
 	
-	pipelineInfo.pDynamicState = &dynamicState;
+	//std::vector<VkDynamicState> dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+	//VkPipelineDynamicStateCreateInfo dynamicState = VulkanInitializers::pipelineDynamicStateCreateInfo(dynamicStateEnables);
+	//pipelineInfo.pDynamicState = &dynamicState;
+	
+	// only if VK_DYNAMIC_STATE_VIEWPORT is not used
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float) ySwapChain.targetSize.width(); //swapChainExtent.width;
+	viewport.height = (float) ySwapChain.targetSize.height(); //swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	viewportState.pViewports = &viewport;
+
+	// only if VK_DYNAMIC_STATE_SCISSOR is not used
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent.width = viewport.width;
+    scissor.extent.height = viewport.height;
+    viewportState.pScissors = &scissor;
 	
 	
 

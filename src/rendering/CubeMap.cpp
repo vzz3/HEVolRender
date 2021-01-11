@@ -9,7 +9,13 @@
 
 using namespace ppvr::rendering;
 
-CubeMap::CubeMap(VulkanDevice& yDev): dev(yDev), cube(yDev), frontFBO{yDev, false}, offscreenImageView{yDev} {
+CubeMap::CubeMap(VulkanDevice& yDev)
+	: dev(yDev),
+		frontCube(yDev, VK_CULL_MODE_BACK_BIT),
+		backCube(yDev, VK_CULL_MODE_FRONT_BIT),
+		frontFBO{yDev, false},
+		backFBO{yDev, false},
+		offscreenImageView{yDev} {
 	fbDepthFormat = VulkanUtility::getSupportedDepthFormat(*dev.vkInstance, dev.vkPhysicalDev);
 }
 CubeMap::~CubeMap() {
@@ -18,33 +24,52 @@ CubeMap::~CubeMap() {
 
 void CubeMap::initGpuResources() {
 	frontFBO.initGpuResources();
-	cube.initGpuResources();
+	backFBO.initGpuResources();
+	
+	frontCube.initGpuResources();
+	backCube.initGpuResources();
+	
 	offscreenImageView.initGpuResources();
 }
 
 void CubeMap::releaseGpuResources() {
 	offscreenImageView.releaseGpuResources();
-	cube.releaseGpuResources();
+	
+	backCube.releaseGpuResources();
+	frontCube.releaseGpuResources();
+	
+	backFBO.releaseGpuResources();
 	frontFBO.releaseGpuResources();
 }
 
 void CubeMap::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
 	frontFBO.initSwapChainResources(ySwapChain);
+	backFBO.initSwapChainResources(ySwapChain);
 	
-	offscreenSwappChain.renderPass = frontFBO.getRenderPass();
-	offscreenSwappChain.swapChainImageCount = ySwapChain.swapChainImageCount;
-	offscreenSwappChain.targetSize = ySwapChain.targetSize;
+	frontSwappChain.renderPass = frontFBO.getRenderPass();
+	frontSwappChain.swapChainImageCount = ySwapChain.swapChainImageCount;
+	frontSwappChain.targetSize = ySwapChain.targetSize;
+	frontCube.initSwapChainResources(frontSwappChain);
 	
-	cube.initSwapChainResources(offscreenSwappChain);
+	backSwappChain.renderPass = backFBO.getRenderPass();
+	backSwappChain.swapChainImageCount = ySwapChain.swapChainImageCount;
+	backSwappChain.targetSize = ySwapChain.targetSize;
+	backCube.initSwapChainResources(backSwappChain);
+	
 	offscreenImageView.initSwapChainResources(ySwapChain, std::vector<ImageDebugView::ImagePanel>{
 		//ImageDebugView::ImagePanel{VkImageView view,						float scale, 	glm::vec2 screenOffset		}
-		ImageDebugView::ImagePanel{	 frontFBO.getColorAttachment(0).view,	0.3f,			{0.05f, 0.05f}				}
+		ImageDebugView::ImagePanel{	 frontFBO.getColorAttachment(0).view,	0.3f,			{0.05f      , 0.05f}		},
+		ImageDebugView::ImagePanel{	 backFBO.getColorAttachment(0).view,	0.3f,			{2.00f -0.65, 0.05f}		}
 	});
 }
 
 void CubeMap::releaseSwapChainResources() {
 	offscreenImageView.releaseSwapChainResources();
-	cube.releaseSwapChainResources();
+	
+	backCube.releaseSwapChainResources();
+	frontCube.releaseSwapChainResources();
+	
+	backFBO.releaseSwapChainResources();
 	frontFBO.releaseSwapChainResources();
 }
 
@@ -53,7 +78,9 @@ void CubeMap::cleanup() {
 	this->releaseGpuResources();
 }
 
-void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+
+
+void CubeMap::drawCubeFace(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex, Cube& yCube, FrameBuffer &yFBO) {
 	VkClearValue clearValues[2];
 	clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
 	if(useDepthTest) {
@@ -61,30 +88,33 @@ void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf
 	}
 
 	VkRenderPassBeginInfo renderPassBeginInfo = VulkanInitializers::renderPassBeginInfo();
-	renderPassBeginInfo.renderPass = frontFBO.getRenderPass();// offscreenPass.renderPass;
-	renderPassBeginInfo.framebuffer = frontFBO.getFramebuffer();// offscreenPass.frameBuffer;
-	renderPassBeginInfo.renderArea.extent.width = frontFBO.getWidth();// offscreenPass.width;
-	renderPassBeginInfo.renderArea.extent.height = frontFBO.getHeight();//offscreenPass.height;
+	renderPassBeginInfo.renderPass = yFBO.getRenderPass();// offscreenPass.renderPass;
+	renderPassBeginInfo.framebuffer = yFBO.getFramebuffer();// offscreenPass.frameBuffer;
+	renderPassBeginInfo.renderArea.extent.width = yFBO.getWidth();// offscreenPass.width;
+	renderPassBeginInfo.renderArea.extent.height = yFBO.getHeight();//offscreenPass.height;
 	renderPassBeginInfo.clearValueCount = useDepthTest ? 2 : 1;
 	renderPassBeginInfo.pClearValues = clearValues;
 
 	vkCmdBeginRenderPass(yCmdBuf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkViewport viewport = VulkanInitializers::viewport((float)frontFBO.getWidth(), (float)frontFBO.getHeight(), 0.0f, 1.0f);
-	vkCmdSetViewport(yCmdBuf, 0, 1, &viewport);
+	// für dynamische piplines
+	//VkViewport viewport = VulkanInitializers::viewport((float)frontFBO.getWidth(), (float)frontFBO.getHeight(), 0.0f, 1.0f);
+	//vkCmdSetViewport(yCmdBuf, 0, 1, &viewport);
 
-	VkRect2D scissor = VulkanInitializers::rect2D(frontFBO.getWidth(), frontFBO.getHeight(), 0, 0);
-	vkCmdSetScissor(yCmdBuf, 0, 1, &scissor);
+	//VkRect2D scissor = VulkanInitializers::rect2D(frontFBO.getWidth(), frontFBO.getHeight(), 0, 0);
+	//vkCmdSetScissor(yCmdBuf, 0, 1, &scissor);
 
-	VkDeviceSize offsets[1] = { 0 };
+	//VkDeviceSize offsets[1] = { 0 };
 
-	// Mirrored scene
-	//vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.shaded, 0, 1, &descriptorSets.offscreen, 0, NULL);
-	//vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.shadedOffscreen);
-	//models.example.draw(drawCmdBuffers[i]);
-	cube.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
+	yCube.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
 
 	vkCmdEndRenderPass(yCmdBuf);
+}
+
+void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+	
+	this->drawCubeFace(yCamera, yCmdBuf, yCurrentSwapChainImageIndex, frontCube, frontFBO);
+	this->drawCubeFace(yCamera, yCmdBuf, yCurrentSwapChainImageIndex, backCube, backFBO);
 }
 
 void CubeMap::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {	

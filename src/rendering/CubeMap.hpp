@@ -18,14 +18,14 @@ namespace ppvr {
 //				VkDeviceMemory mem;
 //				VkImageView view;
 //			};
-			struct OffscreenPass {
+//			struct OffscreenPass {
 //				int32_t width, height;
 //				VkFramebuffer frameBuffer;
 //				FrameBufferAttachment color, depth;
 //				VkRenderPass renderPass;
-				VkSampler sampler;
-				VkDescriptorImageInfo descriptor;
-			};
+//				VkSampler sampler;
+//				VkDescriptorImageInfo descriptor;
+//			};
 	
 		public:
 			CubeMap(VulkanDevice& yDev);
@@ -40,6 +40,7 @@ namespace ppvr {
 		private:
 			void cleanup();
 			
+			void drawCubeFace(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex, Cube& yCube, FrameBuffer &yFBO);
 		public:
 			void drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
 			
@@ -50,17 +51,21 @@ namespace ppvr {
 			
 			static constexpr bool useDepthTest = false;
 			
-			Cube cube;
+			// eigentlich sollte auch ein cube mit zwei piplines reichen, den descriptorLayouts, DescriptorSets, VertrexBuffers usw. sind immer gleich.
+			Cube frontCube;
+			Cube backCube;
+			
 			FrameBuffer frontFBO;
+			FrameBuffer backFBO;
 			ImageDebugView offscreenImageView;
 			
 			// from constructor
 			VulkanDevice& dev;
 			
 			// from [xxx]Offscreen()
-			OffscreenPass offscreenPass;
-			VulkanSwapChain offscreenSwappChain;
-			
+			//OffscreenPass offscreenPass;
+			VulkanSwapChain frontSwappChain;
+			VulkanSwapChain backSwappChain;
 			
 			
 			

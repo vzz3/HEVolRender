@@ -26,7 +26,7 @@ namespace ppvr {
 				//VkDescriptorImageInfo descriptorImage;
 				
 				// from [xxx]UniformBuffers()
-				std::vector<VkBuffer> uniformBuffers;	// one for all swap chain images should be enoght becaus it does not change anyway
+				std::vector<VkBuffer> uniformBuffers;	// one for all swap chain images should be enough because it does not change anyway
 				std::vector<VkDeviceMemory> uniformBuffersMemory;
 				
 				// from [xxx]DescriptorPool()

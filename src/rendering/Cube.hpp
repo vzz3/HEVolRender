@@ -14,7 +14,7 @@ namespace ppvr {
 	namespace rendering {
 		class Cube {
 		public:
-			Cube(VulkanDevice& yDev);
+			Cube(VulkanDevice& yDev, VkCullModeFlags yCullMode);
 			~Cube();
 			
 			void initGpuResources();
@@ -78,6 +78,8 @@ namespace ppvr {
 			
 			// from constructor
 			VulkanDevice& dev;
+			
+			VkCullModeFlags cullMode;
 			
 			// from [xxx]VertexBuffer()
 			VkBuffer vertexBuffer;

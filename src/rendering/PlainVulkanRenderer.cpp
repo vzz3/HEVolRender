@@ -32,7 +32,7 @@ void PlainVulkanRenderer::initResources()
 	roAxis = new Axis(m_device);
 	roAxis->initGpuResources();
 	
-	roCube = new Cube(m_device);
+	roCube = new Cube(m_device, VK_CULL_MODE_NONE);
 	roCube->initGpuResources();
 	
 	roFrontCubeMap = new CubeMap(m_device);
