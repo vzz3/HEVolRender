@@ -200,6 +200,8 @@ add_shader(${PROJECT_NAME} "cube.frag")
 add_shader(${PROJECT_NAME} "cube.vert")
 add_shader(${PROJECT_NAME} "quad.frag")
 add_shader(${PROJECT_NAME} "quad.vert")
+add_shader(${PROJECT_NAME} "xray.frag")
+add_shader(${PROJECT_NAME} "xray.vert")
 
 
 

@@ -5,6 +5,7 @@
 #include <QFile>
 
 #include "./VulkanUtility.hpp"
+#include "./data/VolumeFactory.hpp"
 
 using namespace ppvr::rendering;
 
@@ -37,6 +38,18 @@ void PlainVulkanRenderer::initResources()
 	
 	roFrontCubeMap = new CubeMap(m_device);
 	roFrontCubeMap->initGpuResources();
+	
+	
+	//m_volume = new Volume<uint16_t>(4, 4, 4, 16);
+	//uint16_t test = (*m_volume)[1][2][3];
+	//(*m_volume)[1][2][3] = 18;
+	//test = (*m_volume)[1][2][3];
+	data::VolumeFactory::createVolume(m_volume, 100);
+	
+	m_gpuVolume = new data::GpuVolume(m_device);
+	m_gpuVolume->uploadVolume(m_volume);
+	roXRay = new XRay(m_device);
+	roXRay->initGpuResources();
 }
 
 void PlainVulkanRenderer::releaseResources()
@@ -61,12 +74,28 @@ void PlainVulkanRenderer::releaseResources()
         m_descPool = VK_NULL_HANDLE;
     }
 	*/
-	roAxis->releaseGpuResources();
-	roCube->releaseGpuResources();
-	roFrontCubeMap->releaseGpuResources();
+	roXRay->releaseGpuResources();
+	delete roXRay;
+	roXRay = nullptr;
 	
+	delete m_gpuVolume;
+	m_gpuVolume = nullptr;
+	
+	//delete m_volume;
+	//m_volume = nullptr;
+	
+	roFrontCubeMap->releaseGpuResources();
+	delete roFrontCubeMap;
+	roFrontCubeMap = nullptr;
+	
+	roCube->releaseGpuResources();
+	delete roCube;
+	roCube = nullptr;
+	
+	roAxis->releaseGpuResources();
 	delete roAxis;
 	roAxis = nullptr;
+	
 }
 
 void PlainVulkanRenderer::initSwapChainResources()
@@ -81,14 +110,18 @@ void PlainVulkanRenderer::initSwapChainResources()
     roAxis->initSwapChainResources(m_swapChain);
     roCube->initSwapChainResources(m_swapChain);
 	roFrontCubeMap->initSwapChainResources(m_swapChain);
+	
+	roXRay->initSwapChainResources(m_swapChain, m_gpuVolume, roFrontCubeMap->getFrontImageView(), roFrontCubeMap->getBackImageView());
 }
 
 void PlainVulkanRenderer::releaseSwapChainResources()
 {
     qDebug("PlainVulkanRenderer->releaseSwapChainResources()");
+	
+	roXRay->releaseSwapChainResources();
+	roFrontCubeMap->releaseSwapChainResources();
+	roCube->releaseSwapChainResources();
     roAxis->releaseSwapChainResources();
-    roCube->releaseSwapChainResources();
-    roFrontCubeMap->releaseSwapChainResources();
 }
 
 
@@ -166,9 +199,14 @@ void PlainVulkanRenderer::startNextFrame()
     m_devFuncs->vkCmdDraw(cb, 3, 1, 0, 0);
 	*/
 	
+	
+	
+	//roCube->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
+	roXRay->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
 	roAxis->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
-	roCube->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
 	roFrontCubeMap->draw(m_camera, cmdBuf, m_window->currentSwapChainImageIndex());
+	
+	
 	
     m_device.funcs->vkCmdEndRenderPass(cmdBuf);
 

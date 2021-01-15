@@ -13,10 +13,10 @@ CubeMap::CubeMap(VulkanDevice& yDev)
 	: dev(yDev),
 		frontCube(yDev, VK_CULL_MODE_BACK_BIT),
 		backCube(yDev, VK_CULL_MODE_FRONT_BIT),
-		frontFBO{yDev, false},
+		frontFBO{yDev, false, std::vector<VkFormat>{VK_FORMAT_R16G16B16A16_UNORM}}, // I do not need t A channel but Mac OS do not support VK_FORMAT_R16G16B16_UNORM (http://vulkan.gpuinfo.org/listformats.php?platform=macos)
 		backFBO{yDev, false},
 		offscreenImageView{yDev} {
-	fbDepthFormat = VulkanUtility::getSupportedDepthFormat(*dev.vkInstance, dev.vkPhysicalDev);
+	//fbDepthFormat = VulkanUtility::getSupportedDepthFormat(*dev.vkInstance, dev.vkPhysicalDev);
 }
 CubeMap::~CubeMap() {
 	this->cleanup();
@@ -58,8 +58,8 @@ void CubeMap::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
 	
 	offscreenImageView.initSwapChainResources(ySwapChain, std::vector<ImageDebugView::ImagePanel>{
 		//ImageDebugView::ImagePanel{VkImageView view,						float scale, 	glm::vec2 screenOffset		}
-		ImageDebugView::ImagePanel{	 frontFBO.getColorAttachment(0).view,	0.3f,			{0.05f      , 0.05f}		},
-		ImageDebugView::ImagePanel{	 backFBO.getColorAttachment(0).view,	0.3f,			{2.00f -0.65, 0.05f}		}
+		ImageDebugView::ImagePanel{	 getFrontImageView(),	0.3f,			{0.05f      , 0.05f}		},
+		ImageDebugView::ImagePanel{	 getBackImageView() ,	0.3f,			{2.00f -0.65, 0.05f}		}
 	});
 }
 
@@ -95,7 +95,7 @@ void CubeMap::drawCubeFace(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size
 	renderPassBeginInfo.clearValueCount = useDepthTest ? 2 : 1;
 	renderPassBeginInfo.pClearValues = clearValues;
 
-	vkCmdBeginRenderPass(yCmdBuf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	dev.funcs->vkCmdBeginRenderPass(yCmdBuf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	// für dynamische piplines
 	//VkViewport viewport = VulkanInitializers::viewport((float)frontFBO.getWidth(), (float)frontFBO.getHeight(), 0.0f, 1.0f);
@@ -108,7 +108,7 @@ void CubeMap::drawCubeFace(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size
 
 	yCube.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
 
-	vkCmdEndRenderPass(yCmdBuf);
+	dev.funcs->vkCmdEndRenderPass(yCmdBuf);
 }
 
 void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
@@ -119,4 +119,12 @@ void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf
 
 void CubeMap::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {	
 	offscreenImageView.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
+}
+
+VkImageView CubeMap::getFrontImageView() const {
+	return frontFBO.getColorAttachment(0).view;
+}
+
+VkImageView CubeMap::getBackImageView() const {
+	return backFBO.getColorAttachment(0).view;
 }

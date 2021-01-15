@@ -45,13 +45,16 @@ namespace ppvr {
 			void drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
 			
 			void draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
+			
+			VkImageView getFrontImageView() const;
+			VkImageView getBackImageView() const;
 		private:
-			static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM; // TODO!!!!
-			VkFormat fbDepthFormat;
+			//static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM; // TODO!!!!
+			//VkFormat fbDepthFormat;
 			
 			static constexpr bool useDepthTest = false;
 			
-			// eigentlich sollte auch ein cube mit zwei piplines reichen, den descriptorLayouts, DescriptorSets, VertrexBuffers usw. sind immer gleich.
+			// TODO: eigentlich sollte auch ein cube mit zwei piplines reichen, den descriptorLayouts, DescriptorSets, VertrexBuffers usw. sind immer gleich.
 			Cube frontCube;
 			Cube backCube;
 			

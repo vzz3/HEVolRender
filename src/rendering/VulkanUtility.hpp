@@ -42,6 +42,20 @@ namespace ppvr {
 			 */
 			static void copyBuffer(VulkanDevice& yDev, VkBuffer ySrcBuffer, VkBuffer yDstBuffer, VkDeviceSize ySize);
 		
+			static VkCommandBuffer 	beginSingleTimeCommands(VulkanDevice& yDev);
+			static void 			endSingleTimeCommands(  VulkanDevice& yDev, VkCommandBuffer yCommandBuffer);
+		
+			static void createImage(VulkanDevice& yDev,
+				VkImageType yImageType,
+				uint32_t width, uint32_t height, uint32_t depth,
+				VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+				VkImage& image, VkDeviceMemory& imageMemory);
+		
+			static void transitionImageLayout(VulkanDevice& yDev, VkImage yImage, VkFormat yFormat, VkImageLayout yOldLayout, VkImageLayout yNewLayout);
+		
+			static void copyBufferToImage(VulkanDevice& yDev, VkBuffer yBuffer, VkImage yImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth = 1);
+		
+		
 			static VkFormat getSupportedDepthFormat(VulkanInstance& yVkInstance, VkPhysicalDevice yVkPhysicalDevice);
 		};
 	}

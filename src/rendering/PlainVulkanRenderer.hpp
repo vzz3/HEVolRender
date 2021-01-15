@@ -8,6 +8,9 @@
 #include "./Axis.hpp"
 #include "./Cube.hpp"
 #include "./CubeMap.hpp"
+#include "./data/Volume.hpp"
+#include "./data/GpuVolume.hpp"
+#include "./XRay.hpp"
 
 namespace ppvr {
 	namespace rendering {
@@ -56,6 +59,10 @@ namespace ppvr {
 				QMatrix4x4 m_proj;
 				float m_rotation = 0.0f;
 				*/
+			
+				Volume<uint16_t> m_volume;
+				data::GpuVolume* m_gpuVolume = nullptr;
+				XRay* roXRay = nullptr;
 		};
 	}
 }

@@ -13,7 +13,7 @@ FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth)
 	: FrameBuffer{
 		yDev,
 		yUseDepth,
-		std::vector<VkFormat>{VK_FORMAT_R8G8B8A8_UNORM}
+		std::vector<VkFormat>{VK_FORMAT_R8G8B8A8_UNORM} 
 	} {
 	
 }

@@ -9,6 +9,7 @@ vulkan low level API explanation: https://software.intel.com/content/www/us/en/d
 examples: https://github.com/KhronosGroup/Vulkan-Samples
 https://developer.nvidia.com/blog/vulkan-dos-donts/
 uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
 
 ## Build on mac OS
 Blog Post about Vulkan support in QT under mac OS: https://www.qt.io/blog/2018/05/30/vulkan-for-qt-on-macos

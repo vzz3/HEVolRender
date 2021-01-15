@@ -334,6 +334,7 @@ namespace ppvr {
 				writeDescriptorSet.pBufferInfo = bufferInfo;
 				writeDescriptorSet.pImageInfo = nullptr; // Optional
 				writeDescriptorSet.pTexelBufferView = nullptr; // Optional
+				writeDescriptorSet.dstArrayElement = 0;
 				writeDescriptorSet.descriptorCount = descriptorCount;
 				return writeDescriptorSet;
 			}
@@ -353,6 +354,7 @@ namespace ppvr {
 				writeDescriptorSet.pBufferInfo = nullptr; // Optional
 				writeDescriptorSet.pImageInfo = imageInfo;
 				writeDescriptorSet.pTexelBufferView = nullptr; // Optional
+				writeDescriptorSet.dstArrayElement = 0;
 				writeDescriptorSet.descriptorCount = descriptorCount;
 				return writeDescriptorSet;
 			}
