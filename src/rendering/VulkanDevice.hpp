@@ -16,8 +16,9 @@ namespace ppvr {
 			
 			
 			
-			VkCommandPool graphicsCommandPool;
 			VkQueue graphicsQueue;
+			VkCommandPool graphicsCommandPool;
+			
 			
 			VulkanDevice(VulkanInstance* yVkInstance, VkPhysicalDevice yVkPhysicalDevice, VkDevice yVkDevice, QVulkanDeviceFunctions* yDeviceFunctions, VkCommandPool yGraphicsCommandPool, VkQueue yGraphicsQueue);
 			VulkanDevice();

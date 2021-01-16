@@ -7,9 +7,14 @@ used example: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hell
 ## important Vulkan links
 vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
 examples: https://github.com/KhronosGroup/Vulkan-Samples
+Headless example: https://github.com/SaschaWillems/Vulkan/tree/master/examples/renderheadless
 https://developer.nvidia.com/blog/vulkan-dos-donts/
 uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
 Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
+C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
+SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
+
+
 
 ## Build on mac OS
 Blog Post about Vulkan support in QT under mac OS: https://www.qt.io/blog/2018/05/30/vulkan-for-qt-on-macos

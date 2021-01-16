@@ -107,19 +107,47 @@ void VulkanUtility::createBuffer(VulkanDevice& yDev, VkDeviceSize ySize, VkBuffe
 	yDev.funcs->vkBindBufferMemory(yDev.vkDev, yBuffer, yBufferMemory, 0);
 }
 
-void VulkanUtility::copyBuffer(VulkanDevice& yDev, VkBuffer ySrcBuffer, VkBuffer yDstBuffer, VkDeviceSize ySize) {
-	// https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer
+void VulkanUtility::createImage(VulkanDevice& yDev,
+	VkImageType yImageType,
+	uint32_t yWidth, uint32_t yHeight, uint32_t yDepth,
+	VkFormat yFormat, VkImageTiling yTiling, VkImageUsageFlags yUsage, VkMemoryPropertyFlags yProperties,
+	VkImage& yImage, VkDeviceMemory& yImageMemory) {
+	//constexpr VkImageType imageType = VK_IMAGE_TYPE_3D;
+	//constexpr VkFormat format = VK_FORMAT_R16_UNORM;
+	//constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	//constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
+	VkImageCreateInfo imageInfo = VulkanInitializers::imageCreateInfo();
+	imageInfo.imageType = yImageType;
+	imageInfo.extent.width = yWidth;
+	imageInfo.extent.height = yHeight;
+	imageInfo.extent.depth = yDepth;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = yFormat;
+	imageInfo.tiling = yTiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = yUsage;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VkBufferCopy copyRegion{};
-		copyRegion.srcOffset = 0; // Optional
-		copyRegion.dstOffset = 0; // Optional
-		copyRegion.size = ySize;
-		yDev.funcs->vkCmdCopyBuffer(commandBuffer, ySrcBuffer, yDstBuffer, 1, &copyRegion);
+	VK_CHECK_RESULT (yDev.funcs->vkCreateImage(yDev.vkDev, &imageInfo, nullptr, &yImage), "failed to create image!");
 
-	endSingleTimeCommands(yDev, commandBuffer);
+	VkMemoryRequirements memRequirements;
+	yDev.funcs->vkGetImageMemoryRequirements(yDev.vkDev, yImage, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo = VulkanInitializers::memoryAllocateInfo();
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = VulkanUtility::findMemoryType(yDev, memRequirements.memoryTypeBits, yProperties);
+
+	VK_CHECK_RESULT (yDev.funcs->vkAllocateMemory(yDev.vkDev, &allocInfo, nullptr, &yImageMemory), "failed to allocate image memory!");
+
+	VK_CHECK_RESULT (yDev.funcs->vkBindImageMemory(yDev.vkDev, yImage, yImageMemory, 0), "failed to bind image memory!");
 }
+
+
+
 
 VkCommandBuffer VulkanUtility::beginSingleTimeCommands(VulkanDevice& yDev) {
 	// https://vulkan-tutorial.com/Texture_mapping/Images
@@ -157,54 +185,95 @@ void VulkanUtility::endSingleTimeCommands(  VulkanDevice& yDev, VkCommandBuffer 
 
 	yDev.funcs->vkQueueSubmit(yDev.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	yDev.funcs->vkQueueWaitIdle(yDev.graphicsQueue); // We could use a fence and wait with vkWaitForFences, or simply wait for the transfer queue to become idle with vkQueueWaitIdle. A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time. That may give the driver more opportunities to optimize.
+	
+		// e.g.:
+		//VkFence fence;
+		//VK_CHECK_RESULT(vkCreateFence(device, &fenceInfo, nullptr, &fence));
+		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
+		//VK_CHECK_RESULT(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX));
+		//vkDestroyFence(device, fence, nullptr);
 
 	yDev.funcs->vkFreeCommandBuffers(yDev.vkDev, yDev.graphicsCommandPool, 1, &yCommandBuffer);
 }
 
-void VulkanUtility::createImage(VulkanDevice& yDev,
-	VkImageType yImageType,
-	uint32_t yWidth, uint32_t yHeight, uint32_t yDepth,
-	VkFormat yFormat, VkImageTiling yTiling, VkImageUsageFlags yUsage, VkMemoryPropertyFlags yProperties,
-	VkImage& yImage, VkDeviceMemory& yImageMemory) {
-	//constexpr VkImageType imageType = VK_IMAGE_TYPE_3D;
-	//constexpr VkFormat format = VK_FORMAT_R16_UNORM;
-	//constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	//constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	VkImageCreateInfo imageInfo = VulkanInitializers::imageCreateInfo();
-	imageInfo.imageType = yImageType;
-	imageInfo.extent.width = yWidth;
-	imageInfo.extent.height = yHeight;
-	imageInfo.extent.depth = yDepth;
-	imageInfo.mipLevels = 1;
-	imageInfo.arrayLayers = 1;
-	imageInfo.format = yFormat;
-	imageInfo.tiling = yTiling;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = yUsage;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+void VulkanUtility::copyBuffer(VulkanDevice& yDev,
+	VkBuffer ySrcBuffer, VkBuffer yDstBuffer, VkDeviceSize ySize) {
+	
+	// https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer
 
-	VK_CHECK_RESULT (yDev.funcs->vkCreateImage(yDev.vkDev, &imageInfo, nullptr, &yImage), "failed to create image!");
-
-	VkMemoryRequirements memRequirements;
-	yDev.funcs->vkGetImageMemoryRequirements(yDev.vkDev, yImage, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo = VulkanInitializers::memoryAllocateInfo();
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = VulkanUtility::findMemoryType(yDev, memRequirements.memoryTypeBits, yProperties);
-
-	VK_CHECK_RESULT (yDev.funcs->vkAllocateMemory(yDev.vkDev, &allocInfo, nullptr, &yImageMemory), "failed to allocate image memory!");
-
-	yDev.funcs->vkBindImageMemory(yDev.vkDev, yImage, yImageMemory, 0);
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
+	copyBuffer(yDev, commandBuffer, ySrcBuffer, yDstBuffer, ySize);
+	endSingleTimeCommands(yDev, commandBuffer);
 }
 
-void VulkanUtility::transitionImageLayout(VulkanDevice& yDev, VkImage yImage, VkFormat yFormat, VkImageLayout yOldLayout, VkImageLayout yNewLayout) {
+void VulkanUtility::copyBuffer(VulkanDevice& yDev,
+	VkCommandBuffer yCommandBuffer,
+	VkBuffer ySrcBuffer, VkBuffer yDstBuffer, VkDeviceSize ySize)
+{
+	// https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer
+
+	VkBufferCopy copyRegion{};
+	copyRegion.srcOffset = 0; // Optional
+	copyRegion.dstOffset = 0; // Optional
+	copyRegion.size = ySize;
+	yDev.funcs->vkCmdCopyBuffer(yCommandBuffer, ySrcBuffer, yDstBuffer, 1, &copyRegion);
+
+}
+
+
+/*
+void VulkanUtility::insertImageMemoryBarrier(
+			VulkanDevice& yDev,
+			VkCommandBuffer yCmdbuffer,
+			VkImage yImage,
+			VkAccessFlags ySrcAccessMask,
+			VkAccessFlags yDstAccessMask,
+			VkImageLayout yOldImageLayout,
+			VkImageLayout yNewImageLayout,
+			VkPipelineStageFlags ySrcStageMask,
+			VkPipelineStageFlags yDstStageMask,
+			VkImageSubresourceRange ySubresourceRange)
+		{
+			VkImageMemoryBarrier imageMemoryBarrier = VulkanInitializers::imageMemoryBarrier();
+			imageMemoryBarrier.srcAccessMask = ySrcAccessMask;
+			imageMemoryBarrier.dstAccessMask = yDstAccessMask;
+			imageMemoryBarrier.oldLayout = yOldImageLayout;
+			imageMemoryBarrier.newLayout = yNewImageLayout;
+			imageMemoryBarrier.image = image;
+			imageMemoryBarrier.subresourceRange = subresourceRange;
+
+			vkCmdPipelineBarrier(
+				cmdbuffer,
+				srcStageMask,
+				dstStageMask,
+				0,
+				0, nullptr,
+				0, nullptr,
+				1, &imageMemoryBarrier);
+		}
+*/
+
+void VulkanUtility::transitionImageLayout(
+	VulkanDevice& yDev,
+	VkImage yImage, VkFormat yFormat,
+	VkImageLayout yOldLayout, VkImageLayout yNewLayout)
+{
+	// https://vulkan-tutorial.com/Texture_mapping/Images
+
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
+	transitionImageLayout(yDev, commandBuffer, yImage, yFormat, yOldLayout, yNewLayout);
+	endSingleTimeCommands(yDev, commandBuffer);
+}
+
+void VulkanUtility::transitionImageLayout(
+	VulkanDevice& yDev,
+	VkCommandBuffer yCommandBuffer,
+	VkImage yImage, VkFormat yFormat,
+	VkImageLayout yOldLayout, VkImageLayout yNewLayout)
+{
 	// https://vulkan-tutorial.com/Texture_mapping/Images
 	
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
-
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = yOldLayout;
@@ -212,6 +281,7 @@ void VulkanUtility::transitionImageLayout(VulkanDevice& yDev, VkImage yImage, Vk
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = yImage;
+	
 	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;
@@ -233,12 +303,18 @@ void VulkanUtility::transitionImageLayout(VulkanDevice& yDev, VkImage yImage, Vk
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	} else if (yOldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && yNewLayout == VK_IMAGE_LAYOUT_GENERAL) {
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	} else {
 		throw std::invalid_argument("unsupported layout transition!");
 	}
 
 	vkCmdPipelineBarrier(
-		commandBuffer,
+		yCommandBuffer,
 		sourceStage, destinationStage,
 		0,
 		0, nullptr,
@@ -246,12 +322,22 @@ void VulkanUtility::transitionImageLayout(VulkanDevice& yDev, VkImage yImage, Vk
 		1, &barrier
 	);
 
+}
+
+void VulkanUtility::copyBufferToImage(
+	VulkanDevice& yDev,
+	VkBuffer yBuffer, VkImage yImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth)
+{
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
+	copyBufferToImage(yDev, commandBuffer, yBuffer, yImage, yWidth, yHeight, yDepth);
 	endSingleTimeCommands(yDev, commandBuffer);
 }
 
-void VulkanUtility::copyBufferToImage(VulkanDevice& yDev, VkBuffer yBuffer, VkImage yImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth) {
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
-
+void VulkanUtility::copyBufferToImage(
+	VulkanDevice& yDev,
+	VkCommandBuffer yCommandBuffer,
+	VkBuffer yBuffer, VkImage yImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth)
+{
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -267,10 +353,40 @@ void VulkanUtility::copyBufferToImage(VulkanDevice& yDev, VkBuffer yBuffer, VkIm
 		yDepth
 	};
 
-	yDev.funcs->vkCmdCopyBufferToImage(commandBuffer, yBuffer, yImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	yDev.funcs->vkCmdCopyBufferToImage(yCommandBuffer, yBuffer, yImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+}
 
+void VulkanUtility::copyImage(
+	VulkanDevice& yDev,
+	VkImage ySrcImage, VkImage yDstImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth)
+{
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
+	copyImage(yDev, commandBuffer, ySrcImage, yDstImage, yWidth, yHeight, yDepth);
 	endSingleTimeCommands(yDev, commandBuffer);
 }
+
+void VulkanUtility::copyImage(
+	VulkanDevice& yDev,
+	VkCommandBuffer yCommandBuffer,
+	VkImage ySrcImage, VkImage yDstImage, uint32_t yWidth, uint32_t yHeight, uint32_t yDepth)
+{
+	VkImageCopy imageCopyRegion{};
+	imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imageCopyRegion.srcSubresource.layerCount = 1;
+	imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imageCopyRegion.dstSubresource.layerCount = 1;
+	imageCopyRegion.extent.width = yWidth;
+	imageCopyRegion.extent.height = yHeight;
+	imageCopyRegion.extent.depth = yDepth;
+
+	yDev.funcs->vkCmdCopyImage(
+		yCommandBuffer,
+		ySrcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		yDstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1,
+		&imageCopyRegion);
+}
+
 
 
 

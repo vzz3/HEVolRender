@@ -11,6 +11,13 @@ namespace ppvr {
 	namespace rendering {
 		class FrameBuffer {
 		public:
+			struct ImageDefinition {
+				//ImageDefinition(VkFormat yFormat);
+				ImageDefinition(VkFormat yFormat, VkImageLayout yFinalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				VkFormat format;
+				VkImageLayout finalLayout;
+			};
+		
 			struct FrameBufferAttachment {
 				VkImage image;
 				VkDeviceMemory mem;
@@ -19,14 +26,14 @@ namespace ppvr {
 			
 		public:
 			FrameBuffer(VulkanDevice& yDev, bool yUseDepth);
-			FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<VkFormat>& yFbColorFormats);
-			FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<VkFormat>& yFbColorFormats, VkFormat yFbDepthFormat);
+			FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<ImageDefinition>& yFbColorFormats);
+			FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<ImageDefinition>& yFbColorFormats, VkFormat yFbDepthFormat);
 			~FrameBuffer();
 			
 			void initGpuResources();
 			void releaseGpuResources();
 			
-			void initSwapChainResources(const VulkanSwapChain& ySwapChain);
+			void initSwapChainResources(const QSize& yTargetSize);
 			void releaseSwapChainResources();
 			
 		private:
@@ -39,13 +46,13 @@ namespace ppvr {
 			void createColorAttachment(size_t yIndex);
 			void cleanupColorAttachment(size_t yIndex);
 			
-			void createDepthAttachment(const VulkanSwapChain& ySwapChain);
+			void createDepthAttachment();
 			void cleanupDepthAttachment();
 			
-			void createRenderPass(const VulkanSwapChain& ySwapChain);
+			void createRenderPass();
 			void cleanupRenderPass();
 			
-			void createFrameBuffer(const VulkanSwapChain& ySwapChain);
+			void createFrameBuffer();
 			void cleanupFrameBuffer();
 			
 			//void createSampler(const VulkanSwapChain& ySwapChain);
@@ -68,7 +75,7 @@ namespace ppvr {
 			VulkanDevice& dev;
 			const bool useDepthTest = false;
 			//static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM; // TODO!!!!
-			const std::vector<VkFormat> fbColorFormats;
+			const std::vector<ImageDefinition> fbColorFormats;
 			const VkFormat fbDepthFormat;
 			
 			// from initSwapChainResources

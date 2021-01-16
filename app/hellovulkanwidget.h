@@ -79,6 +79,8 @@ public slots:
     void onLogMessageReceived(const QString &text);
     void onFrameQueued(int colorValue);
     void onGrabRequested();
+	
+    void renderEcrypted();
 
 private:
 	Ui_MainWindow *m_Ui;
@@ -124,8 +126,9 @@ protected:
 
 	void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
 	
-private:
+public:
 	//ppvr::rendering::Camera m_camera;
 	VulkanRenderer* m_vulkanRenderer = nullptr;
+private:
 	QPoint m_lastPos;
 };

@@ -59,9 +59,11 @@
 #include <QMessageBox>
 #include <QTabWidget>
 #include "../src/rendering/Camera.hpp"
+#include "../src/rendering/EncryptedVulkanRenderer.hpp"
 
 using ppvr::rendering::PlainVulkanRenderer;
 using ppvr::rendering::Camera;
+using ppvr::rendering::EncryptedVulkanRenderer;
 
 MainWindow::MainWindow() {
 
@@ -101,6 +103,9 @@ MainWindow::MainWindow() {
 	//m_Ui->controls->setLayout(layout);
 	
 	m_Ui->infoPlainTextEdit->setReadOnly(true);
+	
+	
+	connect(m_Ui->actionRenderEncrypted, SIGNAL(triggered()), this, SLOT(renderEcrypted()));
 }
 
 MainWindow::~MainWindow() {
@@ -196,6 +201,17 @@ void MainWindow::onGrabRequested()
     fd.selectFile("test.png");
     if (fd.exec() == QDialog::Accepted)
         img.save(fd.selectedFiles().first());
+}
+
+void MainWindow::renderEcrypted() {
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera());
+	encRenderer->initSwapChainResources(QSize{500, 500}, 1);
+	
+	encRenderer->startNextFrame();
+	encRenderer->framebuffer2host();
+	
+	encRenderer->releaseSwapChainResources();
+	delete encRenderer;
 }
 
 

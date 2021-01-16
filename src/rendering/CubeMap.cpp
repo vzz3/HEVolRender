@@ -13,7 +13,7 @@ CubeMap::CubeMap(VulkanDevice& yDev)
 	: dev(yDev),
 		frontCube(yDev, VK_CULL_MODE_BACK_BIT),
 		backCube(yDev, VK_CULL_MODE_FRONT_BIT),
-		frontFBO{yDev, false, std::vector<VkFormat>{VK_FORMAT_R16G16B16A16_UNORM}}, // I do not need t A channel but Mac OS do not support VK_FORMAT_R16G16B16_UNORM (http://vulkan.gpuinfo.org/listformats.php?platform=macos)
+		frontFBO{yDev, false, std::vector<FrameBuffer::ImageDefinition>{VK_FORMAT_R16G16B16A16_UNORM}}, // I do not need t A channel but Mac OS do not support VK_FORMAT_R16G16B16_UNORM (http://vulkan.gpuinfo.org/listformats.php?platform=macos)
 		backFBO{yDev, false},
 		offscreenImageView{yDev} {
 	//fbDepthFormat = VulkanUtility::getSupportedDepthFormat(*dev.vkInstance, dev.vkPhysicalDev);
@@ -43,8 +43,8 @@ void CubeMap::releaseGpuResources() {
 }
 
 void CubeMap::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
-	frontFBO.initSwapChainResources(ySwapChain);
-	backFBO.initSwapChainResources(ySwapChain);
+	frontFBO.initSwapChainResources(ySwapChain.targetSize);
+	backFBO.initSwapChainResources(ySwapChain.targetSize);
 	
 	frontSwappChain.renderPass = frontFBO.getRenderPass();
 	frontSwappChain.swapChainImageCount = ySwapChain.swapChainImageCount;

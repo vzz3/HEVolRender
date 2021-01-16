@@ -111,7 +111,14 @@
     <addaction name="actionOpen"/>
     <addaction name="actionGrab_Frame"/>
    </widget>
+   <widget class="QMenu" name="menuRender">
+    <property name="title">
+     <string>Render</string>
+    </property>
+    <addaction name="actionRenderEncrypted"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuRender"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -122,6 +129,14 @@
   <action name="actionGrab_Frame">
    <property name="text">
     <string>Grab Frame ...</string>
+   </property>
+  </action>
+  <action name="actionRenderEncrypted">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Render Encrypted</string>
    </property>
   </action>
  </widget>

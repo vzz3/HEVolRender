@@ -9,16 +9,36 @@
 
 using namespace ppvr::rendering;
 
+
+//FrameBuffer::ImageDefinition::ImageDefinition(VkFormat yFormat)
+//	: FrameBuffer::ImageDefinition{
+//		yFormat,
+//		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+//	}
+//{
+//
+//}
+
+FrameBuffer::ImageDefinition::ImageDefinition(VkFormat yFormat, VkImageLayout yFinalLayout)
+	: format{yFormat}, finalLayout{yFinalLayout}
+{
+	
+}
+
+
+
+
 FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth)
 	: FrameBuffer{
 		yDev,
 		yUseDepth,
-		std::vector<VkFormat>{VK_FORMAT_R8G8B8A8_UNORM} 
-	} {
+		std::vector<ImageDefinition>{VK_FORMAT_R8G8B8A8_UNORM}
+	}
+{
 	
 }
 
-FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<VkFormat>& yFbColorFormats)
+FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<ImageDefinition>& yFbColorFormats)
 	: FrameBuffer{
 		yDev,
 		yUseDepth,
@@ -28,7 +48,7 @@ FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<V
 	
 }
 
-FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<VkFormat>& yFbColorFormats, VkFormat yFbDepthFormat)
+FrameBuffer::FrameBuffer(VulkanDevice& yDev, bool yUseDepth, const std::vector<ImageDefinition>& yFbColorFormats, VkFormat yFbDepthFormat)
  	: dev{yDev}, useDepthTest{yUseDepth}, fbColorFormats{yFbColorFormats}, fbDepthFormat{yFbDepthFormat} {
 
 	colors.resize(fbColorFormats.size());
@@ -45,17 +65,17 @@ void FrameBuffer::initGpuResources() {
 void FrameBuffer::releaseGpuResources() {
 }
 
-void FrameBuffer::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
-	width = ySwapChain.targetSize.width();
-	height = ySwapChain.targetSize.height();
+void FrameBuffer::initSwapChainResources(const QSize& yTargetSize) { //QSize targetSize
+	width = yTargetSize.width();
+	height = yTargetSize.height();
 
 	this->createColorAttachments();
 	//this->createSampler(ySwapChain);
 	if(useDepthTest) {
-		this->createDepthAttachment(ySwapChain);
+		this->createDepthAttachment();
 	}
-	this->createRenderPass(ySwapChain);
-	this->createFrameBuffer(ySwapChain);
+	this->createRenderPass();
+	this->createFrameBuffer();
 }
 
 void FrameBuffer::releaseSwapChainResources() {
@@ -99,7 +119,7 @@ void FrameBuffer::createColorAttachment(size_t yIndex) {
 	// Color attachment
 	VkImageCreateInfo image = VulkanInitializers::imageCreateInfo();
 	image.imageType = VK_IMAGE_TYPE_2D;
-	image.format = this->fbColorFormats[yIndex];
+	image.format = this->fbColorFormats[yIndex].format;
 	image.extent.width = this->width;
 	image.extent.height = this->height;
 	image.extent.depth = 1;
@@ -109,6 +129,9 @@ void FrameBuffer::createColorAttachment(size_t yIndex) {
 	image.tiling = VK_IMAGE_TILING_OPTIMAL;
 	// We will sample directly from the color attachment
 	image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	if(this->fbColorFormats[yIndex].finalLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+		image.usage = image.usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	}
 
 	VK_CHECK_RESULT(dev.funcs->vkCreateImage(dev.vkDev, &image, nullptr, &colors[yIndex].image), "failed to create color image for offscreen frame buffer!");
 
@@ -123,7 +146,7 @@ void FrameBuffer::createColorAttachment(size_t yIndex) {
 
 	VkImageViewCreateInfo colorImageView = VulkanInitializers::imageViewCreateInfo();
 	colorImageView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	colorImageView.format = this->fbColorFormats[yIndex];
+	colorImageView.format = this->fbColorFormats[yIndex].format;
 	colorImageView.subresourceRange = {};
 	colorImageView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	colorImageView.subresourceRange.baseMipLevel = 0;
@@ -143,7 +166,7 @@ void FrameBuffer::cleanupDepthAttachment() {
 	depth.mem = VK_NULL_HANDLE;
 }
 
-void FrameBuffer::createDepthAttachment(const VulkanSwapChain& ySwapChain) {
+void FrameBuffer::createDepthAttachment() {
 	// Find a suitable depth format
 	VkFormat fbDepthFormat = VulkanUtility::getSupportedDepthFormat(*dev.vkInstance, dev.vkPhysicalDev);
 
@@ -190,7 +213,7 @@ void FrameBuffer::cleanupRenderPass() {
 	renderPass = VK_NULL_HANDLE;
 }
 
-void FrameBuffer::createRenderPass(const VulkanSwapChain& ySwapChain) {
+void FrameBuffer::createRenderPass() {
 	// Create a separate render pass for the offscreen rendering as it may differ from the one used for scene rendering
 
 	size_t i;
@@ -202,14 +225,14 @@ void FrameBuffer::createRenderPass(const VulkanSwapChain& ySwapChain) {
 	VkAttachmentReference depthReference;
 	// Color attachment
 	for(i=0; i < cCount; i++) {
-		attchmentDescriptions[i].format = fbColorFormats[i];
+		attchmentDescriptions[i].format = fbColorFormats[i].format;
 		attchmentDescriptions[i].samples = VK_SAMPLE_COUNT_1_BIT;
 		attchmentDescriptions[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attchmentDescriptions[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		attchmentDescriptions[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attchmentDescriptions[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attchmentDescriptions[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attchmentDescriptions[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		attchmentDescriptions[i].finalLayout = fbColorFormats[i].finalLayout; //VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
 		
 		colorReferences[i].attachment = i;
 		colorReferences[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -278,7 +301,7 @@ void FrameBuffer::cleanupFrameBuffer() {
 	frameBuffer = VK_NULL_HANDLE;
 }
 
-void FrameBuffer::createFrameBuffer(const VulkanSwapChain& ySwapChain) {
+void FrameBuffer::createFrameBuffer() {
 	size_t i;
 	size_t cCount = colorAttachmentCount();
 	size_t aCount = attachmentCount();
