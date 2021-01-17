@@ -1,5 +1,5 @@
 
-#include "XRay.hpp"
+#include "EncryptedXRay.hpp"
 
 #include "VulkanUtility.hpp"
 #include "VulkanInitializers.hpp"
@@ -11,22 +11,22 @@ using namespace ppvr::rendering;
 
 
 
-XRay::XRay(VulkanDevice& yDev): dev(yDev) {
+EncryptedXRay::EncryptedXRay(VulkanDevice& yDev): dev(yDev) {
 }
 
-XRay::~XRay() {
+EncryptedXRay::~EncryptedXRay() {
 	this->cleanup();
 };
 
-void XRay::initGpuResources() {
+void EncryptedXRay::initGpuResources() {
 	this->createDescriptorSetLayout();
 }
 
-void XRay::releaseGpuResources() {
+void EncryptedXRay::releaseGpuResources() {
 	this->cleanupDescriptorSetLayout();
 }
 
-void XRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack) {
+void EncryptedXRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack) {
 	volume = yVolume;
 	cubePosView[0] = yCubeFront;
 	cubePosView[1] = yCubeBack;
@@ -34,20 +34,20 @@ void XRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVo
 	this->createPipeline(ySwapChain);
 }
 
-void XRay::releaseSwapChainResources() {
+void EncryptedXRay::releaseSwapChainResources() {
 	this->cleanupPipeline();
 	this->cleanupVolumeDescriptors();
 	volume = nullptr;
 }
 
-void XRay::cleanup() {
+void EncryptedXRay::cleanup() {
 	this->releaseSwapChainResources();
 	this->releaseGpuResources();
 }
 
 // --- image descriptor ---
 
-void XRay::cleanupVolumeDescriptors() {
+void EncryptedXRay::cleanupVolumeDescriptors() {
 	cleanupDescriptorSet();
 	cleanupDescriptorPool();
 	cleanupUniformBuffer();
@@ -55,7 +55,7 @@ void XRay::cleanupVolumeDescriptors() {
 	cleanupCubePosSampler();
 }
 
-void XRay::createVolumeDescriptors(const VulkanSwapChain& ySwapChain) {
+void EncryptedXRay::createVolumeDescriptors(const VulkanSwapChain& ySwapChain) {
 	createVolumeSampler(ySwapChain);
 	createCubePosSampler(ySwapChain);
 	createUniformBuffer(ySwapChain.swapChainImageCount);
@@ -68,12 +68,12 @@ void XRay::createVolumeDescriptors(const VulkanSwapChain& ySwapChain) {
 }
 
 
-void XRay::cleanupVolumeSampler() {
+void EncryptedXRay::cleanupVolumeSampler() {
 	dev.funcs->vkDestroySampler(dev.vkDev, volumeSampler, nullptr);
 	volumeSampler = VK_NULL_HANDLE;
 }
 
-void XRay::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
+void EncryptedXRay::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
 	// Create sampler to sample from the attachment in the fragment shader
 	VkSamplerCreateInfo samplerInfo = VulkanInitializers::samplerCreateInfo();
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -90,12 +90,12 @@ void XRay::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
 	VK_CHECK_RESULT(dev.funcs->vkCreateSampler(dev.vkDev, &samplerInfo, nullptr, &volumeSampler), "failed to create sampler!");
 }
 
-void XRay::cleanupCubePosSampler() {
+void EncryptedXRay::cleanupCubePosSampler() {
 	dev.funcs->vkDestroySampler(dev.vkDev, cubePosSampler, nullptr);
 	cubePosSampler = VK_NULL_HANDLE;
 }
 
-void XRay::createCubePosSampler(const VulkanSwapChain& ySwapChain) {
+void EncryptedXRay::createCubePosSampler(const VulkanSwapChain& ySwapChain) {
 	// Create sampler to sample from the attachment in the fragment shader
 	VkSamplerCreateInfo samplerInfo = VulkanInitializers::samplerCreateInfo();
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -112,7 +112,7 @@ void XRay::createCubePosSampler(const VulkanSwapChain& ySwapChain) {
 	VK_CHECK_RESULT(dev.funcs->vkCreateSampler(dev.vkDev, &samplerInfo, nullptr, &cubePosSampler), "failed to create sampler!");
 }
 
-void XRay::cleanupUniformBuffer() {
+void EncryptedXRay::cleanupUniformBuffer() {
 	for (size_t i = 0; i < uniformBuffers.size(); i++) {
         dev.funcs->vkDestroyBuffer(dev.vkDev, uniformBuffers[i], nullptr);
 		uniformBuffers[i] = VK_NULL_HANDLE;
@@ -121,7 +121,7 @@ void XRay::cleanupUniformBuffer() {
     }
 }
 
-void XRay::createUniformBuffer(size_t ySwapChainImageCount) {
+void EncryptedXRay::createUniformBuffer(size_t ySwapChainImageCount) {
 	constexpr VkDeviceSize bufferSize = sizeof(uniform::XRayUniformBufferObject);
 
 	uniformBuffers.resize(ySwapChainImageCount);
@@ -135,12 +135,12 @@ void XRay::createUniformBuffer(size_t ySwapChainImageCount) {
     }
 }
 
-void XRay::cleanupDescriptorPool() {
+void EncryptedXRay::cleanupDescriptorPool() {
 	dev.funcs->vkDestroyDescriptorPool(dev.vkDev, descriptorPool, nullptr);
 	descriptorPool = VK_NULL_HANDLE;
 }
 
-void XRay::createDescriptorPool(size_t ySwapChainImageCount) {
+void EncryptedXRay::createDescriptorPool(size_t ySwapChainImageCount) {
 	std::vector<VkDescriptorPoolSize> poolSizes = {
 		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(ySwapChainImageCount)),			// uniform buffer for XRayUniformBufferObject
 		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),	// sampler+image for volume
@@ -151,11 +151,11 @@ void XRay::createDescriptorPool(size_t ySwapChainImageCount) {
 	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
 }
 
-void XRay::cleanupDescriptorSet() {
+void EncryptedXRay::cleanupDescriptorSet() {
 	// You don't need to explicitly clean up descriptor sets, because they will be automatically freed when the descriptor pool is destroyed.
 }
 
-void XRay::createDescriptorSet(size_t ySwapChainImageCount) {
+void EncryptedXRay::createDescriptorSet(size_t ySwapChainImageCount) {
 	std::vector<VkDescriptorSetLayout> layouts(ySwapChainImageCount, descriptorSetLayout); // Constructs the container with ySwapChainImageCount copies of debugDescriptorSetLayout.
 	VkDescriptorSetAllocateInfo allocInfo = VulkanInitializers::descriptorSetAllocateInfo(
 		descriptorPool,								// descriptorPool
@@ -226,7 +226,7 @@ void XRay::createDescriptorSet(size_t ySwapChainImageCount) {
 	}
 }
 
-void XRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
+void EncryptedXRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 
 //	float scale = images[yIndex].scale;// 0.3f;
 //	float s =  2.0f 		* scale;
@@ -259,12 +259,12 @@ void XRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 
 // --- render pipline ---
 
-void XRay::cleanupDescriptorSetLayout() {
+void EncryptedXRay::cleanupDescriptorSetLayout() {
 	dev.funcs->vkDestroyDescriptorSetLayout(dev.vkDev, descriptorSetLayout, nullptr);
 	descriptorSetLayout = VK_NULL_HANDLE;
 }
 
-void XRay::createDescriptorSetLayout() {
+void EncryptedXRay::createDescriptorSetLayout() {
 	std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings;
 	//VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo;
 	//VkPipelineLayoutCreateInfo pipelineLayoutInfo;
@@ -302,7 +302,7 @@ void XRay::createDescriptorSetLayout() {
 	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorSetLayout(dev.vkDev, &descriptorLayoutInfo, nullptr, &descriptorSetLayout), "failed to create descriptor set layout!");
 }
 
-void XRay::cleanupPipeline() {
+void EncryptedXRay::cleanupPipeline() {
 	dev.funcs->vkDestroyPipeline(dev.vkDev, debugPipline, nullptr);
 	debugPipline = VK_NULL_HANDLE;
 	
@@ -310,12 +310,12 @@ void XRay::cleanupPipeline() {
 	debugPiplineLayout = VK_NULL_HANDLE;
 }
 
-void XRay::createPipeline(const VulkanSwapChain& ySwapChain) {
+void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &debugPiplineLayout), "failed to create pipeline layout!");
 
-	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/xRay.vert.spv"));
-	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/xRay.frag.spv"));
+	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.vert.spv"));
+	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.frag.spv"));
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VulkanInitializers::pipelineShaderStageCreateInfo(vertShaderModule, VK_SHADER_STAGE_VERTEX_BIT);
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VulkanInitializers::pipelineShaderStageCreateInfo(fragShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT);
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};
@@ -376,7 +376,7 @@ void XRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, vertShaderModule, nullptr);
 }
 
-void XRay::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+void EncryptedXRay::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
 	
 	//this->updateDebugUniformBuffer(yCurrentSwapChainImageIndex);
 

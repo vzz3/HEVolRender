@@ -10,7 +10,7 @@
 #include "./CubeMap.hpp"
 #include "./data/Volume.hpp"
 #include "./data/GpuVolume.hpp"
-#include "./XRay.hpp"
+#include "./EncryptedXRay.hpp"
 #include "./FrameBuffer.hpp"
 
 namespace ppvr {
@@ -99,7 +99,7 @@ namespace ppvr {
 			
 				Volume<uint16_t> m_volume;
 				data::GpuVolume* m_gpuVolume = nullptr;
-				XRay* roXRay = nullptr;
+				EncryptedXRay* roEncXRay = nullptr;
 		};
 	}
 }

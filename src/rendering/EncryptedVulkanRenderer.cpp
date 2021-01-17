@@ -94,9 +94,9 @@ void EncryptedVulkanRenderer::initVulkan(QVulkanInstance* yQVulkanInstance, VkPh
 
 void EncryptedVulkanRenderer::releaseGpuResources() {
 	
-	roXRay->releaseGpuResources();
-	delete roXRay;
-	roXRay = nullptr;
+	roEncXRay->releaseGpuResources();
+	delete roEncXRay;
+	roEncXRay = nullptr;
 	
 	delete m_gpuVolume;
 	m_gpuVolume = nullptr;
@@ -125,13 +125,13 @@ void EncryptedVulkanRenderer::initGpuResources() {
 	m_gpuVolume = new data::GpuVolume(device);
 	m_gpuVolume->uploadVolume(m_volume);
 	
-	roXRay = new XRay(device);
-	roXRay->initGpuResources();
+	roEncXRay = new EncryptedXRay(device);
+	roEncXRay->initGpuResources();
 }
 
 void EncryptedVulkanRenderer::releaseSwapChainResources() {
 	
-	roXRay->releaseSwapChainResources();
+	roEncXRay->releaseSwapChainResources();
 	roCubeMap->releaseSwapChainResources();
 	
 	
@@ -149,7 +149,7 @@ void EncryptedVulkanRenderer::initSwapChainResources(QSize yTargetSize, size_t y
 	
 	
 	roCubeMap->initSwapChainResources(swapChain);
-	roXRay->initSwapChainResources(swapChain, m_gpuVolume, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
+	roEncXRay->initSwapChainResources(swapChain, m_gpuVolume, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
 }
 
 void EncryptedVulkanRenderer::cleanupCommandBuffer() {
@@ -226,7 +226,7 @@ void EncryptedVulkanRenderer::draw(const Camera& yCamera, VkCommandBuffer& yCmdB
 	device.funcs->vkCmdBeginRenderPass(yCmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	
 	// TODO DRAW
-	roXRay->draw(camera, yCmdBuf, yCurrentSwapChainImageIndex);
+	roEncXRay->draw(camera, yCmdBuf, yCurrentSwapChainImageIndex);
 	
 	device.funcs->vkCmdEndRenderPass(yCmdBuf);
 }
