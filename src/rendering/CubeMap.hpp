@@ -28,7 +28,7 @@ namespace ppvr {
 //			};
 	
 		public:
-			CubeMap(VulkanDevice& yDev);
+			CubeMap(VulkanDevice& yDev, bool yInitDebugView = true);
 			~CubeMap();
 			
 			void initGpuResources();
@@ -53,6 +53,8 @@ namespace ppvr {
 			//VkFormat fbDepthFormat;
 			
 			static constexpr bool useDepthTest = false;
+			
+			const bool initDebugView;
 			
 			// TODO: eigentlich sollte auch ein cube mit zwei piplines reichen, den descriptorLayouts, DescriptorSets, VertrexBuffers usw. sind immer gleich.
 			Cube frontCube;

@@ -205,6 +205,8 @@ add_shader(${PROJECT_NAME} "xRay.vert")
 add_shader(${PROJECT_NAME} "encryptedXRay.frag")
 add_shader(${PROJECT_NAME} "encryptedXRay.vert")
 
+configure_file(app/vk_layer_settings.txt vk_layer_settings.txt COPYONLY)
+
 
 
 # for Xcode file tree

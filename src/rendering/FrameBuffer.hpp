@@ -64,6 +64,15 @@ namespace ppvr {
 			
 			size_t colorAttachmentCount() const;
 			size_t attachmentCount() const;
+			
+		private:
+			inline const ImageDefinition getColorImageDefinition(size_t yIndex) const {
+				return fbColorFormats[yIndex];
+			}
+		public:
+			VkFormat getColorImageFormat(size_t yIndex) const;
+			VkImageLayout getColorImageFinalLayout(size_t yIndex) const;
+			
 			const FrameBufferAttachment& getColorAttachment(size_t yIndex) const;
 			const FrameBufferAttachment& getDepthAttachment() const;
 			const VkRenderPass& getRenderPass() const;

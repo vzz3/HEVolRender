@@ -104,8 +104,12 @@ MainWindow::MainWindow() {
 	
 	m_Ui->infoPlainTextEdit->setReadOnly(true);
 	
+	m_scene4EncryptedImageView = new QGraphicsScene(this);
+	this->m_Ui->encryptedTabGraphicsView->setScene(m_scene4EncryptedImageView);
 	
+	connect(m_Ui->actionGrabFrame, &QAction::triggered, this, &MainWindow::onGrabRequested);
 	connect(m_Ui->actionRenderEncrypted, SIGNAL(triggered()), this, SLOT(renderEcrypted()));
+	connect(m_Ui->actionTestGpuBigInt, SIGNAL(triggered()), this, SLOT(testGpuBigInt()));
 }
 
 MainWindow::~MainWindow() {
@@ -113,15 +117,20 @@ MainWindow::~MainWindow() {
 	qvInstance = nullptr;
 	delete m_Ui;
 	m_Ui = nullptr;
+	delete m_scene4EncryptedImageView;
+	m_scene4EncryptedImageView = nullptr;
 }
 
 void MainWindow::initVulkanWindow() {
 	
     qvInstance = new QVulkanInstance{};
-    qvInstance->setExtensions( QByteArrayList()
-    	//<< "VK_KHR_get_physical_device_properties2" // prevent validation error from QVulkanWindowPrivate::init():2021-01-03 23:58:27.397796+0100 ppvr_vulkan[91162:3916830] vkDebug: Validation: 0: Validation Error: [ VUID-vkCreateDevice-ppEnabledExtensionNames-01387 ] Object 0: VK_NULL_HANDLE, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x12537a2c | Missing extension required by the device extension VK_KHR_portability_subset: VK_KHR_get_physical_device_properties2. The Vulkan spec states: All required extensions for each extension in the VkDeviceCreateInfo::ppEnabledExtensionNames list must also be present in that list (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-vkCreateDevice-ppEnabledExtensionNames-01387)
+	
+    QByteArrayList vkInstExtensions;
+	QByteArrayList vkDeviceExtensions;
+	
+    //vkInstExtensions << "VK_KHR_get_physical_device_properties2" // prevent validation error from QVulkanWindowPrivate::init():2021-01-03 23:58:27.397796+0100 ppvr_vulkan[91162:3916830] vkDebug: Validation: 0: Validation Error: [ VUID-vkCreateDevice-ppEnabledExtensionNames-01387 ] Object 0: VK_NULL_HANDLE, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x12537a2c | Missing extension required by the device extension VK_KHR_portability_subset: VK_KHR_get_physical_device_properties2. The Vulkan spec states: All required extensions for each extension in the VkDeviceCreateInfo::ppEnabledExtensionNames list must also be present in that list (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-vkCreateDevice-ppEnabledExtensionNames-01387)
 
-    );
+	//vkDeviceExtensions << "VK_KHR_portability_subset"  // prevent validation error from QVulkanWindowPrivate::init(): 2021-01-03 23:50:50.122671+0100 ppvr_vulkan[91036:3905482] vkDebug: Validation: 0: Validation Error: [ VUID-VkDeviceCreateInfo-pProperties-04451 ] Object 0: handle = 0x10efb65e0, type = VK_OBJECT_TYPE_PHYSICAL_DEVICE; | MessageID = 0x3a3b6ca0 | vkCreateDevice: VK_KHR_portability_subset must be enabled because physical device VkPhysicalDevice 0x10efb65e0[] supports it The Vulkan spec states: If the [VK_KHR_portability_subset] extension is included in pProperties of vkEnumerateDeviceExtensionProperties, ppEnabledExtensions must include "VK_KHR_portability_subset". (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-VkDeviceCreateInfo-pProperties-04451)
 
 #ifdef NDEBUG
 #else
@@ -131,6 +140,8 @@ void MainWindow::initVulkanWindow() {
     	//<< "VK_LAYER_LUNARG_api_dump"
     	<< "VK_LAYER_LUNARG_standard_validation"
 	);
+	
+	vkDeviceExtensions << "VK_KHR_shader_non_semantic_info";
 #else
     inst->setLayers(QByteArrayList()
                    << "VK_LAYER_GOOGLE_threading"
@@ -143,16 +154,17 @@ void MainWindow::initVulkanWindow() {
 #endif
 #endif
 
+	 qvInstance->setExtensions(vkInstExtensions);
+
     if (!qvInstance->create()) {
         qFatal("Failed to create Vulkan instance: %d", qvInstance->errorCode());
 	}
+	VkInstance	vkTestInstance = qvInstance->vkInstance();
     m_window = new VulkanWindow;
     m_window->setVulkanInstance(qvInstance);
 	
 	
-	m_window->setDeviceExtensions( QByteArrayList()
- 		//<< "VK_KHR_portability_subset"  // prevent validation error from QVulkanWindowPrivate::init(): 2021-01-03 23:50:50.122671+0100 ppvr_vulkan[91036:3905482] vkDebug: Validation: 0: Validation Error: [ VUID-VkDeviceCreateInfo-pProperties-04451 ] Object 0: handle = 0x10efb65e0, type = VK_OBJECT_TYPE_PHYSICAL_DEVICE; | MessageID = 0x3a3b6ca0 | vkCreateDevice: VK_KHR_portability_subset must be enabled because physical device VkPhysicalDevice 0x10efb65e0[] supports it The Vulkan spec states: If the [VK_KHR_portability_subset] extension is included in pProperties of vkEnumerateDeviceExtensionProperties, ppEnabledExtensions must include "VK_KHR_portability_subset". (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-VkDeviceCreateInfo-pProperties-04451)
-	);
+	m_window->setDeviceExtensions(vkDeviceExtensions);
 	// QVulkanWindowPrivate::recreateSwapChain()
 	
 	
@@ -163,7 +175,7 @@ void MainWindow::initVulkanWindow() {
 	
     QWidget *wrapper = QWidget::createWindowContainer(m_window);
 	//m_glWidget = new GLWidget(this, this);
-	m_Ui->vlLayout->addWidget(wrapper);
+	m_Ui->vkLayout->addWidget(wrapper);
 	
 	//m_window->show();
 }
@@ -207,11 +219,27 @@ void MainWindow::renderEcrypted() {
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera());
 	encRenderer->initSwapChainResources(QSize{500, 500}, 1);
 	
-	encRenderer->startNextFrame();
-	encRenderer->framebuffer2host();
+	encRenderer->draw(0);
+	QImage img = encRenderer->framebuffer2host();
 	
 	encRenderer->releaseSwapChainResources();
 	delete encRenderer;
+	
+	m_scene4EncryptedImageView->clear();
+	m_scene4EncryptedImageView->addPixmap(QPixmap::fromImage(img));
+    m_scene4EncryptedImageView->setSceneRect(img.rect());
+	
+}
+
+void MainWindow::testGpuBigInt() {
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera());
+	encRenderer->initSwapChainResources(QSize{1, 1}, 1);
+	
+	encRenderer->evaluateTest();
+	
+	encRenderer->releaseSwapChainResources();
+	delete encRenderer;
+	
 }
 
 
@@ -232,7 +260,7 @@ void VulkanWindow::wheelEvent(QWheelEvent *event)
 {
 	Camera& camera = m_vulkanRenderer->camera();
 	float zoomDelta = event->delta() / 300.0f;
-	qDebug() << "zoomDelta" << zoomDelta;
+	//qDebug() << "zoomDelta" << zoomDelta;
 	camera.zoom(zoomDelta);
 	//update(); // TODO render new frame
 }
@@ -300,7 +328,15 @@ void VulkanRenderer::initResources()
     info += QStringLiteral("Enabled instance extensions:\n");
     for (const QByteArray &ext : inst->extensions())
         info += QString().sprintf("    %s\n", ext.constData());
-
+	
+	{
+		info += QStringLiteral("VkPhysicalDeviceFeatures:\n");
+		VkPhysicalDeviceFeatures pDeviceFeatures{};
+		inst->functions()->vkGetPhysicalDeviceFeatures(m_window->physicalDevice(), &pDeviceFeatures);
+		info += QString().sprintf("    fragmentStoresAndAtomics: %s\n", 		(pDeviceFeatures.fragmentStoresAndAtomics ? "YES" : "NO"));
+		info += QString().sprintf("    vertexPipelineStoresAndAtomics: %s\n", 	(pDeviceFeatures.vertexPipelineStoresAndAtomics ? "YES" : "NO"));
+	}
+	
     info += QString().sprintf("Color format: %u\nDepth-stencil format: %u\n",
                               m_window->colorFormat(), m_window->depthStencilFormat());
 

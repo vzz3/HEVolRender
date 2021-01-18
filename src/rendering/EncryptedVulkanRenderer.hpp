@@ -12,12 +12,13 @@
 #include "./data/GpuVolume.hpp"
 #include "./EncryptedXRay.hpp"
 #include "./FrameBuffer.hpp"
+#include <QImage>
 
 namespace ppvr {
 	namespace rendering {
 		class EncryptedVulkanRenderer {
 			public:
-				EncryptedVulkanRenderer(QVulkanInstance* yQVulkanInstance, VkPhysicalDevice yVkPhysicalDevice, const Camera& yCamera);
+				EncryptedVulkanRenderer(QVulkanInstance* yQVulkanInstance, VkPhysicalDevice yVkPhysicalDevice, const Camera& yCamera, const bool yBigIntTest = false);
 				~EncryptedVulkanRenderer();
 			
 			private:
@@ -42,13 +43,15 @@ namespace ppvr {
 				void createCommandBuffer(size_t ySwapChainImageCount = 1);
 				void cleanupCommandBuffer();
 			
+				VkCommandBuffer startFrame();
+				void startMainRenderPass(VkCommandBuffer yCommandBuffer);
+				void endMainRenderPass(VkCommandBuffer yCommandBuffer);
+				void endFrame(VkCommandBuffer yCommandBuffer);
 			public:
-				void startNextFrame();// override;
-				void framebuffer2host();
-			private:
-				void draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
+				void draw(size_t yCurrentSwapChainImageIndex);
+				QImage framebuffer2host();
+				void evaluateTest();
 			
-
 				//Camera& camera() {
 				//	return m_camera;
 				//}

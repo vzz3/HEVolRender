@@ -78,13 +78,13 @@ namespace ppvr {
 			
 			static void transitionImageLayout(
 				VulkanDevice& yDev,
-				VkImage yImage, VkFormat yFormat,
+				VkImage yImage,
 				VkImageLayout yOldLayout, VkImageLayout yNewLayout);
 			
 			static void transitionImageLayout(
 				VulkanDevice& yDev,
 				VkCommandBuffer yCommandBuffer,
-				VkImage yImage, VkFormat yFormat,
+				VkImage yImage,
 				VkImageLayout yOldLayout, VkImageLayout yNewLayout);
 		
 			

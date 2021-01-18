@@ -368,6 +368,14 @@ size_t FrameBuffer::attachmentCount() const {
 	return fbColorFormats.size() + (useDepthTest ? 1 : 0);
 }
 
+VkFormat FrameBuffer::getColorImageFormat(size_t yIndex) const {
+	return getColorImageDefinition(yIndex).format;
+}
+
+VkImageLayout FrameBuffer::getColorImageFinalLayout(size_t yIndex) const {
+	return getColorImageDefinition(yIndex).finalLayout;
+}
+
 const FrameBuffer::FrameBufferAttachment& FrameBuffer::getColorAttachment(size_t yIndex) const {
 	return colors[yIndex];
 }

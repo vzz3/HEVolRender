@@ -166,6 +166,12 @@ namespace ppvr {
 			int_fast8_t getSignum() const {
 				return this->signum;
 			}
+			
+		public:
+			typedef BIG_INT_WORD_TYPE matissaType[S];
+			inline const matissaType& getData() const {
+				return UFixBigInt<S>::getData();
+			}
 
 		// ----- constructors -----
 		public:

@@ -93,11 +93,11 @@ namespace ppvr {
 			VulkanSwapChain offscreenSwappChain;
 			
 			// from [xxx]DebugPipeline()
-			VkPipeline debugPipline;
-			VkPipelineLayout debugPiplineLayout;
+			VkPipeline debugPipline = VK_NULL_HANDLE;
+			VkPipelineLayout debugPiplineLayout = VK_NULL_HANDLE;
 			
 			// from [xxx]DescriptorSetLayout()
-			VkDescriptorSetLayout debugDescriptorSetLayout; // beschreibt die uniforms in der pipline mit den shadern
+			VkDescriptorSetLayout debugDescriptorSetLayout = VK_NULL_HANDLE; // beschreibt die uniforms in der pipline mit den shadern
 			
 			std::vector<ImagePanel> images; // source, defined by the user of this class
 			std::vector<ImageDescriptor> imgDescs; // destination

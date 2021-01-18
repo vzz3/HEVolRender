@@ -256,20 +256,20 @@ void VulkanUtility::insertImageMemoryBarrier(
 
 void VulkanUtility::transitionImageLayout(
 	VulkanDevice& yDev,
-	VkImage yImage, VkFormat yFormat,
+	VkImage yImage,
 	VkImageLayout yOldLayout, VkImageLayout yNewLayout)
 {
 	// https://vulkan-tutorial.com/Texture_mapping/Images
 
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands(yDev);
-	transitionImageLayout(yDev, commandBuffer, yImage, yFormat, yOldLayout, yNewLayout);
+	transitionImageLayout(yDev, commandBuffer, yImage, yOldLayout, yNewLayout);
 	endSingleTimeCommands(yDev, commandBuffer);
 }
 
 void VulkanUtility::transitionImageLayout(
 	VulkanDevice& yDev,
 	VkCommandBuffer yCommandBuffer,
-	VkImage yImage, VkFormat yFormat,
+	VkImage yImage,
 	VkImageLayout yOldLayout, VkImageLayout yNewLayout)
 {
 	// https://vulkan-tutorial.com/Texture_mapping/Images

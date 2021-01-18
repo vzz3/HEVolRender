@@ -81,6 +81,7 @@ public slots:
     void onGrabRequested();
 	
     void renderEcrypted();
+    void testGpuBigInt();
 
 private:
 	Ui_MainWindow *m_Ui;
@@ -90,6 +91,9 @@ private:
     QLCDNumber *m_number;
 	
     QVulkanInstance *qvInstance;
+	
+    QGraphicsScene *m_scene4EncryptedImageView;
+	QPixmap pixmap4EncryptedImageView;
 };
 
 class VulkanRenderer : public PlainVulkanRenderer //TriangleRenderer

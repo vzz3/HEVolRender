@@ -175,7 +175,7 @@ void EncryptedXRay::createDescriptorSet(size_t ySwapChainImageCount) {
 		
 		VkDescriptorImageInfo volumeImageInfo{};
 		volumeImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		volumeImageInfo.imageView = volume->getColumeImageView();
+		volumeImageInfo.imageView = volume->getImageView();
 		volumeImageInfo.sampler = volumeSampler;
 		
 		VkDescriptorImageInfo cubePosSamplerInfo{};
@@ -311,6 +311,8 @@ void EncryptedXRay::cleanupPipeline() {
 }
 
 void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
+	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_WORD_COUNT;
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &debugPiplineLayout), "failed to create pipeline layout!");
 
@@ -329,7 +331,8 @@ void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 	VkPipelineRasterizationStateCreateInfo rasterizationState = VulkanInitializers::pipelineRasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE,0);
 	VkPipelineMultisampleStateCreateInfo multisampleState = VulkanInitializers::pipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT, 0);
 	VkPipelineColorBlendAttachmentState blendAttachmentState = VulkanInitializers::pipelineColorBlendAttachmentState(0xf, VK_FALSE);
-	VkPipelineColorBlendStateCreateInfo colorBlendState = VulkanInitializers::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
+	std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates{attachementCount, blendAttachmentState};
+	VkPipelineColorBlendStateCreateInfo colorBlendState = VulkanInitializers::pipelineColorBlendStateCreateInfo(attachementCount, blendAttachmentStates.data());
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = VulkanInitializers::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL);
 	
 	

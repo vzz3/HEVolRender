@@ -45,11 +45,11 @@ void GpuVolume::cleanup() {
     dev.funcs->vkFreeMemory(dev.vkDev, volumeImageMemory, nullptr);
     volumeImageMemory = VK_NULL_HANDLE;
 }
-/*
+
 void GpuVolume::cleanupStagingBuffer() {
-	
 	dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
 	
+	// cleanup the staging buffer
 	dev.funcs->vkDestroyBuffer(dev.vkDev, stagingBuffer, nullptr);
 	stagingBuffer = VK_NULL_HANDLE;
 	
@@ -57,35 +57,15 @@ void GpuVolume::cleanupStagingBuffer() {
 	stagingBufferMemory = VK_NULL_HANDLE;
 }
 
-void GpuVolume::createStagingBuffer() {
-	VkDeviceSize imageSize = width * height * depth * sizeof(uint16_t);
-
-	VkBuffer stagingBuffer = nullptr;
-	VkDeviceMemory stagingBufferMemory = nullptr;
-
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	constexpr VkBufferUsageFlags stagingBufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	constexpr VkMemoryPropertyFlags stagingBufferProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-	VulkanUtility::createBuffer(dev, imageSize, stagingBufferUsage, stagingBufferProperties, stagingBuffer, stagingBufferMemory);
-	
-	void* data;
-	dev.funcs->vkMapMemory(dev.vkDev, stagingBufferMemory, 0, imageSize, 0, &data);
-	//memcpy(data, pixels, static_cast<size_t>(imageSize));
-	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
-}
-*/
-void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
-	this->cleanup();
-
-	mWidth = yVolume.width();
-	mHeight =  yVolume.height();
-	mDepth = yVolume.depth();
-	VkDeviceSize imageSize = mWidth * mHeight * mDepth * sizeof(uint16_t);
+void* GpuVolume::createStagingBuffer(const VkFormat yVolumeFormat, const size_t yWidth, const size_t yHeight, const size_t yDepth) {
+	mWidth = yWidth;
+	mHeight = yHeight;
+	mDepth = yDepth;
+	VkDeviceSize imageSize = this->imageSize();
 
 	// create statign buffer
-	VkBuffer stagingBuffer = nullptr;
-	VkDeviceMemory stagingBufferMemory = nullptr;
+	//VkBuffer stagingBuffer = nullptr;
+	//VkDeviceMemory stagingBufferMemory = nullptr;
 
 	constexpr VkBufferUsageFlags stagingBufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 	constexpr VkMemoryPropertyFlags stagingBufferProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
@@ -94,29 +74,66 @@ void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
 	// copy the volume to the staging buffer
 	void* data;
 	dev.funcs->vkMapMemory(dev.vkDev, stagingBufferMemory, 0, imageSize, 0, &data);
-		memcpy(data, yVolume.data(), static_cast<size_t>(imageSize));
-	dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
-	
-	
+	return data;
+	// dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+}
+
+void GpuVolume::createGpuImageFromStagingBuffer() {
 	// create the image in GPU memory
 	constexpr VkImageType imageType = VK_IMAGE_TYPE_3D;
-	constexpr VkFormat format = volumeFormat; //VK_FORMAT_R16_UNORM; // VK_FORMAT_R8G8B8A8_SRGB
 	constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	VulkanUtility::createImage(dev, imageType, mWidth, mHeight, mDepth, format, tiling, usage, properties, volumeImage, volumeImageMemory);
+	VulkanUtility::createImage(dev, imageType, mWidth, mHeight, mDepth, mVolumeFormat, tiling, usage, properties, volumeImage, volumeImageMemory);
 
 	// copy the image from the staging buffer to the image memory on the GPU
-	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		VulkanUtility::copyBufferToImage(dev, stagingBuffer, volumeImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), static_cast<uint32_t>(mDepth));
-	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
+void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
+	this->cleanup();
+	constexpr VkFormat format = plainVolumeFormat;
+
+	void* data = this->createStagingBuffer(format, yVolume.width(), yVolume.height(), yVolume.depth());
+		memcpy(data, yVolume.data(), static_cast<size_t>(this->imageSize()));
+	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	
+	// create the image in GPU memory
+	this->createGpuImageFromStagingBuffer();
 
 	// cleanup the staging buffer
-	dev.funcs->vkDestroyBuffer(dev.vkDev, stagingBuffer, nullptr);
-	stagingBuffer = VK_NULL_HANDLE;
+	this->cleanupStagingBuffer();
+}
+
+void GpuVolume::uploadBigIntVolumePart(const Volume<PaillierInt>& yVolume, const size_t yWordOffset) {
+	this->cleanup();
 	
-	dev.funcs->vkFreeMemory(dev.vkDev, stagingBufferMemory, nullptr);
-	stagingBufferMemory = VK_NULL_HANDLE;
+	assert( typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t) ); // , "encrypted GPU Volume upload currently only support unsigned 32 bit integers"
+	
+	constexpr VkFormat format = bigIntWordVolumeFormat;
+
+
+	BIG_INT_WORD_TYPE* data = (BIG_INT_WORD_TYPE*)this->createStagingBuffer(format, yVolume.width(), yVolume.height(), yVolume.depth());
+	
+		//memcpy(data, yVolume.data(), static_cast<size_t>(this->imageSize()));
+	for (size_t i = 0; i < yVolume.length(); i++) {
+		const PaillierInt& bigIntVal = yVolume.get(i);
+		size_t dataOffset = i * GPU_INT_TEXTURE_WORD_COUNT;
+		
+		for (size_t w = 0; w < GPU_INT_TEXTURE_WORD_COUNT; w++) {
+			BIG_INT_WORD_TYPE word = bigIntVal.getData()[yWordOffset + w];
+    		data[dataOffset + w] = word;
+    	}
+	}
+	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	
+	// create the image in GPU memory
+	this->createGpuImageFromStagingBuffer();
+
+	// cleanup the staging buffer
+	this->cleanupStagingBuffer();
 }
 
 size_t GpuVolume::width() const {
@@ -129,7 +146,7 @@ size_t GpuVolume::depth() const {
 	return mDepth;
 }
 
-VkImageView GpuVolume::getColumeImageView() {
+VkImageView GpuVolume::getImageView() {
 	if(volumeImageView == nullptr) {
 		createImageView();
 	}
@@ -145,7 +162,7 @@ void GpuVolume::cleanupImageView() {
 void GpuVolume::createImageView() {
 	VkImageViewCreateInfo colorImageView = VulkanInitializers::imageViewCreateInfo();
 	colorImageView.viewType = VK_IMAGE_VIEW_TYPE_3D;
-	colorImageView.format = volumeFormat;
+	colorImageView.format = mVolumeFormat;
 	colorImageView.subresourceRange = {};
 	colorImageView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	colorImageView.subresourceRange.baseMipLevel = 0;

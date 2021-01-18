@@ -5,12 +5,14 @@
 #include "VulkanInitializers.hpp"
 #include <array>
 #include "uniform/DebugQuadUniformBufferObject.hpp"
+#include <QDebug>
 
 
 using namespace ppvr::rendering;
 
-CubeMap::CubeMap(VulkanDevice& yDev)
+CubeMap::CubeMap(VulkanDevice& yDev, bool yInitDebugView)
 	: dev(yDev),
+		initDebugView{yInitDebugView},
 		frontCube(yDev, VK_CULL_MODE_BACK_BIT),
 		backCube(yDev, VK_CULL_MODE_FRONT_BIT),
 		frontFBO{yDev, false, std::vector<FrameBuffer::ImageDefinition>{VK_FORMAT_R16G16B16A16_UNORM}}, // I do not need t A channel but Mac OS do not support VK_FORMAT_R16G16B16_UNORM (http://vulkan.gpuinfo.org/listformats.php?platform=macos)
@@ -29,11 +31,15 @@ void CubeMap::initGpuResources() {
 	frontCube.initGpuResources();
 	backCube.initGpuResources();
 	
-	offscreenImageView.initGpuResources();
+	if(initDebugView) {
+		offscreenImageView.initGpuResources();
+	}
 }
 
 void CubeMap::releaseGpuResources() {
-	offscreenImageView.releaseGpuResources();
+	if(initDebugView) {
+		offscreenImageView.releaseGpuResources();
+	}
 	
 	backCube.releaseGpuResources();
 	frontCube.releaseGpuResources();
@@ -56,15 +62,19 @@ void CubeMap::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
 	backSwappChain.targetSize = ySwapChain.targetSize;
 	backCube.initSwapChainResources(backSwappChain);
 	
-	offscreenImageView.initSwapChainResources(ySwapChain, std::vector<ImageDebugView::ImagePanel>{
-		//ImageDebugView::ImagePanel{VkImageView view,						float scale, 	glm::vec2 screenOffset		}
-		ImageDebugView::ImagePanel{	 getFrontImageView(),	0.3f,			{0.05f      , 0.05f}		},
-		ImageDebugView::ImagePanel{	 getBackImageView() ,	0.3f,			{2.00f -0.65, 0.05f}		}
-	});
+	if(initDebugView) {
+		offscreenImageView.initSwapChainResources(ySwapChain, std::vector<ImageDebugView::ImagePanel>{
+			//ImageDebugView::ImagePanel{VkImageView view,						float scale, 	glm::vec2 screenOffset		}
+			ImageDebugView::ImagePanel{	 getFrontImageView(),	0.3f,			{0.05f      , 0.05f}		},
+			ImageDebugView::ImagePanel{	 getBackImageView() ,	0.3f,			{2.00f -0.65, 0.05f}		}
+		});
+	}
 }
 
 void CubeMap::releaseSwapChainResources() {
-	offscreenImageView.releaseSwapChainResources();
+	if(initDebugView) {
+		offscreenImageView.releaseSwapChainResources();
+	}
 	
 	backCube.releaseSwapChainResources();
 	frontCube.releaseSwapChainResources();
@@ -117,8 +127,12 @@ void CubeMap::drawOffscreenFrame(const Camera& yCamera, VkCommandBuffer& yCmdBuf
 	this->drawCubeFace(yCamera, yCmdBuf, yCurrentSwapChainImageIndex, backCube, backFBO);
 }
 
-void CubeMap::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {	
-	offscreenImageView.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
+void CubeMap::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+	if(initDebugView) {
+		offscreenImageView.draw(yCamera, yCmdBuf, yCurrentSwapChainImageIndex);
+	} else {
+		qDebug() << "offscreen image debug view is not inizialized.";
+	}
 }
 
 VkImageView CubeMap::getFrontImageView() const {

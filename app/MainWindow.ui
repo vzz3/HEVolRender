@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1029</width>
-    <height>528</height>
+    <width>972</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,31 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <layout class="QGridLayout" name="vlLayout"/>
+       <widget class="QTabWidget" name="tabWidget_2">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_7">
+         <attribute name="title">
+          <string>Plain</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="vkLayout"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_8">
+         <attribute name="title">
+          <string>Encrypted</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="QGraphicsView" name="encryptedTabGraphicsView"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
       </item>
       <item>
        <widget class="QTabWidget" name="tabWidget">
@@ -100,7 +124,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1029</width>
+     <width>972</width>
      <height>22</height>
     </rect>
    </property>
@@ -109,13 +133,14 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
-    <addaction name="actionGrab_Frame"/>
+    <addaction name="actionGrabFrame"/>
    </widget>
    <widget class="QMenu" name="menuRender">
     <property name="title">
      <string>Render</string>
     </property>
     <addaction name="actionRenderEncrypted"/>
+    <addaction name="actionTestGpuBigInt"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuRender"/>
@@ -126,7 +151,7 @@
     <string>Open...</string>
    </property>
   </action>
-  <action name="actionGrab_Frame">
+  <action name="actionGrabFrame">
    <property name="text">
     <string>Grab Frame ...</string>
    </property>
@@ -137,6 +162,11 @@
    </property>
    <property name="text">
     <string>Render Encrypted</string>
+   </property>
+  </action>
+  <action name="actionTestGpuBigInt">
+   <property name="text">
+    <string>Test GPU BigInt</string>
    </property>
   </action>
  </widget>

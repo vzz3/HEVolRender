@@ -34,14 +34,15 @@ namespace ppvr {
 			// make every version of this template classe a frend of every other version
 			template<BIG_INT_WORD_COUNT_TYPE OS>
 			friend class UFixBigInt;
-
-		// ----- statics -----
+			
 		public:
 			friend std::ostream& operator << ( std::ostream& os, const UFixBigInt<S>& value ){
 				os << value.toStringDec();
 				return os;
 			}
 			
+			
+		// ----- statics -----
 			static UFixBigInt<S> fromUint64(const uint64_t& uint64Val);
 		protected:
 			static UFixBigInt<S>& fromUint64(const uint64_t& uint64Val, UFixBigInt<S> &target );
