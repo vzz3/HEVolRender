@@ -21,13 +21,12 @@ void main() {
 	for(uint i=0; i<4; i++) {
 		outFragColor[i] = uvec4(0,0,0,0);
 	}
-	outFragColor[0] = texture(usampler3D(texturesVolumes[0], samplerVolumes), vec3(inUV, 0.5f));
-	//float avg = 1.0f ;//sampleCount;
-	//outFragColor = uvec4(avg,avg,avg,1);
 
-	////ivec3 volumePos = ivec3(1, int(inUV.y * 12), 1);
-	//ivec3 volumePos = ivec3(gl_FragCoord.xy, 1);
-	//outFragColor[0] = texelFetch(usampler3D(texturesVolumes[0], samplerVolumes), volumePos, 0);
+	// working texture() example (pos coordinates are normalized floats)
+	//outFragColor[0] = texture(usampler3D(texturesVolumes[0], samplerVolumes), vec3(inUV, 0.5f));
+
+	// working texelFetch() example (pos coordinates are absolute integers)
+	outFragColor[0] = texelFetch(usampler3D(texturesVolumes[0], samplerVolumes), ivec3(gl_FragCoord.xy, 0), 0);
 
 	//outFragColor[0] = uvec4(volumePos.x, volumePos.y, 0, 1);
 }
