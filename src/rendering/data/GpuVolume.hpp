@@ -16,8 +16,7 @@ namespace ppvr {
 				GpuVolume(VulkanDevice& yDev);
 				~GpuVolume();
 				
-			private:
-				void cleanup();
+				void releaseGpuResources();
 				
 			public:
 				//void initGpuResources();
@@ -28,10 +27,10 @@ namespace ppvr {
 				
 			private:
 				inline VkDeviceSize imageSize() {
-					return mWidth * mHeight * mDepth * sizeof(uint16_t);
+					return mWidth * mHeight * mDepth * mVolumeFormatSize;
 				}
 				
-				void* createStagingBuffer(const VkFormat yVolumeFormat, const size_t yWidth, const size_t yHeight, const size_t yDepth);
+				void* createStagingBuffer(const VkFormat yVolumeFormat, const size_t yVolumeFormatSize, const size_t yWidth, const size_t yHeight, const size_t yDepth);
 				void cleanupStagingBuffer();
 				
 				void createGpuImageFromStagingBuffer();
@@ -72,6 +71,7 @@ namespace ppvr {
 				
 				size_t mWidth, mHeight, mDepth;
 				VkFormat mVolumeFormat = VK_FORMAT_R16_UNORM; //VK_FORMAT_R16_UNORM; // VK_FORMAT_R8G8B8A8_SRGB
+				size_t mVolumeFormatSize = sizeof(uint16_t);
 				
 				VkBuffer stagingBuffer = VK_NULL_HANDLE;
 				VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;

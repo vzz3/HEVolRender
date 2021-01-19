@@ -12,17 +12,20 @@ BigIntGpuVolumeSet::BigIntGpuVolumeSet(VulkanDevice& yDev): dev(yDev) {
 }
 
 BigIntGpuVolumeSet::~BigIntGpuVolumeSet() {
-	this->cleanup();
+	this->releaseGpuResources();
 };
 
-void BigIntGpuVolumeSet::cleanup() {
+void BigIntGpuVolumeSet::releaseGpuResources() {
+	for (auto& gpuVolume : gpuVolumeParts) {
+    	gpuVolume.releaseGpuResources();
+	}
 }
 
 void BigIntGpuVolumeSet::uploadVolume(const Volume<PaillierInt>& yVolume) {
 	constexpr size_t requiredVolumes = GPU_INT_TEXTURE_SIZE; // = ciel(PAILLIER_INT_WORD_SIZE / GpuVolume::bigIntWordCount)
 	gpuVolumeParts.resize(requiredVolumes, GpuVolume{dev});
 	
-	for (size_t i; i < requiredVolumes; i++) {
+	for (size_t i=0; i < requiredVolumes; i++) {
     	gpuVolumeParts[i].uploadBigIntVolumePart(yVolume, i * GPU_INT_TEXTURE_WORD_COUNT);
 	}
 }

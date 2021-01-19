@@ -97,8 +97,8 @@ namespace ppvr {
 			VulkanSwapChain offscreenSwappChain;
 			
 			// from [xxx]DebugPipeline()
-			VkPipeline debugPipline;
-			VkPipelineLayout debugPiplineLayout;
+			VkPipeline pipline;
+			VkPipelineLayout piplineLayout;
 			
 			// from [xxx]DescriptorSetLayout()
 			VkDescriptorSetLayout descriptorSetLayout; // beschreibt die uniforms in der pipline mit den shadern

@@ -13,6 +13,7 @@ uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/d
 Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
 C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
 SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
+Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debug_printf.html, https://vulkan.lunarg.com/issue/home?limit=10;q=;mine=false;org=false;khronos=false;lunarg=false;indie=false;status=new,open, https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md
 
 
 

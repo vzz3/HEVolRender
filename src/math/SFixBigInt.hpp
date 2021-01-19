@@ -172,6 +172,19 @@ namespace ppvr {
 			inline const matissaType& getData() const {
 				return UFixBigInt<S>::getData();
 			}
+			
+			inline matissaType& getDataUnsafe() {
+				return UFixBigInt<S>::getDataUnsafe();
+			}
+			
+			inline void fixSignumAfterUnsafeOperation(bool yNegative) {
+				if( this->isMagnitudeZero() ) {
+					this->signum = 0;
+				} else {
+					this->signum = yNegative ? -1 : +1;
+				}
+			}
+			
 
 		// ----- constructors -----
 		public:

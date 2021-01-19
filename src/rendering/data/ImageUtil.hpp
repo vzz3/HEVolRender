@@ -6,6 +6,7 @@
 #include <string>
 #include <QImage>
 #include <vector>
+#include "Image.hpp"
 
 #include "../../paillier/Paillier_typeDev.h"
 
@@ -28,6 +29,7 @@ namespace ppvr {
 			public:
 				static void framebuffer2ppm(VulkanDevice& yDevice, const FrameBuffer& yFBO, const std::string& yBaseName);
 				static QImage framebuffer2QImage(VulkanDevice& yDevice, const FrameBuffer& yFBO, const size_t yAttachmentIndex);
+				static void framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO, Image<PaillierInt>& yDstImage);
 			};
 		}
 	}

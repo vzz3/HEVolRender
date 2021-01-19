@@ -3,15 +3,18 @@
 
 #include "../VulkanUtility.hpp"
 #include "../VulkanInitializers.hpp"
-#include "../uniform/XRayUniformBufferObject.hpp"
+//#include "../uniform/XRayUniformBufferObject.hpp"
 #include <array>
+#include "../data/ImageUtil.hpp"
+#include <iostream>
 
 
 using namespace ppvr::rendering;
 
 
 
-BigIntTestObj::BigIntTestObj(VulkanDevice& yDev): dev(yDev) {
+BigIntTestObj::BigIntTestObj(VulkanDevice& yDev): dev(yDev), gpuVolumeSet(yDev) {
+	createTest();
 }
 
 BigIntTestObj::~BigIntTestObj() {
@@ -19,17 +22,17 @@ BigIntTestObj::~BigIntTestObj() {
 };
 
 void BigIntTestObj::initGpuResources() {
+	gpuVolumeSet.uploadVolume(srcVolume);
 	this->createDescriptorSetLayout();
 }
 
 void BigIntTestObj::releaseGpuResources() {
 	this->cleanupDescriptorSetLayout();
+	gpuVolumeSet.releaseGpuResources();
 }
 
-void BigIntTestObj::initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack) {
-	volume = yVolume;
-	cubePosView[0] = yCubeFront;
-	cubePosView[1] = yCubeBack;
+void BigIntTestObj::initSwapChainResources(const VulkanSwapChain& ySwapChain) {
+	//volume = yVolume;
 	this->createVolumeDescriptors(ySwapChain);
 	this->createPipeline(ySwapChain);
 }
@@ -37,7 +40,7 @@ void BigIntTestObj::initSwapChainResources(const VulkanSwapChain& ySwapChain, da
 void BigIntTestObj::releaseSwapChainResources() {
 	this->cleanupPipeline();
 	this->cleanupVolumeDescriptors();
-	volume = nullptr;
+	//volume = nullptr;
 }
 
 void BigIntTestObj::cleanup() {
@@ -52,12 +55,12 @@ void BigIntTestObj::cleanupVolumeDescriptors() {
 	cleanupDescriptorPool();
 	cleanupUniformBuffer();
 	cleanupVolumeSampler();
-	cleanupCubePosSampler();
+	//cleanupCubePosSampler();
 }
 
 void BigIntTestObj::createVolumeDescriptors(const VulkanSwapChain& ySwapChain) {
 	createVolumeSampler(ySwapChain);
-	createCubePosSampler(ySwapChain);
+	//createCubePosSampler(ySwapChain);
 	createUniformBuffer(ySwapChain.swapChainImageCount);
 	createDescriptorPool(ySwapChain.swapChainImageCount);
 	createDescriptorSet(ySwapChain.swapChainImageCount);
@@ -76,9 +79,9 @@ void BigIntTestObj::cleanupVolumeSampler() {
 void BigIntTestObj::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
 	// Create sampler to sample from the attachment in the fragment shader
 	VkSamplerCreateInfo samplerInfo = VulkanInitializers::samplerCreateInfo();
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.magFilter = VK_FILTER_NEAREST;// VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_NEAREST;//VK_FILTER_LINEAR;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;//VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.addressModeV = samplerInfo.addressModeU;
 	samplerInfo.addressModeW = samplerInfo.addressModeU;
@@ -88,28 +91,6 @@ void BigIntTestObj::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
 	samplerInfo.maxLod = 1.0f;
 	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 	VK_CHECK_RESULT(dev.funcs->vkCreateSampler(dev.vkDev, &samplerInfo, nullptr, &volumeSampler), "failed to create sampler!");
-}
-
-void BigIntTestObj::cleanupCubePosSampler() {
-	dev.funcs->vkDestroySampler(dev.vkDev, cubePosSampler, nullptr);
-	cubePosSampler = VK_NULL_HANDLE;
-}
-
-void BigIntTestObj::createCubePosSampler(const VulkanSwapChain& ySwapChain) {
-	// Create sampler to sample from the attachment in the fragment shader
-	VkSamplerCreateInfo samplerInfo = VulkanInitializers::samplerCreateInfo();
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	samplerInfo.addressModeV = samplerInfo.addressModeU;
-	samplerInfo.addressModeW = samplerInfo.addressModeU;
-	samplerInfo.mipLodBias = 0.0f;
-	samplerInfo.maxAnisotropy = 1.0f;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = 1.0f;
-	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-	VK_CHECK_RESULT(dev.funcs->vkCreateSampler(dev.vkDev, &samplerInfo, nullptr, &cubePosSampler), "failed to create sampler!");
 }
 
 void BigIntTestObj::cleanupUniformBuffer() {
@@ -122,7 +103,7 @@ void BigIntTestObj::cleanupUniformBuffer() {
 }
 
 void BigIntTestObj::createUniformBuffer(size_t ySwapChainImageCount) {
-	constexpr VkDeviceSize bufferSize = sizeof(uniform::XRayUniformBufferObject);
+	constexpr VkDeviceSize bufferSize = sizeof(BigIntTestUniformBufferObject);
 
 	uniformBuffers.resize(ySwapChainImageCount);
     uniformBuffersMemory.resize(ySwapChainImageCount);
@@ -142,10 +123,10 @@ void BigIntTestObj::cleanupDescriptorPool() {
 
 void BigIntTestObj::createDescriptorPool(size_t ySwapChainImageCount) {
 	std::vector<VkDescriptorPoolSize> poolSizes = {
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(ySwapChainImageCount)),			// uniform buffer for XRayUniformBufferObject
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),	// sampler+image for volume
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),				// sampler for cube postion images
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * 2)) 		// front and back postions of cube
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(ySwapChainImageCount)),			// uniform buffer for BigIntTestUniformBufferObject
+		//VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),	// sampler+image for volume
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),				// sampler for volume
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * GPU_INT_TEXTURE_SIZE)) 		// volume image
 	};
 	VkDescriptorPoolCreateInfo poolInfo = VulkanInitializers::descriptorPoolCreateInfo(poolSizes, static_cast<uint32_t>(ySwapChainImageCount));
 	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
@@ -171,18 +152,20 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(uniform::XRayUniformBufferObject);
+		bufferInfo.range = sizeof(BigIntTestUniformBufferObject);
 		
+		/*
 		VkDescriptorImageInfo volumeImageInfo{};
 		volumeImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		volumeImageInfo.imageView = volume->getImageView();
 		volumeImageInfo.sampler = volumeSampler;
+		*/
 		
-		VkDescriptorImageInfo cubePosSamplerInfo{};
-		cubePosSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		cubePosSamplerInfo.imageView = nullptr;
-		cubePosSamplerInfo.sampler = cubePosSampler;
-		
+		VkDescriptorImageInfo volumeSamplerInfo{};
+		volumeSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		volumeSamplerInfo.imageView = nullptr;
+		volumeSamplerInfo.sampler = volumeSampler;
+		/*
 		constexpr size_t cubePosTexArraySize = 2;
 		VkDescriptorImageInfo cubePosImageInfo[cubePosTexArraySize];
 		for (size_t i = 0; i < cubePosTexArraySize; i++) {
@@ -190,6 +173,15 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 			cubePosImageInfo[i].imageView = cubePosView[i];
 			cubePosImageInfo[i].sampler = nullptr;
 		}
+	*/
+		constexpr size_t volumeTexArraySize = GPU_INT_TEXTURE_SIZE;
+		VkDescriptorImageInfo volumeImageInfo[volumeTexArraySize];
+		for (size_t i = 0; i < volumeTexArraySize; i++) {
+			volumeImageInfo[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			volumeImageInfo[i].imageView = gpuVolumeSet[i].getImageView();
+			volumeImageInfo[i].sampler = nullptr;
+		}
+		
 	
 		std::vector<VkWriteDescriptorSet> writeDescriptorSets = {
 			// Binding 0 : Vertex shader uniform buffer
@@ -199,6 +191,7 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 				1,											// dstBinding
 				&bufferInfo									// pBufferInfo
 			),
+			/*
 			// Binding 1 : Fragment shader texture sampler
 			VulkanInitializers::writeDescriptorSet(
 				descriptorSets[i],							// dstSet
@@ -206,20 +199,21 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 				2,											// dstBinding
 				&volumeImageInfo							// pImageInfo
 			),
+			*/
 			// Binding 3 : Fragment shader sampler
 			VulkanInitializers::writeDescriptorSet(
 				descriptorSets[i],							// dstSet
 				VK_DESCRIPTOR_TYPE_SAMPLER,					// descriptorType
 				3,											// dstBinding
-				&cubePosSamplerInfo							// pImageInfo
+				&volumeSamplerInfo							// pImageInfo
 			),
 			// Binding 4 : Fragment shader texture
 			VulkanInitializers::writeDescriptorSet(
 				descriptorSets[i],							// dstSet
 				VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// descriptorType
 				4,											// dstBinding
-				&cubePosImageInfo[0],						// pImageInfo
-				cubePosTexArraySize							// descriptorCount
+				&volumeImageInfo[0],						// pImageInfo
+				volumeTexArraySize							// descriptorCount
 			),
 		};
 		dev.funcs->vkUpdateDescriptorSets(dev.vkDev, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
@@ -228,29 +222,10 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 
 void BigIntTestObj::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 
-//	float scale = images[yIndex].scale;// 0.3f;
-//	float s =  2.0f 		* scale;
-//	float x = -1.0f  + images[yIndex].screenOffset.x;
-//	float y = -1.0f  + images[yIndex].screenOffset.y;
-//	glm::mat3x3 mm = glm::transpose(glm::mat3x3({ // I write in row major but glm/glsl uses column major
-//				    s,	 0.0f,	    x,	 0.0f, // row 0
-//				 0.0f,	    s,	    y,	 0.0f, // row 1
-//				 0.0f,	 0.0f,	 1.0f,	 0.0f, // row 2
-//				 0.0f,	 0.0f,	 0.0f,	 1.0f, // row 3
-//			}));
-//	uniform::DebugQuadUniformBufferObject ubo{};
-//	ubo.model.modelMatrix = mm;
-//
-//	constexpr VkDeviceSize uboSize = sizeof(uniform::DebugQuadUniformBufferObject);
-//	void* data;
-//	dev.funcs->vkMapMemory(dev.vkDev, imgDescs[yIndex].uniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);
-//		memcpy(data, &ubo, uboSize);
-//	dev.funcs->vkUnmapMemory(dev.vkDev, imgDescs[yIndex].uniformBuffersMemory[yCurrentSwapChainImageIndex]);
+	BigIntTestUniformBufferObject ubo{};
+	ubo.testOperationType = BIG_INT_GPU_TEST_OPERATION_copy;
 
-	uniform::XRayUniformBufferObject ubo{};
-	ubo.volumeInfo.volumeDepth = volume->depth();
-
-	constexpr VkDeviceSize uboSize = sizeof(uniform::XRayUniformBufferObject);
+	constexpr VkDeviceSize uboSize = sizeof(BigIntTestUniformBufferObject);
 	void* data;
 	dev.funcs->vkMapMemory(dev.vkDev, uniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);
 		memcpy(data, &ubo, uboSize);
@@ -280,11 +255,13 @@ void BigIntTestObj::createDescriptorSetLayout() {
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,			// type
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
 		1));										// binding
+	/*
 	// Binding 2 : Fragment shader image sampler
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// type
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
 		2));										// binding
+	*/
 	// Binding 4 : Fragment shader sampler
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_SAMPLER,					// type
@@ -295,7 +272,7 @@ void BigIntTestObj::createDescriptorSetLayout() {
 		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// type
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
 		4,											// binding
-		2));										// descriptorCount
+		GPU_INT_TEXTURE_SIZE));						// descriptorCount
 
 	VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo = VulkanInitializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
 
@@ -303,21 +280,21 @@ void BigIntTestObj::createDescriptorSetLayout() {
 }
 
 void BigIntTestObj::cleanupPipeline() {
-	dev.funcs->vkDestroyPipeline(dev.vkDev, debugPipline, nullptr);
-	debugPipline = VK_NULL_HANDLE;
+	dev.funcs->vkDestroyPipeline(dev.vkDev, pipline, nullptr);
+	pipline = VK_NULL_HANDLE;
 	
-	dev.funcs->vkDestroyPipelineLayout(dev.vkDev, debugPiplineLayout, nullptr);
-	debugPiplineLayout = VK_NULL_HANDLE;
+	dev.funcs->vkDestroyPipelineLayout(dev.vkDev, piplineLayout, nullptr);
+	piplineLayout = VK_NULL_HANDLE;
 }
 
 void BigIntTestObj::createPipeline(const VulkanSwapChain& ySwapChain) {
 	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_WORD_COUNT;
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
-	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &debugPiplineLayout), "failed to create pipeline layout!");
+	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &piplineLayout), "failed to create pipeline layout!");
 
-	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.vert.spv"));
-	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.frag.spv"));
+	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/bigIntTest.vert.spv"));
+	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/bigIntTest.frag.spv"));
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VulkanInitializers::pipelineShaderStageCreateInfo(vertShaderModule, VK_SHADER_STAGE_VERTEX_BIT);
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VulkanInitializers::pipelineShaderStageCreateInfo(fragShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT);
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};
@@ -337,7 +314,7 @@ void BigIntTestObj::createPipeline(const VulkanSwapChain& ySwapChain) {
 	
 	
 	
-	VkGraphicsPipelineCreateInfo pipelineInfo = VulkanInitializers::pipelineCreateInfo(debugPiplineLayout, ySwapChain.renderPass, 0);
+	VkGraphicsPipelineCreateInfo pipelineInfo = VulkanInitializers::pipelineCreateInfo(piplineLayout, ySwapChain.renderPass, 0);
 	pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
 	pipelineInfo.pStages = shaderStages.data();
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
@@ -373,18 +350,89 @@ void BigIntTestObj::createPipeline(const VulkanSwapChain& ySwapChain) {
 
 	rasterizationState.cullMode = VK_CULL_MODE_NONE;
 	
-	VK_CHECK_RESULT (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &debugPipline), "failed to create debug graphics pipeline!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipline), "failed to create debug graphics pipeline!");
 	
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, fragShaderModule, nullptr);
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, vertShaderModule, nullptr);
 }
 
-void BigIntTestObj::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
+void BigIntTestObj::draw(VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex) {
 	
 	//this->updateDebugUniformBuffer(yCurrentSwapChainImageIndex);
 
 	// draw the quad, 2 triangles
-	dev.funcs->vkCmdBindDescriptorSets(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPiplineLayout, 0, 1, &descriptorSets[yCurrentSwapChainImageIndex], 0, nullptr);
-	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipline);
+	dev.funcs->vkCmdBindDescriptorSets(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, piplineLayout, 0, 1, &descriptorSets[yCurrentSwapChainImageIndex], 0, nullptr);
+	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipline);
 	dev.funcs->vkCmdDraw(yCmdBuf, 6, 1, 0, 0);
+}
+
+
+// --- Test Case -----
+
+void BigIntTestObj::createTest() {
+	size_t s = 12;
+	srcVolume.resize(1, s, 1);
+	refImage.resize (1, s, 0);
+	dstImage.resize (1, s, 0);
+	
+	size_t c = 0;
+	srcVolume[0][  c][0] = PaillierInt::fromString("0", 10);
+	refImage [0][  c]    = PaillierInt::fromString("0", 10);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10);
+	refImage [0][  c]    = PaillierInt::fromString("1", 10);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("2", 10);
+	refImage [0][  c]    = PaillierInt::fromString("2", 10);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("255", 10);
+	refImage [0][  c]    = PaillierInt::fromString("255", 10);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("256", 10);
+	refImage [0][  c]    = PaillierInt::fromString("256", 10);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 31;
+	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 31;
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 32;
+	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 32;
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 63;
+	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 64;
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("10101010 01010101 10101010 01010101", 2);
+	refImage [0][  c]    = PaillierInt::fromString("10101010 01010101 10101010 01010101", 2);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1  10101010 01010101 10101010 01010101", 2);
+	refImage [0][  c]    = PaillierInt::fromString("1  10101010 01010101 10101010 01010101", 2);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
+	refImage [0][  c]    = PaillierInt::fromString("10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
+	refImage [0][  c]    = PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
+}
+
+void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
+	if(yFBO.getWidth() != refImage.width()) {
+		throw std::logic_error("Frame buffer width does not match the width of the reference image.");
+	}
+	if(yFBO.getHeight() != refImage.height()) {
+		throw std::logic_error("Frame buffer width does not match the height of the reference image.");
+	}
+	
+	data::ImageUtil::framebuffer2Image(dev, yFBO, dstImage);
+	for(size_t y=0; y < refImage.height(); y++) {
+		for(size_t x=0; x < refImage.width(); x++) {
+			PaillierInt& refVal = refImage.get(x, y);
+			PaillierInt& dstVal = dstImage.get(x, y);
+			dstVal.fixSignumAfterUnsafeOperation(false);
+			if(refVal != dstVal) {
+				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test " + testCaseName + " faild! \n"
+					+ "\t" + refVal.toStringHex() + " != " + dstVal.toStringHex();
+				//throw std::logic_error(msg);
+				std::cout << msg << std::endl;
+			}
+		}
+	}
 }

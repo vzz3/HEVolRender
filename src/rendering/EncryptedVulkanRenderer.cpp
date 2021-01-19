@@ -17,6 +17,7 @@ using namespace ppvr::rendering;
 EncryptedVulkanRenderer::EncryptedVulkanRenderer(QVulkanInstance* yQVulkanInstance, VkPhysicalDevice yVkPhysicalDevice, const Camera& yCamera, const bool yBigIntTest)
 	:
 		camera(yCamera),
+		initBigIntTest(yBigIntTest),
 		//fboFormates{{VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL}}
 		fboFormates{
 			GPU_INT_TEXTURE_SIZE,
@@ -32,7 +33,7 @@ EncryptedVulkanRenderer::~EncryptedVulkanRenderer() {
 }
 
 void EncryptedVulkanRenderer::cleanup() {
-	
+
 	releaseSwapChainResources();
 	
 	releaseGpuResources();
@@ -96,18 +97,23 @@ void EncryptedVulkanRenderer::initVulkan(QVulkanInstance* yQVulkanInstance, VkPh
 }
 
 void EncryptedVulkanRenderer::releaseGpuResources() {
-	
-	roEncXRay->releaseGpuResources();
-	delete roEncXRay;
-	roEncXRay = nullptr;
-	
-	delete m_gpuVolume;
-	m_gpuVolume = nullptr;
-	
-	
-	roCubeMap->releaseGpuResources();
-	delete roCubeMap;
-	roCubeMap = nullptr;
+	if(initBigIntTest) {
+		roBigIntTester->releaseGpuResources();
+		delete roBigIntTester;
+		roBigIntTester = nullptr;
+	} else {
+		roEncXRay->releaseGpuResources();
+		delete roEncXRay;
+		roEncXRay = nullptr;
+		
+		delete m_gpuVolume;
+		m_gpuVolume = nullptr;
+		
+		
+		roCubeMap->releaseGpuResources();
+		delete roCubeMap;
+		roCubeMap = nullptr;
+	}
 	
 	fbo->releaseGpuResources();
 	delete fbo;
@@ -118,25 +124,33 @@ void EncryptedVulkanRenderer::initGpuResources() {
 	fbo = new FrameBuffer(device, false, fboFormates);
 	fbo->initGpuResources();
 
-	roCubeMap = new CubeMap(device, false);
-	roCubeMap->initGpuResources();
-	
-	
-	
-	data::VolumeFactory::createVolume(m_volume, 100);
-	
-	m_gpuVolume = new data::GpuVolume(device);
-	m_gpuVolume->uploadVolume(m_volume);
-	
-	roEncXRay = new EncryptedXRay(device);
-	roEncXRay->initGpuResources();
+	if(initBigIntTest) {
+		roBigIntTester = new BigIntTestObj(device);
+		roBigIntTester->initGpuResources();
+	} else {
+
+		roCubeMap = new CubeMap(device, false);
+		roCubeMap->initGpuResources();
+		
+		
+		
+		data::VolumeFactory::createVolume(m_volume, 100);
+		
+		m_gpuVolume = new data::GpuVolume(device);
+		m_gpuVolume->uploadVolume(m_volume);
+		
+		roEncXRay = new EncryptedXRay(device);
+		roEncXRay->initGpuResources();
+	}
 }
 
 void EncryptedVulkanRenderer::releaseSwapChainResources() {
-	
-	roEncXRay->releaseSwapChainResources();
-	roCubeMap->releaseSwapChainResources();
-	
+	if(initBigIntTest) {
+		roBigIntTester->releaseSwapChainResources();
+	} else {
+		roEncXRay->releaseSwapChainResources();
+		roCubeMap->releaseSwapChainResources();
+	}
 	
 	cleanupCommandBuffer();
 	fbo->releaseSwapChainResources();
@@ -150,14 +164,15 @@ void EncryptedVulkanRenderer::initSwapChainResources(QSize yTargetSize, size_t y
 	swapChain.renderPass = fbo->getRenderPass();
 	swapChain.targetSize = yTargetSize;
 	
-	
-	roCubeMap->initSwapChainResources(swapChain);
-	roEncXRay->initSwapChainResources(swapChain, m_gpuVolume, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
+	if(initBigIntTest) {
+		roBigIntTester->initSwapChainResources(swapChain);
+	} else {
+		roCubeMap->initSwapChainResources(swapChain);
+		roEncXRay->initSwapChainResources(swapChain, m_gpuVolume, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
+	}
 }
 
-void EncryptedVulkanRenderer::cleanupCommandBuffer() {
-
-}
+void EncryptedVulkanRenderer::cleanupCommandBuffer() {}
 
 void EncryptedVulkanRenderer::createCommandBuffer(size_t ySwapChainImageCount) {}
 
@@ -233,6 +248,10 @@ void EncryptedVulkanRenderer::endFrame(VkCommandBuffer yCommandBuffer) {
 }
 
 void EncryptedVulkanRenderer::draw(size_t yCurrentSwapChainImageIndex) {
+	if(initBigIntTest) {
+		throw std::logic_error("This Instance of EncryptedVulkanRenderer is create with test support only.");
+	}
+	
 	VkCommandBuffer cmdBuf = this->startFrame();
 	
 	// ------ offscreen render pass ------
@@ -261,12 +280,20 @@ QImage EncryptedVulkanRenderer::framebuffer2host() {
 }
 
 void EncryptedVulkanRenderer::evaluateTest() {
+	if(!initBigIntTest) {
+		throw std::logic_error("This Instance of EncryptedVulkanRenderer is create without test support.");
+	}
+	
 	VkCommandBuffer cmdBuf = this->startFrame();
 	this->startMainRenderPass(cmdBuf);
 	
 	// TODO DRAW
 	//roEncXRay->draw(camera, cmdBuf, yCurrentSwapChainImageIndex);
+	roBigIntTester->draw(cmdBuf, 0);
 	
 	this->endMainRenderPass(cmdBuf);
 	this->endFrame(cmdBuf);
+	
+	// ------ read back the calculated values
+	roBigIntTester->evaluateTest(*fbo);
 }

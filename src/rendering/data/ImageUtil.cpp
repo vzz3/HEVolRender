@@ -15,7 +15,6 @@ using ppvr::rendering::FrameBuffer;
 const std::vector<VkFormat> ImageUtil::R8G8B8A8_Formates = { VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_USCALED };
 
 void ImageUtil::framebuffer2ppm(VulkanDevice& yDevice, const FrameBuffer& yFBO, const std::string& yBaseName) {
-	std::vector<VkFormat> suportedFormates = { VK_FORMAT_R8G8B8A8_SINT, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_UINT, VK_FORMAT_R8G8B8A8_SNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SSCALED, VK_FORMAT_R8G8B8A8_USCALED };
 	
 	const char* imageData;
 	int32_t width = yFBO.getWidth();
@@ -28,7 +27,7 @@ void ImageUtil::framebuffer2ppm(VulkanDevice& yDevice, const FrameBuffer& yFBO, 
 	// create images
 	for (size_t i = 0; i < dstImages.size(); i++) {
 	
-		assert( inVector(yFBO.getColorImageFormat(i), suportedFormates));
+		assert( inVector(yFBO.getColorImageFormat(i), R8G8B8A8_Formates)); // check if format is supported
 	
 		VulkanUtility::createImage(yDevice,
 			VK_IMAGE_TYPE_2D, 						// VkImageType yImageType
@@ -198,3 +197,87 @@ QImage ImageUtil::framebuffer2QImage(VulkanDevice& yDevice, const FrameBuffer& y
 	return frameGrabTargetImage;
 }
 
+void ImageUtil::framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO, Image<PaillierInt>& yDstImage) {
+	
+	const char* imageData;
+	int32_t width = yFBO.getWidth();
+	int32_t height = yFBO.getHeight();
+	
+	// Create the linear tiled destination image to copy to and to read the memory from
+	std::vector<VkImage> dstImages{yFBO.colorAttachmentCount()};
+	std::vector<VkDeviceMemory> dstImageMemories{yFBO.colorAttachmentCount()};
+	
+	// create images
+	for (size_t i = 0; i < dstImages.size(); i++) {
+		VulkanUtility::createImage(yDevice,
+			VK_IMAGE_TYPE_2D, 						// VkImageType yImageType
+			width, height, 1, 						// yWidth, yHeight, yDepth,
+			yFBO.getColorImageFormat(i),			// VkFormat yFormat
+			VK_IMAGE_TILING_LINEAR, 				// VkImageTiling yTiling
+			VK_IMAGE_USAGE_TRANSFER_DST_BIT, 		// VkImageUsageFlags yUsage
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,	// VkMemoryPropertyFlags yProperties
+			dstImages[i], 							// VkImage& yImage
+			dstImageMemories[i]						// VkDeviceMemory& yImageMemory
+		);
+	}
+	
+	// Do the actual blit from the offscreen image to our host visible destination image
+	VkCommandBuffer copyCmd = VulkanUtility::beginSingleTimeCommands(yDevice);
+	
+	for (size_t i = 0; i < dstImages.size(); i++) {
+		// Transition destination image to transfer destination layout
+		// TODO check srcStageMask
+		VulkanUtility::transitionImageLayout(yDevice, copyCmd, dstImages[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		
+		// colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be transitioned
+		// TODO realy???? is this correct?????
+		assert(yFBO.getColorImageFinalLayout(i) == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		
+		VulkanUtility::copyImage(yDevice, copyCmd,
+			yFBO.getColorAttachment(i).image, dstImages[i],	// srcImage, dstImage
+			width, height, 1);
+		
+		
+		// Transition destination image to general layout, which is the required layout for mapping the image memory later on
+		VulkanUtility::transitionImageLayout(yDevice, copyCmd, dstImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+	}
+	
+	VulkanUtility::endSingleTimeCommands(yDevice, copyCmd); // this command waits for the GPU
+
+	// Get layout of the image (including row pitch)
+	VkImageSubresource subResource{};
+	subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	VkSubresourceLayout subResourceLayout;
+
+	for (size_t i = 0; i < dstImages.size(); i++) {
+		yDevice.funcs->vkGetImageSubresourceLayout(yDevice.vkDev, dstImages[i], &subResource, &subResourceLayout);
+
+		// Map image memory so we can start copying from it
+		yDevice.funcs->vkMapMemory(yDevice.vkDev, dstImageMemories[i], 0, VK_WHOLE_SIZE, 0, (void**)&imageData);
+		imageData += subResourceLayout.offset;
+
+		/*
+			Save host visible framebuffer image to disk (ppm format)
+		*/
+
+		size_t wordOffset = i * GPU_INT_TEXTURE_WORD_COUNT;
+
+		// ppm binary pixel data
+		for (int32_t y = 0; y < height; y++) {
+			BIG_INT_WORD_TYPE *row = (BIG_INT_WORD_TYPE*)imageData;
+			for (int32_t x = 0; x < width; x++) {
+				PaillierInt& bigIntVal = yDstImage.get(x,y);
+				for (size_t w = 0; w < GPU_INT_TEXTURE_WORD_COUNT; w++) {
+					bigIntVal.getDataUnsafe()[wordOffset + w] = *row;
+					row++;
+				}
+			}
+			imageData += subResourceLayout.rowPitch;
+		}
+		
+		// Clean up resources
+		yDevice.funcs->vkUnmapMemory(yDevice.vkDev, dstImageMemories[i]);
+		yDevice.funcs->vkFreeMemory(yDevice.vkDev, dstImageMemories[i], nullptr); dstImageMemories[i] = nullptr;
+		yDevice.funcs->vkDestroyImage(yDevice.vkDev, dstImages[i], nullptr); dstImages[i] = nullptr;
+	}
+}

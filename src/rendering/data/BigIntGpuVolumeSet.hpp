@@ -15,10 +15,8 @@ namespace ppvr {
 				BigIntGpuVolumeSet(VulkanDevice& yDev);
 				~BigIntGpuVolumeSet();
 				
-			private:
-				void cleanup();
+				void releaseGpuResources();
 				
-			public:
 				void uploadVolume(const Volume<PaillierInt>& yVolume);
 				
 				/**

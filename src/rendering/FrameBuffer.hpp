@@ -101,7 +101,7 @@ namespace ppvr {
 			VkRenderPass renderPass;
 			
 			// from [xxx]RenderPass()
-			VkFramebuffer frameBuffer;
+			VkFramebuffer frameBuffer = VK_NULL_HANDLE;
 			
 			//VkSampler sampler;
 			//VkDescriptorImageInfo descriptor;

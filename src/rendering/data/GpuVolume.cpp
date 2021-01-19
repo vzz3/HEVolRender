@@ -13,7 +13,7 @@ GpuVolume::GpuVolume(VulkanDevice& yDev): dev(yDev) {
 }
 
 GpuVolume::~GpuVolume() {
-	this->cleanup();
+	this->releaseGpuResources();
 };
 
 /*
@@ -32,7 +32,7 @@ void GpuVolume::releaseSwapChainResources() {
 	
 }
 */
-void GpuVolume::cleanup() {
+void GpuVolume::releaseGpuResources() {
 	//this->releaseSwapChainResources();
 	//this->releaseGpuResources();
 	
@@ -57,7 +57,9 @@ void GpuVolume::cleanupStagingBuffer() {
 	stagingBufferMemory = VK_NULL_HANDLE;
 }
 
-void* GpuVolume::createStagingBuffer(const VkFormat yVolumeFormat, const size_t yWidth, const size_t yHeight, const size_t yDepth) {
+void* GpuVolume::createStagingBuffer(const VkFormat yVolumeFormat, const size_t yVolumeFormatSize, const size_t yWidth, const size_t yHeight, const size_t yDepth) {
+	mVolumeFormat = yVolumeFormat;
+	mVolumeFormatSize = yVolumeFormatSize;
 	mWidth = yWidth;
 	mHeight = yHeight;
 	mDepth = yDepth;
@@ -93,10 +95,10 @@ void GpuVolume::createGpuImageFromStagingBuffer() {
 }
 
 void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
-	this->cleanup();
+	this->releaseGpuResources();
 	constexpr VkFormat format = plainVolumeFormat;
 
-	void* data = this->createStagingBuffer(format, yVolume.width(), yVolume.height(), yVolume.depth());
+	void* data = this->createStagingBuffer(format, sizeof(uint16_t), yVolume.width(), yVolume.height(), yVolume.depth());
 		memcpy(data, yVolume.data(), static_cast<size_t>(this->imageSize()));
 	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
 	
@@ -108,14 +110,14 @@ void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
 }
 
 void GpuVolume::uploadBigIntVolumePart(const Volume<PaillierInt>& yVolume, const size_t yWordOffset) {
-	this->cleanup();
+	this->releaseGpuResources();
 	
-	assert( typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t) ); // , "encrypted GPU Volume upload currently only support unsigned 32 bit integers"
+	//assert( typeid(BIG_INT_WORD_TYPE) == typeid(uint32_t) ); // , "encrypted GPU Volume upload currently only support unsigned 32 bit integers"
 	
 	constexpr VkFormat format = bigIntWordVolumeFormat;
 
 
-	BIG_INT_WORD_TYPE* data = (BIG_INT_WORD_TYPE*)this->createStagingBuffer(format, yVolume.width(), yVolume.height(), yVolume.depth());
+	BIG_INT_WORD_TYPE* data = (BIG_INT_WORD_TYPE*)this->createStagingBuffer(format, (sizeof(BIG_INT_WORD_TYPE)*GPU_INT_TEXTURE_WORD_COUNT), yVolume.width(), yVolume.height(), yVolume.depth());
 	
 		//memcpy(data, yVolume.data(), static_cast<size_t>(this->imageSize()));
 	for (size_t i = 0; i < yVolume.length(); i++) {

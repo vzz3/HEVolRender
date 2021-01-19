@@ -72,9 +72,14 @@ namespace ppvr {
 			//std::shared_ptr<BIG_INT_WORD_TYPE[]> value;
 			
 		public:
-			inline const decltype(value) &getData() const {
+			inline const decltype(value)& getData() const {
 				return this->value;
 			}
+			
+			inline decltype(value)& getDataUnsafe() {
+				return this->value;
+			}
+			
 		// ----- constructors -----
 		public:
 			UFixBigInt();

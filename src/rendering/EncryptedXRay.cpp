@@ -303,18 +303,18 @@ void EncryptedXRay::createDescriptorSetLayout() {
 }
 
 void EncryptedXRay::cleanupPipeline() {
-	dev.funcs->vkDestroyPipeline(dev.vkDev, debugPipline, nullptr);
-	debugPipline = VK_NULL_HANDLE;
+	dev.funcs->vkDestroyPipeline(dev.vkDev, pipline, nullptr);
+	pipline = VK_NULL_HANDLE;
 	
-	dev.funcs->vkDestroyPipelineLayout(dev.vkDev, debugPiplineLayout, nullptr);
-	debugPiplineLayout = VK_NULL_HANDLE;
+	dev.funcs->vkDestroyPipelineLayout(dev.vkDev, piplineLayout, nullptr);
+	piplineLayout = VK_NULL_HANDLE;
 }
 
 void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_WORD_COUNT;
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
-	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &debugPiplineLayout), "failed to create pipeline layout!");
+	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &piplineLayout), "failed to create pipeline layout!");
 
 	VkShaderModule vertShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.vert.spv"));
 	VkShaderModule fragShaderModule = VulkanUtility::createShaderModule(this->dev, QStringLiteral("shaders/encryptedXRay.frag.spv"));
@@ -337,7 +337,7 @@ void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 	
 	
 	
-	VkGraphicsPipelineCreateInfo pipelineInfo = VulkanInitializers::pipelineCreateInfo(debugPiplineLayout, ySwapChain.renderPass, 0);
+	VkGraphicsPipelineCreateInfo pipelineInfo = VulkanInitializers::pipelineCreateInfo(piplineLayout, ySwapChain.renderPass, 0);
 	pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
 	pipelineInfo.pStages = shaderStages.data();
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
@@ -373,7 +373,7 @@ void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
 
 	rasterizationState.cullMode = VK_CULL_MODE_NONE;
 	
-	VK_CHECK_RESULT (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &debugPipline), "failed to create debug graphics pipeline!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateGraphicsPipelines(dev.vkDev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipline), "failed to create debug graphics pipeline!");
 	
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, fragShaderModule, nullptr);
 	dev.funcs->vkDestroyShaderModule(dev.vkDev, vertShaderModule, nullptr);
@@ -384,7 +384,7 @@ void EncryptedXRay::draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t
 	//this->updateDebugUniformBuffer(yCurrentSwapChainImageIndex);
 
 	// draw the quad, 2 triangles
-	dev.funcs->vkCmdBindDescriptorSets(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPiplineLayout, 0, 1, &descriptorSets[yCurrentSwapChainImageIndex], 0, nullptr);
-	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, debugPipline);
+	dev.funcs->vkCmdBindDescriptorSets(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, piplineLayout, 0, 1, &descriptorSets[yCurrentSwapChainImageIndex], 0, nullptr);
+	dev.funcs->vkCmdBindPipeline(yCmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipline);
 	dev.funcs->vkCmdDraw(yCmdBuf, 6, 1, 0, 0);
 }

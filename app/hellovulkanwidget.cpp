@@ -232,8 +232,8 @@ void MainWindow::renderEcrypted() {
 }
 
 void MainWindow::testGpuBigInt() {
-	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera());
-	encRenderer->initSwapChainResources(QSize{1, 1}, 1);
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera(), true);
+	encRenderer->initSwapChainResources(QSize{1, 12}, 1);
 	
 	encRenderer->evaluateTest();
 	

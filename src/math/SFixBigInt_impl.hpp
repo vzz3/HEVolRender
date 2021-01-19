@@ -18,15 +18,7 @@ SFixBigInt<S> SFixBigInt<S>::fromInt64(const int64_t& int64Val) {
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::fromInt64(const int64_t& int64Val, SFixBigInt<S> &target ) {
 	UFixBigInt<S>::fromUint64(std::abs(int64Val), target);
-	if(target.isMagnitudeZero() ) {
-		target.signum = 0;
-	} else {
-		if(int64Val > 0) {
-			target.signum = 1;
-		} else if(int64Val < 0) {
-			target.signum = -1;
-		}
-	}
+	target.fixSignumAfterUnsafeOperation(int64Val < 0);
 	return target;
 }
 
@@ -67,11 +59,7 @@ SFixBigInt<S>& SFixBigInt<S>::fromString(std::string str, const BIG_INT_WORD_TYP
 	UFixBigInt<S>::fromString(str, base, target);
 
 	// set sign
-	if( target.isMagnitudeZero() ) {
-		target.signum = 0;
-	} else {
-		target.signum = negative ? -1 : +1;
-	}
+	target.fixSignumAfterUnsafeOperation(negative);
 
 	return target;
 }
@@ -111,11 +99,7 @@ SFixBigInt<S> SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rando
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S>& SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd, SFixBigInt<S> &target) {
 	UFixBigInt<S>::randomNumber(sizeInBit, rnd, target);
-	if(target.isMagnitudeZero()) {
-		target.signum = 0;
-	} else {
-		target.signum = 1;
-	}
+	target.fixSignumAfterUnsafeOperation(false);
 	return target;
 }
 
@@ -128,11 +112,7 @@ SFixBigInt<S>& SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Rand
 	}
 
 	UFixBigInt<S>::randomNumber(upperBound, rnd, target);
-	if(target.isMagnitudeZero()) {
-		target.signum = 0;
-	} else {
-		target.signum = 1;
-	}
+	target.fixSignumAfterUnsafeOperation(false);
 	return target;
 }
 

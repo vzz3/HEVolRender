@@ -152,6 +152,14 @@ file(GLOB SRC_FILES
 	"src/*/*.c" 	"src/*/*.cpp"		"src/*/*.h"		"src/*/*.hpp"
 	"src/*/*/*.c"	"src/*/*/*.cpp"		"src/*/*/*.h"	"src/*/*/*.hpp"
 )
+file(GLOB SRC_MATH_FILES
+	"src/math/*.c" 		"src/math/*.cpp"		"src/math/*.h"		"src/math/*.hpp"
+	"src/math/*/*.c"	"src/math/*/*.cpp"		"src/math/*/*.h"	"src/math/*/*.hpp"
+)
+file(GLOB SRC_PAILLIER_FILES
+	"src/paillier/*.c" 		"src/paillier/*.cpp"		"src/paillier/*.h"		"src/paillier/*.hpp"
+	"src/paillier/*/*.c"	"src/paillier/*/*.cpp"		"src/paillier/*/*.h"	"src/paillier/*/*.hpp"
+)
 
 file(GLOB APP_FILES
 	"app/*.c" 		"app/*.cpp"			"app/*.h"		"app/*.hpp"
@@ -177,7 +185,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES}
 )
 #add_framework(Security ppvr)
 
-add_executable(ppvr-test ${SRC_FILES} ${TEST_FILES})
+add_executable(ppvr-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES})
 #add_framework(Security ppvr-test)
 
 target_link_libraries(${PROJECT_NAME}
@@ -202,6 +210,8 @@ add_shader(${PROJECT_NAME} "quad.frag")
 add_shader(${PROJECT_NAME} "quad.vert")
 add_shader(${PROJECT_NAME} "xRay.frag")
 add_shader(${PROJECT_NAME} "xRay.vert")
+add_shader(${PROJECT_NAME} "bigIntTest.frag")
+add_shader(${PROJECT_NAME} "bigIntTest.vert")
 add_shader(${PROJECT_NAME} "encryptedXRay.frag")
 add_shader(${PROJECT_NAME} "encryptedXRay.vert")
 

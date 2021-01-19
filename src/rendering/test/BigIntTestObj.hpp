@@ -3,15 +3,23 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "../VulkanDevice.hpp"
-#include "../Camera.hpp"
+#include "../data/Volume.hpp"
+#include "../data/Image.hpp"
+#include "../FrameBuffer.hpp"
+
 #include "../VulkanSwapChain.hpp"
-#include "../data/GpuVolume.hpp"
+#include "../data/BigIntGpuVolumeSet.hpp"
 
-
+#define BIG_INT_GPU_TEST_OPERATION_copy 1
 
 namespace ppvr {
 	namespace rendering {
 		class BigIntTestObj {
+		
+			struct BigIntTestUniformBufferObject {
+				uint32_t testOperationType;
+			};
+	
 	
 		public:
 			BigIntTestObj(VulkanDevice& yDev);
@@ -20,7 +28,7 @@ namespace ppvr {
 			void initGpuResources();
 			void releaseGpuResources();
 			
-			void initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack );
+			void initSwapChainResources(const VulkanSwapChain& ySwapChain);
 			void releaseSwapChainResources();
 			
 		private:
@@ -34,8 +42,8 @@ namespace ppvr {
 			void createVolumeSampler(const VulkanSwapChain& ySwapChain);
 			void cleanupVolumeSampler();
 			
-			void createCubePosSampler(const VulkanSwapChain& ySwapChain);
-			void cleanupCubePosSampler();
+			//void createCubePosSampler(const VulkanSwapChain& ySwapChain);
+			//void cleanupCubePosSampler();
 			
 			void createUniformBuffer(size_t ySwapChainImageCount);
 			void cleanupUniformBuffer();
@@ -60,16 +68,19 @@ namespace ppvr {
 			void createPipeline(const VulkanSwapChain& ySwapChain);
 			void cleanupPipeline();
 			
-		private:
-			
 		public:
-			void draw(const Camera& yCamera, VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
+			void draw(VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImageIndex);
+			
+		private:
+			void createTest();
+		public:
+			void evaluateTest(FrameBuffer& yFBO);
+			
 		private:
 			// from constructor
 			VulkanDevice& dev;
 			
-			data::GpuVolume* volume = nullptr;
-			VkImageView cubePosView[2]; // index 0 = front; index 1 = back
+			//data::GpuVolume* volume = nullptr;
 			
 			
 			//VkImageView volumeView;
@@ -77,7 +88,7 @@ namespace ppvr {
 			// from [xxx]Sampler()
 			VkSampler volumeSampler;
 			
-			VkSampler cubePosSampler;
+			//VkSampler cubePosSampler;
 			
 			//VkDescriptorImageInfo descriptorImage;
 		
@@ -97,12 +108,19 @@ namespace ppvr {
 			VulkanSwapChain offscreenSwappChain;
 			
 			// from [xxx]DebugPipeline()
-			VkPipeline debugPipline;
-			VkPipelineLayout debugPiplineLayout;
+			VkPipeline pipline;
+			VkPipelineLayout piplineLayout;
 			
 			// from [xxx]DescriptorSetLayout()
 			VkDescriptorSetLayout descriptorSetLayout; // beschreibt die uniforms in der pipline mit den shadern
 			
+			// ------------
+			Volume<PaillierInt> srcVolume;
+			Image<PaillierInt> refImage;
+			Image<PaillierInt> dstImage;
+			
+			data::BigIntGpuVolumeSet gpuVolumeSet;
+			std::string testCaseName{"GPU big int copy"};
 		};
 	}
 }

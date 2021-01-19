@@ -1,33 +1,33 @@
 
 #include <cassert>
 
-using ppvr::rendering::data::Volume;
+using ppvr::rendering::data::Image;
 
 template <typename T>
-Volume<T>::Volume()
+Image<T>::Image()
 	: mWidth(0), mHeight(0) {
 }
 
 template <typename T>
-Volume<T>::Volume(size_t yWidth, size_t yHeight) {
+Image<T>::Image(size_t yWidth, size_t yHeight) {
 	this->resize(yWidth, yHeight);
 }
 
 template <typename T>
-Volume<T>::Volume(size_t yWidth, size_t yHeight, T yVal) {
+Image<T>::Image(size_t yWidth, size_t yHeight, T yVal) {
   	this->resize(yWidth, yHeight, yVal);
 }
 
 template <typename T>
-Volume<T>::~Volume() {}
+Image<T>::~Image() {}
 
 template <typename T>
-void Volume<T>::resize(size_t yWidth, size_t yHeight) {
+void Image<T>::resize(size_t yWidth, size_t yHeight) {
 		this->resize(yWidth, yHeight, T{});
 }
 
 template <typename T>
-void Volume<T>::resize(size_t yWidth, size_t yHeight, T yVal) {
+void Image<T>::resize(size_t yWidth, size_t yHeight, T yVal) {
 	//assert(yWidth >= 1);
 	//assert(yHeight >= 1);
 	//assert(yDepth >= 1);
@@ -38,31 +38,42 @@ void Volume<T>::resize(size_t yWidth, size_t yHeight, T yVal) {
 }
 
 template <typename T>
-size_t Volume<T>::index(size_t x, size_t y, size_t z) const {
+size_t Image<T>::index(size_t x, size_t y) const {
 	size_t index = y * mWidth + x;
 	return index;
 }
 
 template <typename T>
-void Volume<T>::set(size_t x, size_t y, const T& value)  {
+void Image<T>::set(size_t x, size_t y, const T& value)  {
 	size_t i = index(x, y);
 	mValues[i] = value;
 	//resetCaches();
 }
 
 template <typename T>
-const T& Volume<T>::get(size_t x, size_t y) const {
+T& Image<T>::get(size_t x, size_t y) {
 	size_t i = index(x, y);
 	return mValues[i];
 }
 
 template <typename T>
-void Volume<T>::set(size_t index, const T& value) {
+const T& Image<T>::get(size_t x, size_t y) const {
+	size_t i = index(x, y);
+	return mValues[i];
+}
+
+template <typename T>
+void Image<T>::set(size_t index, const T& value) {
 	mValues[index] = value;
 }
 
 template <typename T>
-const T& Volume<T>::get(size_t index) const {
+T& Image<T>::get(size_t index) {
+	return mValues[index];
+}
+
+template <typename T>
+const T& Image<T>::get(size_t index) const {
 	return mValues[index];
 }
 
@@ -70,11 +81,11 @@ const T& Volume<T>::get(size_t index) const {
 
 
 template <typename T>
-T* Volume<T>::data() {
+T* Image<T>::data() {
 	return mValues.data();
 }
 
 template <typename T>
-const T* Volume<T>::data() const {
+const T* Image<T>::data() const {
 	return mValues.data();
 }
