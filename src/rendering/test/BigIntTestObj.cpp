@@ -398,6 +398,9 @@ void BigIntTestObj::createTest() {
 	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 32;
 	
 	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 63;
+	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 63;
+	
+	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 64;
 	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 64;
 	
 	srcVolume[0][++c][0] = PaillierInt::fromString("10101010 01010101 10101010 01010101", 2);
@@ -421,6 +424,9 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 		throw std::logic_error("Frame buffer width does not match the height of the reference image.");
 	}
 	
+	size_t countSuccess = 0;
+	size_t countError = 0;
+	
 	data::ImageUtil::framebuffer2Image(dev, yFBO, dstImage);
 	for(size_t y=0; y < refImage.height(); y++) {
 		for(size_t x=0; x < refImage.width(); x++) {
@@ -428,11 +434,23 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 			PaillierInt& dstVal = dstImage.get(x, y);
 			dstVal.fixSignumAfterUnsafeOperation(false);
 			if(refVal != dstVal) {
-				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test " + testCaseName + " faild! \n"
+				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test \"" + testCaseName + "\" faild! \n"
 					+ "\t" + refVal.toStringHex() + " != " + dstVal.toStringHex();
 				//throw std::logic_error(msg);
 				std::cout << msg << std::endl;
+				
+				countError++;
+			} else {
+				countSuccess++;
 			}
 		}
+	}
+	
+	std::cout << "--------------------------------------------" << std::endl;
+	if(countError > 0) {
+		size_t countTotal = countSuccess + countError;
+		std::cout << countError << " from " << (countTotal) <<  " assertions failed in \"" << testCaseName << "\"."  << std::endl;
+	} else {
+		std::cout << "ALL (" << countSuccess << ") assertions in \"" << testCaseName << "\" passed." << std::endl;
 	}
 }
