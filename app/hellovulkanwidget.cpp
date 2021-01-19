@@ -60,10 +60,13 @@
 #include <QTabWidget>
 #include "../src/rendering/Camera.hpp"
 #include "../src/rendering/EncryptedVulkanRenderer.hpp"
+#include "../src/rendering/test/BigIntTestFactory.hpp"
 
 using ppvr::rendering::PlainVulkanRenderer;
 using ppvr::rendering::Camera;
 using ppvr::rendering::EncryptedVulkanRenderer;
+using ppvr::rendering::test::BigIntTestCase;
+using ppvr::rendering::test::BigIntTestFactory;
 
 MainWindow::MainWindow() {
 
@@ -217,12 +220,14 @@ void MainWindow::onGrabRequested()
 
 void MainWindow::renderEcrypted() {
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera());
+	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(QSize{500, 500}, 1);
 	
 	encRenderer->draw(0);
 	QImage img = encRenderer->framebuffer2host();
 	
 	encRenderer->releaseSwapChainResources();
+	encRenderer->releaseGpuResources();
 	delete encRenderer;
 	
 	m_scene4EncryptedImageView->clear();
@@ -233,11 +238,20 @@ void MainWindow::renderEcrypted() {
 
 void MainWindow::testGpuBigInt() {
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera(), true);
-	encRenderer->initSwapChainResources(QSize{1, 12}, 1);
 	
-	encRenderer->evaluateTest();
+	std::vector<BigIntTestCase> testCases = BigIntTestFactory::createAllTest();
+	for(BigIntTestCase& testCase : testCases) {
+		encRenderer->setBigIntTestCase(&testCase);
+		
+		encRenderer->initGpuResources();
+		encRenderer->initSwapChainResources(testCase.getRequiredFboSize(), 1);
+		
+		encRenderer->evaluateTest();
+		
+		encRenderer->releaseSwapChainResources();
+		encRenderer->releaseGpuResources();
+	}
 	
-	encRenderer->releaseSwapChainResources();
 	delete encRenderer;
 	
 }

@@ -39,6 +39,9 @@ void Image<T>::resize(size_t yWidth, size_t yHeight, T yVal) {
 
 template <typename T>
 size_t Image<T>::index(size_t x, size_t y) const {
+	assert(x < mWidth);
+	assert(y < mHeight);
+	
 	size_t index = y * mWidth + x;
 	return index;
 }
@@ -64,16 +67,22 @@ const T& Image<T>::get(size_t x, size_t y) const {
 
 template <typename T>
 void Image<T>::set(size_t index, const T& value) {
+	assert(index < length());
+	
 	mValues[index] = value;
 }
 
 template <typename T>
 T& Image<T>::get(size_t index) {
+	assert(index < length());
+	
 	return mValues[index];
 }
 
 template <typename T>
 const T& Image<T>::get(size_t index) const {
+	assert(index < length());
+	
 	return mValues[index];
 }
 

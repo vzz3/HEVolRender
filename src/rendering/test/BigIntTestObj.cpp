@@ -9,12 +9,12 @@
 #include <iostream>
 
 
-using namespace ppvr::rendering;
+using namespace ppvr::rendering::test;
 
 
 
-BigIntTestObj::BigIntTestObj(VulkanDevice& yDev): dev(yDev), gpuVolumeSet(yDev) {
-	createTest();
+BigIntTestObj::BigIntTestObj(VulkanDevice& yDev, const BigIntTestCase& yTestCase): dev(yDev), testCase(yTestCase), gpuVolumeSet(yDev) {
+	//createTest();
 }
 
 BigIntTestObj::~BigIntTestObj() {
@@ -22,7 +22,7 @@ BigIntTestObj::~BigIntTestObj() {
 };
 
 void BigIntTestObj::initGpuResources() {
-	gpuVolumeSet.uploadVolume(srcVolume);
+	gpuVolumeSet.uploadVolume(testCase.srcVolume);
 	this->createDescriptorSetLayout();
 }
 
@@ -223,7 +223,7 @@ void BigIntTestObj::createDescriptorSet(size_t ySwapChainImageCount) {
 void BigIntTestObj::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 
 	BigIntTestUniformBufferObject ubo{};
-	ubo.testOperationType = BIG_INT_GPU_TEST_OPERATION_copy;
+	ubo.testOperationType = testCase.gpuOperationType;
 
 	constexpr VkDeviceSize uboSize = sizeof(BigIntTestUniformBufferObject);
 	void* data;
@@ -366,75 +366,26 @@ void BigIntTestObj::draw(VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImage
 	dev.funcs->vkCmdDraw(yCmdBuf, 6, 1, 0, 0);
 }
 
-
-// --- Test Case -----
-
-void BigIntTestObj::createTest() {
-	size_t s = 12;
-	srcVolume.resize(1, s, 1);
-	refImage.resize (1, s, 0);
-	dstImage.resize (1, s, 0);
-	
-	size_t c = 0;
-	srcVolume[0][  c][0] = PaillierInt::fromString("0", 10);
-	refImage [0][  c]    = PaillierInt::fromString("0", 10);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10);
-	refImage [0][  c]    = PaillierInt::fromString("1", 10);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("2", 10);
-	refImage [0][  c]    = PaillierInt::fromString("2", 10);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("255", 10);
-	refImage [0][  c]    = PaillierInt::fromString("255", 10);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("256", 10);
-	refImage [0][  c]    = PaillierInt::fromString("256", 10);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 31;
-	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 31;
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 32;
-	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 32;
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 63;
-	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 63;
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1", 10) << 64;
-	refImage [0][  c]    = PaillierInt::fromString("1", 10) << 64;
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("10101010 01010101 10101010 01010101", 2);
-	refImage [0][  c]    = PaillierInt::fromString("10101010 01010101 10101010 01010101", 2);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1  10101010 01010101 10101010 01010101", 2);
-	refImage [0][  c]    = PaillierInt::fromString("1  10101010 01010101 10101010 01010101", 2);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
-	refImage [0][  c]    = PaillierInt::fromString("10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
-	
-	srcVolume[0][++c][0] = PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
-	refImage [0][  c]    = PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2);
-}
-
 void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
-	if(yFBO.getWidth() != refImage.width()) {
+	if(yFBO.getWidth() != testCase.refImage.width()) {
 		throw std::logic_error("Frame buffer width does not match the width of the reference image.");
 	}
-	if(yFBO.getHeight() != refImage.height()) {
+	if(yFBO.getHeight() != testCase.refImage.height()) {
 		throw std::logic_error("Frame buffer width does not match the height of the reference image.");
 	}
 	
 	size_t countSuccess = 0;
 	size_t countError = 0;
 	
+	dstImage.resize (yFBO.getWidth(), yFBO.getHeight(), 0);
 	data::ImageUtil::framebuffer2Image(dev, yFBO, dstImage);
-	for(size_t y=0; y < refImage.height(); y++) {
-		for(size_t x=0; x < refImage.width(); x++) {
-			PaillierInt& refVal = refImage.get(x, y);
+	for(size_t y=0; y < testCase.refImage.height(); y++) {
+		for(size_t x=0; x < testCase.refImage.width(); x++) {
+			const PaillierInt& refVal = testCase.refImage.get(x, y);
 			PaillierInt& dstVal = dstImage.get(x, y);
 			dstVal.fixSignumAfterUnsafeOperation(false);
 			if(refVal != dstVal) {
-				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test \"" + testCaseName + "\" faild! \n"
+				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test \"" + testCase.name + "\" faild! \n"
 					+ "\t" + refVal.toStringHex() + " != " + dstVal.toStringHex();
 				//throw std::logic_error(msg);
 				std::cout << msg << std::endl;
@@ -449,8 +400,8 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 	std::cout << "--------------------------------------------" << std::endl;
 	if(countError > 0) {
 		size_t countTotal = countSuccess + countError;
-		std::cout << countError << " from " << (countTotal) <<  " assertions failed in \"" << testCaseName << "\"."  << std::endl;
+		std::cout << countError << " from " << (countTotal) <<  " assertions failed in \"" << testCase.name << "\"."  << std::endl;
 	} else {
-		std::cout << "ALL (" << countSuccess << ") assertions in \"" << testCaseName << "\" passed." << std::endl;
+		std::cout << "ALL (" << countSuccess << ") assertions in \"" << testCase.name << "\" passed." << std::endl;
 	}
 }

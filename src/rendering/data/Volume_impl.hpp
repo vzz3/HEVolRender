@@ -40,6 +40,10 @@ void Volume<T>::resize(size_t yWidth, size_t yHeight, size_t yDepth, T yVal) {
 
 template <typename T>
 size_t Volume<T>::index(size_t x, size_t y, size_t z) const {
+	assert(x < mWidth);
+	assert(y < mHeight);
+	assert(z < mDepth);
+	
 	size_t index = z * mHeight * mWidth + y * mWidth + x;
 	return index;
 }
@@ -59,11 +63,15 @@ const T& Volume<T>::get(size_t x, size_t y, size_t z) const {
 
 template <typename T>
 void Volume<T>::set(size_t index, const T& value) {
+	assert(index < length());
+	
 	mValues[index] = value;
 }
 
 template <typename T>
 const T& Volume<T>::get(size_t index) const {
+	assert(index < length());
+	
 	return mValues[index];
 }
 

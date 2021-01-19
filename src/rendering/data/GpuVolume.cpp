@@ -158,7 +158,6 @@ VkImageView GpuVolume::getImageView() {
 void GpuVolume::cleanupImageView() {
 	dev.funcs->vkDestroyImageView(dev.vkDev, volumeImageView, nullptr);
 	volumeImageView = VK_NULL_HANDLE;
-	
 }
 
 void GpuVolume::createImageView() {

@@ -25,7 +25,7 @@ EncryptedVulkanRenderer::EncryptedVulkanRenderer(QVulkanInstance* yQVulkanInstan
 		}
 	{
 	initVulkan(yQVulkanInstance, yVkPhysicalDevice);
-	initGpuResources();
+	//initGpuResources();
 }
 
 EncryptedVulkanRenderer::~EncryptedVulkanRenderer() {
@@ -98,11 +98,15 @@ void EncryptedVulkanRenderer::initVulkan(QVulkanInstance* yQVulkanInstance, VkPh
 
 void EncryptedVulkanRenderer::releaseGpuResources() {
 	if(initBigIntTest) {
-		roBigIntTester->releaseGpuResources();
+		if(roBigIntTester != nullptr) {
+			roBigIntTester->releaseGpuResources();
+		}
 		delete roBigIntTester;
 		roBigIntTester = nullptr;
 	} else {
-		roEncXRay->releaseGpuResources();
+		if(roEncXRay != nullptr) {
+			roEncXRay->releaseGpuResources();
+		}
 		delete roEncXRay;
 		roEncXRay = nullptr;
 		
@@ -110,12 +114,16 @@ void EncryptedVulkanRenderer::releaseGpuResources() {
 		m_gpuVolume = nullptr;
 		
 		
-		roCubeMap->releaseGpuResources();
+		if(roCubeMap != nullptr) {
+			roCubeMap->releaseGpuResources();
+		}
 		delete roCubeMap;
 		roCubeMap = nullptr;
 	}
 	
-	fbo->releaseGpuResources();
+	if(fbo != nullptr) {
+		fbo->releaseGpuResources();
+	}
 	delete fbo;
 	fbo = nullptr;
 }
@@ -125,7 +133,10 @@ void EncryptedVulkanRenderer::initGpuResources() {
 	fbo->initGpuResources();
 
 	if(initBigIntTest) {
-		roBigIntTester = new BigIntTestObj(device);
+		if(bigIntTestCase == nullptr) {
+			throw std::logic_error("A EncryptedVulkanRenderer that was inizialized for testing requires a BigIntTestCase befor the GPU resources can be inizialized.");
+		}
+		roBigIntTester = new test::BigIntTestObj(device, *bigIntTestCase);
 		roBigIntTester->initGpuResources();
 	} else {
 
@@ -146,14 +157,22 @@ void EncryptedVulkanRenderer::initGpuResources() {
 
 void EncryptedVulkanRenderer::releaseSwapChainResources() {
 	if(initBigIntTest) {
-		roBigIntTester->releaseSwapChainResources();
+		if(roBigIntTester != nullptr) {
+			roBigIntTester->releaseSwapChainResources();
+		}
 	} else {
-		roEncXRay->releaseSwapChainResources();
-		roCubeMap->releaseSwapChainResources();
+		if(roEncXRay != nullptr) {
+			roEncXRay->releaseSwapChainResources();
+		}
+		if(roCubeMap != nullptr) {
+			roCubeMap->releaseSwapChainResources();
+		}
 	}
 	
 	cleanupCommandBuffer();
-	fbo->releaseSwapChainResources();
+	if(fbo != nullptr) {
+		fbo->releaseSwapChainResources();
+	}
 }
 
 void EncryptedVulkanRenderer::initSwapChainResources(QSize yTargetSize, size_t ySwapChainImageCount) {
@@ -277,6 +296,11 @@ void EncryptedVulkanRenderer::draw(size_t yCurrentSwapChainImageIndex) {
 QImage EncryptedVulkanRenderer::framebuffer2host() {
 	//data::ImageUtil::framebuffer2ppm(device, *fbo, "headless_");
 	return data::ImageUtil::framebuffer2QImage(device, *fbo, 0);
+}
+
+
+void EncryptedVulkanRenderer::setBigIntTestCase(test::BigIntTestCase* yBigIntTestCase) {
+	bigIntTestCase = yBigIntTestCase;
 }
 
 void EncryptedVulkanRenderer::evaluateTest() {

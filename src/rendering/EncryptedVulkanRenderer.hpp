@@ -29,13 +29,13 @@ namespace ppvr {
 				void initVulkan(QVulkanInstance* yQVulkanInstance, VkPhysicalDevice yVkPhysicalDevice );
 				void cleanupVulakn();
 			
+		public:
 				void initGpuResources();
 				void releaseGpuResources();
 			
 				//void initRederObjects();
 				//void cleanupRenderObjects();
 			
-			public:
 				void initSwapChainResources(QSize yTargetSize, size_t ySwapChainImageCount); // override;
 				void releaseSwapChainResources(); // override;
 
@@ -51,6 +51,8 @@ namespace ppvr {
 			public:
 				void draw(size_t yCurrentSwapChainImageIndex);
 				QImage framebuffer2host();
+			
+				void setBigIntTestCase(test::BigIntTestCase* yBigIntTestCase);
 				void evaluateTest();
 			
 				//Camera& camera() {
@@ -84,7 +86,8 @@ namespace ppvr {
 				data::GpuVolume* m_gpuVolume = nullptr;
 				EncryptedXRay* roEncXRay = nullptr;
 			
-				BigIntTestObj *roBigIntTester = nullptr;
+				test::BigIntTestCase* bigIntTestCase = nullptr;
+				test::BigIntTestObj* roBigIntTester = nullptr;
 		};
 	}
 }
