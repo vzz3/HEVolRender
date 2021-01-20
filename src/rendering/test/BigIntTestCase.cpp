@@ -40,7 +40,7 @@ void BigIntTestCase::setAssertion(const size_t yAssertionIndex, const std::vecto
 
 	refImage [0][yAssertionIndex] = yResult;
 	for(size_t i = 0; i < yInputVars.size(); i++) {
-		srcVolume[0][yAssertionIndex][i] = yInputVars[i];
+		srcVolume[i][yAssertionIndex][0] = yInputVars[i];
 	}
 }
 

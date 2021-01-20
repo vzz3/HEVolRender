@@ -3,7 +3,6 @@
 #include <vector>
 #include "./BigIntTestCase.hpp"
 
-#define BIG_INT_GPU_TEST_OPERATION_copy 1
 
 namespace ppvr {
 	namespace rendering {
@@ -14,6 +13,7 @@ namespace ppvr {
 				
 			//private:
 				static BigIntTestCase createCopyTest();
+				static BigIntTestCase createMulTest();
 			};
 		}
 	}

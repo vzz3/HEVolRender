@@ -11,7 +11,6 @@
 #include "../data/BigIntGpuVolumeSet.hpp"
 
 #include "./BigIntTestCase.hpp"
-//#define BIG_INT_GPU_TEST_OPERATION_copy 1
 
 namespace ppvr {
 	namespace rendering {

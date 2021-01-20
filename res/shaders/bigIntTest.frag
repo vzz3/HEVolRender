@@ -1,6 +1,17 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
-#include "lib/VolumeUniformBufferObject.glsl"
+// DO NOT FORGET:
+//	cd /Users/sebastian/Documents/_Eigene_Dokumente/TU/CsProject/prototypeVulkan/build
+//	glslc -o shaders/bigIntTest.frag.spv ../res/shaders/bigIntTest.frag
+//	MoltenVKShaderConverter -si shaders/bigIntTest.frag.spv -mo shaders/bigIntTest.frag.msl -l
+
+
+//#include "lib/VolumeUniformBufferObject.glsl"
+#include "math/bigInt_defs.h.glsl"
+#include "math/BigIntUtil.glsl"
+#include "math/UFixBigInt.glsl"
+#include "../../src/rendering/test/BigIntGpuTestOperation_types.hpp"
 
 layout(binding = 1) uniform uboBigIntTest {
 	uint testOperationType;
@@ -11,11 +22,13 @@ layout(binding = 1) uniform uboBigIntTest {
 
 
 layout (binding = 3) uniform sampler samplerVolumes;
-layout (binding = 4) uniform utexture3D texturesVolumes[4];
+//layout (binding = 4) uniform utexture3D texturesVolumes[BIG_INT_BIT_TO_SIZE( (64*2) )];
+layout (binding = 4) uniform utexture3D texturesVolumes[GPU_INT_TEXTURE_SIZE];
+
 
 layout (location = 0) in vec2 inUV;
 
-layout (location = 0) out uvec4 outFragColor[4];
+layout (location = 0) out uvec4 outFragColor[GPU_INT_TEXTURE_SIZE];
 
 void main() {
 	// inizialize all output variables
@@ -29,7 +42,25 @@ void main() {
 	// working texelFetch() example (pos coordinates are absolute integers)
 	//outFragColor[0] = texelFetch(usampler3D(texturesVolumes[0], samplerVolumes), ivec3(gl_FragCoord.xy, 0), 0);
 
-	for(uint i=0; i<4; i++) {
-		outFragColor[i] = texelFetch(usampler3D(texturesVolumes[i], samplerVolumes), ivec3(gl_FragCoord.xy, 0), 0);
+	// simple copy
+	//for(uint i=0; i<GPU_INT_TEXTURE_SIZE; i++) {
+	//	outFragColor[i] = texelFetch(usampler3D(texturesVolumes[i], samplerVolumes), ivec3(gl_FragCoord.xy, 0), 0);
+	//}
+
+
+	FIX_BIG_INT_VALUE ufBigIntRes;
+	switch (testOperationType) {
+		case BIG_INT_GPU_TEST_OPERATION_mul:
+			FIX_BIG_INT_VALUE a = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(0, gl_FragCoord.y, 0));
+			FIX_BIG_INT_VALUE b = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(1, gl_FragCoord.y, 0));
+			ufBigIntRes = UFixBigInt_mul(a, b);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_copy:
+		    //result = cubicOut();
+		    //break;
+		default:
+			ufBigIntRes = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(gl_FragCoord.xy, 0));
 	}
+
+	outFragColor = UFixBigInt_toColorOut(ufBigIntRes);
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
-#include "BigInt_wordDev.h"
+#include "BigInt_wordDef.h"
 
 #include "Random.hpp"
 //#include "UFixBigInt.hpp"

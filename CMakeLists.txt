@@ -117,6 +117,7 @@ ENDIF()
 #qt5_add_resources(SHADER_RSC_ADDED
 #    hellovulkanwidget.qrc
 #)
+# https://stackoverflow.com/questions/60420700/cmake-invocation-of-glslc-with-respect-to-includes-dependencies
 function(add_shader TARGET SHADER)
     find_program(GLSLC glslc)
 
@@ -129,8 +130,16 @@ function(add_shader TARGET SHADER)
     file(MAKE_DIRECTORY ${current-output-dir})
 
     add_custom_command(
+		   #COMMENT "Generating shader " ${current-output-path}
            OUTPUT ${current-output-path}
-           COMMAND ${GLSLC} -o ${current-output-path} ${current-shader-path}
+           COMMAND
+		   		${GLSLC}
+				-MD -MF ${current-output-path}.d
+				#--target-env=opengl
+				-o ${current-output-path}
+				#-mfmt=num
+				${current-shader-path}
+		   #DEPFILE ${current-output-path}.d
            DEPENDS ${current-shader-path}
            IMPLICIT_DEPENDS CXX ${current-shader-path}
            VERBATIM)
@@ -167,6 +176,12 @@ file(GLOB APP_FILES
 	"app/*/*/*.c"	"app/*/*/*.cpp"		"app/*/*/*.h"	"app/*/*/*.hpp"
 )
 
+file(GLOB SHADER_FILES
+	"res/shaders/*.vert" 		"res/shaders/*.frag"		"res/shaders/*.glsl"
+	"res/shaders/*/*.vert" 		"res/shaders/*/*.frag"		"res/shaders/*/*.glsl"
+	"res/shaders/*/*/*.vert"	"res/shaders/*/*/*.frag"	"res/shaders/*/*/*.glsl"
+)
+
 file(GLOB TEST_FILES
 	"test/*.c" 		"test/*.cpp"		"test/*.h"		"test/*.hpp"
 	"test/*/*.c" 	"test/*/*.cpp"		"test/*/*.h"	"test/*/*.hpp"
@@ -175,6 +190,7 @@ file(GLOB TEST_FILES
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SRC_FILES}
+	${SHADER_FILES}
 	${APP_FILES}
 	#"${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp"
 	#"${CMAKE_CURRENT_SOURCE_DIR}/app/hellovulkanwidget.cpp"
@@ -222,3 +238,4 @@ configure_file(app/vk_layer_settings.txt vk_layer_settings.txt COPYONLY)
 # for Xcode file tree
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/test" PREFIX "test" FILES ${TEST_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res/shaders" PREFIX "shaders" FILES ${SHADER_FILES})

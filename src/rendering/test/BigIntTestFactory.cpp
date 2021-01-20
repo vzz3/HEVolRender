@@ -1,6 +1,6 @@
 
 #include "BigIntTestFactory.hpp"
-
+#include "BigIntGpuTestOperation_types.hpp"
 
 using namespace ppvr::rendering::test;
 
@@ -9,6 +9,7 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 	std::vector<BigIntTestCase> testCases;
 	
 	testCases.push_back(createCopyTest());
+	testCases.push_back(createMulTest());
 	
 	return testCases;
 }
@@ -79,3 +80,85 @@ BigIntTestCase BigIntTestFactory::createCopyTest() {
 	
 	return tc;
 }
+
+BigIntTestCase BigIntTestFactory::createMulTest() {
+	size_t s = 17;
+	BigIntTestCase tc{"GPU big int mul", BIG_INT_GPU_TEST_OPERATION_mul, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("7", 10);
+	b = PaillierInt::fromString("19", 10);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("7F", 16); // 8 bit
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, (a*b)); // result: FF
+	
+	a = PaillierInt::fromString("FF", 16); // 8 bit
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("80", 16); // 8 bit
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, (a*b)); // result: 100
+	
+	a = PaillierInt::fromString("80", 16); // 8 bit
+	b = PaillierInt::fromString("3", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("80", 16); // 8 bit
+	b = PaillierInt::fromString("4", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("81", 16); // 8 bit
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, (a*b)); // result: 102
+	
+	a = PaillierInt::fromString("FF", 16); // 8 bit
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, (a*b)); // result: 1FE
+	
+	a = PaillierInt::fromString("FFFFFFFF", 16); // 32 bit
+	b = PaillierInt::fromString("FFFFFFFF", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF", 16); // 64 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("10000000 00000000", 16); // 32 bit
+	b = PaillierInt::fromString("12345678 9ABCDEF0", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF", 16); // 32 bit
+	b = PaillierInt::fromString("12345678 9ABCDEF0", 16);
+	tc.addAssertion({a,b}, (a*b));
+	
+	return tc;
+}
+

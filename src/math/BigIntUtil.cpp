@@ -111,7 +111,7 @@ BIG_INT_WORD_TYPE BigIntUtil::addInt(const BIG_INT_WORD_TYPE word, const BIG_INT
 	BIG_INT_WORD_TYPE c;
 	c = BigIntUtil::addTwoWords(targetArray[index], word, 0, &targetArray[index]);
 	
-	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c ; ++i) {
+	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c > 0; ++i) {
 		c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
 	}
 	

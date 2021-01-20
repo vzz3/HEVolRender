@@ -7,9 +7,6 @@
 #include "../../paillier/Paillier_typeDev.h"
 #include <QSize>
 
-
-//#define BIG_INT_GPU_TEST_OPERATION_copy 1
-
 namespace ppvr {
 	namespace rendering {
 		namespace test {
