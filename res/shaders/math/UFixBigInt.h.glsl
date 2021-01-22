@@ -3,7 +3,7 @@
 
 
 
-/* ---------- comparisons ---------- */
+// ----- comparisons -----
 
 /*
  * operator<

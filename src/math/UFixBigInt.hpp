@@ -411,7 +411,7 @@ namespace ppvr {
 			 *
 			 * returns the remainder
 			 */
-			BIG_INT_WORD_TYPE divInt(BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const;
+			BIG_INT_WORD_TYPE divInt(const BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const;
 
 			/**
 			 * division by one unsigned word

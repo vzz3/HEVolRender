@@ -265,7 +265,7 @@ namespace ppvr {
 			 *
 			 * of course if there was a carry from table[2] it would be returned
 			 */
-			static BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount);
+			static BIG_INT_WORD_TYPE subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, const BIG_INT_WORD_COUNT_TYPE targetWordCount);
 			
 			
 		// ----- multiplication -----
@@ -297,7 +297,7 @@ namespace ppvr {
 			 * and probably the end of your program
 			 *
 			 */
-			static void divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE *remainder = NULL);
+			static void divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, const BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE *remainder = NULL);
 			
 			// -- divTwoWordsKnuth
 			
@@ -310,9 +310,9 @@ namespace ppvr {
 			 */
 			static void divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder = NULL);
 			static BIG_INT_WORD_TYPE divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c);
-			static BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d);
-			static unsigned int divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v);
-			static void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v);
+			static BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE d);
+			static unsigned int divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v);
+			static void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, const BIG_INT_WORD_TYPE v);
 		};
 	}
 }

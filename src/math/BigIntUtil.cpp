@@ -139,13 +139,13 @@ BIG_INT_WORD_TYPE BigIntUtil::subTwoWords(const BIG_INT_WORD_TYPE a, const BIG_I
 	return carry;
 }
 
-BIG_INT_WORD_TYPE BigIntUtil::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) {
+BIG_INT_WORD_TYPE BigIntUtil::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, const BIG_INT_WORD_COUNT_TYPE targetWordCount) {
 	assert( index < targetWordCount );
 	
 	BIG_INT_WORD_TYPE c;
 	c = subTwoWords(targetArray[index], word, 0, &targetArray[index]);
 	
-	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c ; ++i) {
+	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c > 0; ++i) {
 		c = subTwoWords(targetArray[i], 0, c, &targetArray[i]);
 	}
 	
@@ -211,7 +211,7 @@ void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 
 // -- divTwoWords
 
-void BigIntUtil::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder) {
+void BigIntUtil::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, const BIG_INT_WORD_TYPE divisor, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder) {
 	// c = divisor
 	// (a < c ) for the result to be one word
 	assert( divisor != 0 && a < divisor );
@@ -303,7 +303,7 @@ BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, B
 	return d;
 }
 
-BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE d) {
+BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE d) {
 	if( d == 0 ) {
 		return u;
 	}
@@ -313,7 +313,7 @@ BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, 
 	return u;
 }
 
-unsigned int BigIntUtil::divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT_WORD_TYPE u3, BIG_INT_WORD_TYPE v) {
+unsigned int BigIntUtil::divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v) {
 	bool nextTest;
 	BIG_INT_WORD_TYPE qp, rp, temp;
 	
@@ -351,7 +351,7 @@ unsigned int BigIntUtil::divTwoWordsKnuth_calculate(BIG_INT_WORD_TYPE u, BIG_INT
 	return BigIntUtil::getLowAsLowBits(qp); // return qp.low
 }
 
-void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, BIG_INT_WORD_TYPE v) {
+void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, const BIG_INT_WORD_TYPE v) {
 	BIG_INT_WORD_TYPE temp, res_high, res_low;
 	BigIntUtil::mulTwoWords(v, q,  &res_high, &res_low);
 	

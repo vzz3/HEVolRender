@@ -1,5 +1,6 @@
 
 #include "BigIntUtil.h.glsl"
+#include "../lib/assert.h.glsl"
 
 // ----- bit utilities -----
 
@@ -110,7 +111,7 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 
 BIG_INT_WORD_TYPE BigIntUtil_addTwoInts(const in BIG_INT_WORD_TYPE wordHigh, const in BIG_INT_WORD_TYPE wordLow
 	, const in BIG_INT_WORD_COUNT_TYPE index, inout FIX_BIG_INT_VALUE targetArray, const in BIG_INT_WORD_COUNT_TYPE targetWordCount) {
-	//assert( index < (targetWordCount - 1) ); // TODO
+	assert( index < (targetWordCount - 1) ); // TODO
 
 	BIG_INT_WORD_TYPE c;
 
@@ -124,13 +125,54 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoInts(const in BIG_INT_WORD_TYPE wordHigh, con
 }
 
 BIG_INT_WORD_TYPE BigIntUtil_addInt(const in BIG_INT_WORD_TYPE word, const in BIG_INT_WORD_COUNT_TYPE index, inout FIX_BIG_INT_VALUE targetArray, const in BIG_INT_WORD_COUNT_TYPE targetWordCount) {
-	//assert( index < targetWordCount );
+	assert( index < targetWordCount );
 
 	BIG_INT_WORD_TYPE c;
 	c = BigIntUtil_addTwoWords(targetArray[index], word, 0, targetArray[index]);
 
 	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c > 0; ++i) {
 		c = BigIntUtil_addTwoWords(targetArray[i], 0, c, targetArray[i]);
+	}
+
+	return c;
+}
+
+
+// ----- substraction -----
+
+BIG_INT_WORD_TYPE BigIntUtil_subTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE carry, out BIG_INT_WORD_TYPE result) {
+	if( carry == 0 ) {
+		result = a - b;
+		if( a < b ) {
+			carry = 1;
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+			result = result & BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+		}
+	} else {
+		carry   = 1;
+		result = a - b - carry;
+
+		if( a > b ) { // !(a <= b )
+			carry = 0;
+		} else {
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+			result = result & BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+		}
+	}
+
+	return carry;
+}
+
+BIG_INT_WORD_TYPE BigIntUtil_subInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, inout FIX_BIG_INT_VALUE targetArray, const in BIG_INT_WORD_COUNT_TYPE targetWordCount) {
+	assert( index < targetWordCount );
+
+	BIG_INT_WORD_TYPE c;
+	c = BigIntUtil_subTwoWords(targetArray[index], word, 0, targetArray[index]);
+
+	for(BIG_INT_WORD_COUNT_TYPE i=index+1 ; i<targetWordCount && c > 0; ++i) {
+		c = BigIntUtil_subTwoWords(targetArray[i], 0, c, targetArray[i]);
 	}
 
 	return c;
@@ -184,10 +226,11 @@ void BigIntUtil_mulTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_
 	temp &= BIG_INT_WORD_ALL_BIT_MASK;
 #endif
 	res_low1  = BigIntUtil_setHighFromLowBits(res_low1, temp); 			// res_low1.high = temp.low
+	res_high1 = 0; // not required, just silence the worning  "initialize the variable 'res_high1'..."
 	res_high1 = BigIntUtil_setLowFromHighBits(res_high1, temp); 			// res_high1.low = temp.high
 	res_high1 = BigIntUtil_getLowAsLowBits(res_high1); 					// res_high1.high = 0
 
-	res_low2  = BigIntUtil_getHighAsHighBits(res_low2); 					// res_low2.low = 0
+	res_low2  = 0;//BigIntUtil_getHighAsHighBits(res_low2); 					// res_low2.low = 0
 	temp	  = bHigh * aLow; 										// b.high * a.low
 #ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 	temp &= BIG_INT_WORD_ALL_BIT_MASK;

@@ -119,9 +119,7 @@ void UFixBigInt_mulSchool(const in FIX_BIG_INT_VALUE a, const in FIX_BIG_INT_VAL
 		return;
 	}
 
-	//if((aSize + bSize - 1) > S) {
-	//	throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
-	//}
+	assert_msg((aSize + bSize - 1) > S, "mulSchool not posible without overflow (aSize + bSize >= S)");
 
 	BIG_INT_WORD_TYPE r2, r1, carry = 0;
 
@@ -134,22 +132,16 @@ void UFixBigInt_mulSchool(const in FIX_BIG_INT_VALUE a, const in FIX_BIG_INT_VAL
 		}
 	}
 
-	//if(carry > 0) {
-	//	throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (loop)"));
-	//}
+	assert_msg(carry > 0, "mulSchool not posible without overflow (loop)");
 
 	// multiply with last word if required
 	if( (aSize + bSize - 1) == S ) {
 		BigIntUtil_mulTwoWords(a[aSize-1], b[bSize-1], r2, r1);
 		carry = r2;
-		//if(carry > 0) {
-		//	throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r2)"));
-		//}
+		assert_msg(carry > 0, "mulSchool not posible without overflow (r2)");
 
 		carry = BigIntUtil_addInt(r1, S-1, result, S);
-		//if(carry > 0) {
-		//	throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r1)"));
-		//}
+		assert_msg(arry > 0, "mulSchool not posible without overflow (r1)");
 	}
 }
 
@@ -164,7 +156,117 @@ FIX_BIG_INT_VALUE UFixBigInt_mul(const in FIX_BIG_INT_VALUE me, const in FIX_BIG
 }
 
 
-/* ---------- comparisons ---------- */
+
+
+
+/**
+ * this = this - word
+ * returns the carry (borrow) if this was < word
+ *
+ * @protected
+ */
+BIG_INT_WORD_TYPE subInt(inout FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_TYPE word) {
+	BIG_INT_WORD_TYPE c = BigIntUtil_subInt(word, 0, me, S);
+
+	// reduce word size if a word was truncated
+	//if(this->value[this->wordSize-1] == 0) {
+	//	this->wordSize = this->wordSize-1;
+	//}
+
+	return c;
+}
+
+/**
+ * this method's subtracting other from the 'this' and subtracting
+ * carry if it has been defined
+ * (result = this - other - carry)
+ *
+ * carry must be zero or one (might be a bigger value than 1)
+ * function returns carry (borrow) (1) (if this < other)
+ *
+ * @const
+ * @protected
+ */
+BIG_INT_WORD_TYPE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other, BIG_INT_WORD_TYPE carry, out FIX_BIG_INT_VALUE result) {
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<S; i++) {
+		carry = BigIntUtil_subTwoWords(me[i], other[i], carry, result[i]);
+	}
+	return carry;
+}
+
+/*
+ * @const
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	assert_msg(other > me, "ERROR substract UArbBigInt a - b with a < b")
+	FIX_BIG_INT_VALUE result;
+	UFixBigInt_sub(me, other, 0, result);
+	return result;
+}
+
+
+
+
+// ----- division -----
+
+// -- divInt
+
+/**
+ * division by one unsigned word
+ * restul = this / divisor
+ *
+ * returns the remainder
+ *
+ * @const
+ * @protected
+ * /
+BIG_INT_WORD_TYPE UFixBigInt_divInt(const in FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_TYPE divisor, out FIX_BIG_INT_VALUE result) {
+	if(divisor == 0) {
+		//std::string msg = "UArbBigInt devision by (uint)0.";
+		//std::cerr << msg << std::endl;
+		//throw std::invalid_argument(msg)
+		assert_msg(divisor != 0, "UArbBigInt devision by (uint)0.")
+		return 1/0;
+	}
+
+	if( divisor == 1 ) {
+		result = me;
+		return 0;
+	}
+
+	//UInt<value_size> dividend(*this);
+	const FIX_BIG_INT_VALUE dividend = me;
+
+	int i;  // i must be with a sign
+	BIG_INT_WORD_TYPE r = 0;
+
+	// we're looking for the last word in dividend (most significant word that is not null)
+	//result.setZero();
+	//for(i=S-1 ; i>0 && dividend[i]==0 ; --i);
+	i = int(S) - 1;
+
+	for( ; i>=0 ; --i) {
+		BigIntUtil::divTwoWords(r, dividend[i], divisor, &result.value[i], &r);
+	}
+
+	return r;
+}
+
+/**
+ * division by one unsigned word
+ * this = this / divisor
+ *
+ * returns the remainder
+ *
+ * @protected
+ * /
+BIG_INT_WORD_TYPE UFixBigInt_divInt(const inout FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_TYPE divisor) {
+	return UFixBigInt_divInt(me, divisor, me);
+}
+*/
+
+// ----- comparisons -----
 
 bool UFixBigInt_lessThan(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
 	for (BIG_INT_WORD_COUNT_TYPE i = (S - 1); i > 0; i--) {

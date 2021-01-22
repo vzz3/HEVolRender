@@ -186,6 +186,50 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoInts(const in BIG_INT_WORD_TYPE wordHigh, con
  */
 BIG_INT_WORD_TYPE BigIntUtil_addInt(const in BIG_INT_WORD_TYPE word, const in BIG_INT_WORD_COUNT_TYPE index, inout FIX_BIG_INT_VALUE targetArray, const in BIG_INT_WORD_COUNT_TYPE targetWordCount);
 
+
+// ----- substraction -----
+
+/**
+ * this method subtractes one word from the other and subtracting
+ * carry if it has been defined
+ * (result = a - b - carry)
+ * carry have to be 0 or 1
+ *
+ * returns carry(borow)
+ *
+ * @static
+ * @public
+ */
+BIG_INT_WORD_TYPE BigIntUtil_subTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE carry, out BIG_INT_WORD_TYPE result);
+
+
+/**
+ * this method subtracts one word (at a specific position)
+ * and returns a carry (if it was)
+ *
+ * if we've got (value_size=3):
+ *
+ * table[0] = 10;
+ * table[1] = 30;
+ * table[2] = 5;
+ *
+ * and we call:
+ *
+ * SubInt(2,1)
+ *
+ * then it'll be:
+ *
+ * table[0] = 10;
+ * table[1] = 30 - 2;
+ * table[2] = 5;
+ *
+ * of course if there was a carry from table[2] it would be returned
+ *
+ * @static
+ * @public
+ */
+BIG_INT_WORD_TYPE BigIntUtil_subInt(const in BIG_INT_WORD_TYPE word, const in BIG_INT_WORD_COUNT_TYPE index, inout FIX_BIG_INT_VALUE targetArray, const in BIG_INT_WORD_COUNT_TYPE targetWordCount);
+
 // ----- multiplication -----
 
 /**

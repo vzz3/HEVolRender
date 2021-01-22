@@ -17,6 +17,7 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 	testCases.push_back(createEqualToTest());
 	testCases.push_back(createNotEqualToTest());
 	
+	testCases.push_back(createSubTest());
 	testCases.push_back(createMulTest());
 	
 	return testCases;
@@ -1063,6 +1064,65 @@ BigIntTestCase BigIntTestFactory::createNotEqualToTest() {
 	b = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345688", 16); // 128 bit
 	tc.addAssertion({a,b}, PaillierInt(true));
 	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createSubTest() {
+	size_t s = 25;
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >=192) {
+		s += 2;
+	}
+	BigIntTestCase tc{"GPU big int sub", BIG_INT_GPU_TEST_OPERATION_sub, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	// 1 Byte (8bit)
+	tc.addAssertion({PaillierInt(  0), PaillierInt(  0)}, PaillierInt(0)); // 0 - 0 = 0
+	tc.addAssertion({PaillierInt(  1), PaillierInt(  0)}, PaillierInt(1)); // 1 - 0 = 1
+	tc.addAssertion({PaillierInt(  1), PaillierInt(  1)}, PaillierInt(0)); // 1 - 1 = 0
+
+	tc.addAssertion({PaillierInt(  9), PaillierInt(  1)}, PaillierInt(  8 )); // 9 - 1 = 8
+	tc.addAssertion({PaillierInt(  9), PaillierInt(  9)}, PaillierInt(  0 ));
+	// assertion Nr: 5
+	tc.addAssertion({PaillierInt( 10), PaillierInt(  9)}, PaillierInt(  1 ));
+	tc.addAssertion({PaillierInt(255), PaillierInt(  0)}, PaillierInt(255 ));
+	tc.addAssertion({PaillierInt(255), PaillierInt(255)}, PaillierInt(  0 ));
+	tc.addAssertion({PaillierInt(255), PaillierInt(  1)}, PaillierInt(254 ));
+
+	// 2 Bytes (16 bit)
+	tc.addAssertion({PaillierInt::fromString("0100", 16), PaillierInt::fromString("0100", 16)}, PaillierInt::fromString("00", 16)); // 256 - 256 = 0
+	// assertion Nr: 10
+	tc.addAssertion({PaillierInt::fromString("0101", 16), PaillierInt::fromString("0100", 16)}, PaillierInt::fromString("01", 16)); // 257 - 256 = 1
+	tc.addAssertion({PaillierInt::fromString("0101", 16), PaillierInt::fromString("  01", 16)}, PaillierInt::fromString("0100", 16)); // 257 - 1 = 256
+	tc.addAssertion({PaillierInt::fromString("0101", 16), PaillierInt::fromString("  02", 16)}, PaillierInt::fromString("FF", 16)); // 257 - 2 = 255
+
+	// 4 Bytes (32bit)
+	tc.addAssertion({PaillierInt::fromString("010000", 16), PaillierInt::fromString("010000", 16)}, PaillierInt::fromString("00", 16)); // 2^16 - 2^16 = 0
+	tc.addAssertion({PaillierInt::fromString("010001", 16), PaillierInt::fromString("010000", 16)}, PaillierInt::fromString("01", 16)); // (2^16 + 1) - 2^16 = 1
+	// assertion Nr: 15
+	tc.addAssertion({PaillierInt::fromString("010001", 16), PaillierInt::fromString("    01", 16)}, PaillierInt::fromString("010000", 16)); // (2^16 + 1) - 1 = 2^16
+	tc.addAssertion({PaillierInt::fromString("010001", 16), PaillierInt::fromString("    02", 16)}, PaillierInt::fromString("00FFFF", 16)); // (2^16 + 1) - 2 = 2^16 - 1
+
+	// 8 Bytes (64bit)
+	tc.addAssertion({PaillierInt::fromString("0100000000", 16), PaillierInt::fromString("0100000000", 16)}, PaillierInt::fromString("00", 16)); // 2^32 - 2^32 = 0
+	tc.addAssertion({PaillierInt::fromString("0100000001", 16), PaillierInt::fromString("0100000000", 16)}, PaillierInt::fromString("01", 16)); // (2^32 + 1) - 2^32 = 1
+	tc.addAssertion({PaillierInt::fromString("0100000001", 16), PaillierInt::fromString("01", 16)}, PaillierInt::fromString("0100000000", 16)); // (2^32 + 1) - 1 = 2^32
+	// assertion Nr: 20
+	tc.addAssertion({PaillierInt::fromString("0100000001", 16), PaillierInt::fromString("02", 16)}, PaillierInt::fromString("00FFFFFFFF", 16)); // (2^32 + 1) - 2 = 2^32 - 1
+
+	// 16 Bytes (128bit)
+	tc.addAssertion({PaillierInt::fromString("010000000000000000", 16), PaillierInt::fromString("010000000000000000", 16)}, PaillierInt::fromString("00", 16)      ); // 2^64 - 2^64 = 0
+	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("010000000000000000", 16)}, PaillierInt::fromString("01", 16)      ); // (2^64 + 1) - 2^64 = 1
+	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("01", 16)}, PaillierInt::fromString("010000000000000000", 16) ); // (2^64 + 1) - 1 = 2^64
+	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("02", 16)}, PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16)   ); // (2^64 + 1) - 2 = 2^64 - 1
+
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >=192) {
+		// assertion Nr: 25
+		tc.addAssertion({PaillierInt::fromString(" fedcba9 87654321 00000000 00000000 fedcba98 76543210", 16), PaillierInt::fromString("  123456 789abcde f0000000 00000000 12345678 9abcdef0", 16)}, PaillierInt::fromString("  fdb9753 0eca8642 10000000 00000000 eca8641f db975320", 16) );
+		tc.addAssertion({PaillierInt::fromString("987 654 321 000 000 000 000 000 000 000 000 000 009 876 543 210", 10), PaillierInt::fromString("123 456 789 000 000 000 000 000 000 000 000 000 001 234 567 890", 10)}, PaillierInt::fromString("864 197 532 000 000 000 000 000 000 000 000 000 008 641 975 320", 10) );
+	
+	}
 	return tc;
 }
 

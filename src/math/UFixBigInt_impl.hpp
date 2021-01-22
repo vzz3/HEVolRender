@@ -758,7 +758,7 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::sub(const UFixBigInt<S>& other) {
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::operator- (const UFixBigInt<S>& other) const {
 	if(other > *this) {
-		std::string msg = "ERROR substract UArbBigInt a - b with a < b (a=";// + this->toStringDec() + ", b=" + other.toStringDec() + ")!"; // TODO reenable this!!!!!
+		std::string msg = "ERROR substract UArbBigInt a - b with a < b (a=" + this->toStringDec() + ", b=" + other.toStringDec() + ")!";
 		std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
@@ -922,7 +922,7 @@ UFixBigInt<S> UFixBigInt<S>::operator* (const UFixBigInt<S>& other) const {
 // -- divInt
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const {
+BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(const BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const {
 	if(divisor == 0) {
 		std::string msg = "UArbBigInt devision by (uint)0.";
 		std::cerr << msg << std::endl;
@@ -1387,7 +1387,7 @@ UFixBigInt<S> UFixBigInt<S>::sqrt() const {
 
 
 
-/* ---------- comparisons ---------- */
+// ----- comparisons -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 bool UFixBigInt<S>::operator< (const UFixBigInt<S>& other) const {

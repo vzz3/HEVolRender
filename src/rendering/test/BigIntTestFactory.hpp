@@ -21,6 +21,7 @@ namespace ppvr {
 				static BigIntTestCase createEqualToTest();
 				static BigIntTestCase createNotEqualToTest();
 				
+				static BigIntTestCase createSubTest();
 				static BigIntTestCase createMulTest();
 			};
 		}
