@@ -100,6 +100,99 @@ bool UFixBigInt_isOne(const in FIX_BIG_INT_VALUE me) {
 	return true;
 }
 
+
+
+// ----- addition -----
+
+/**
+ * result = result + word
+ * @return carry
+ * @const
+ * @protected
+ */
+BIG_INT_WORD_TYPE UFixBigInt_add(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other, out FIX_BIG_INT_VALUE result) {
+	BIG_INT_WORD_TYPE carry = 0;
+	BIG_INT_WORD_TYPE a,b;//,c;
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<S; i++) {
+		a = me[i];
+		b = other[i];
+
+		carry = BigIntUtil_addTwoWords(a, b, carry, result[i]);
+	}
+
+	return carry;
+}
+
+/**
+ * this = this + other
+ * @return carry
+ * @const
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_add(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	FIX_BIG_INT_VALUE result;
+	BIG_INT_WORD_TYPE carry = UFixBigInt_add(me, other, result);
+	//if(carry > 0) {
+	//	throw FixBigIntOverflow("add() returned a carry");
+	//}
+	assert_msg(carry == 0, "add() returned a carry")
+	return result;
+}
+
+// ----- substraction -----
+
+/**
+ * this = this - word
+ * returns the carry (borrow) if this was < word
+ *
+ * @protected
+ */
+BIG_INT_WORD_TYPE BigIntUtil_subInt(inout FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_TYPE word) {
+	BIG_INT_WORD_TYPE c = BigIntUtil_subInt(word, 0, me, S);
+
+	// reduce word size if a word was truncated
+	//if(this->value[this->wordSize-1] == 0) {
+	//	this->wordSize = this->wordSize-1;
+	//}
+
+	return c;
+}
+
+/**
+ * this method's subtracting other from the 'this' and subtracting
+ * carry if it has been defined
+ * (result = this - other - carry)
+ *
+ * carry must be zero or one (might be a bigger value than 1)
+ * function returns carry (borrow) (1) (if this < other)
+ *
+ * @const
+ * @protected
+ */
+BIG_INT_WORD_TYPE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other, BIG_INT_WORD_TYPE carry, out FIX_BIG_INT_VALUE result) {
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<S; i++) {
+		carry = BigIntUtil_subTwoWords(me[i], other[i], carry, result[i]);
+	}
+	return carry;
+}
+
+/*
+ * @const
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	assert_msg(other > me, "ERROR substract UArbBigInt a - b with a < b")
+	FIX_BIG_INT_VALUE result;
+	UFixBigInt_sub(me, other, 0, result);
+	return result;
+}
+
+
+
+
+
+// ----- multiplication -----
+
 /**
  * @const
  * @private
@@ -154,58 +247,6 @@ FIX_BIG_INT_VALUE UFixBigInt_mul(const in FIX_BIG_INT_VALUE me, const in FIX_BIG
 	UFixBigInt_mulSchool(me, b, result);
 	return result;
 }
-
-
-
-
-
-/**
- * this = this - word
- * returns the carry (borrow) if this was < word
- *
- * @protected
- */
-BIG_INT_WORD_TYPE subInt(inout FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_TYPE word) {
-	BIG_INT_WORD_TYPE c = BigIntUtil_subInt(word, 0, me, S);
-
-	// reduce word size if a word was truncated
-	//if(this->value[this->wordSize-1] == 0) {
-	//	this->wordSize = this->wordSize-1;
-	//}
-
-	return c;
-}
-
-/**
- * this method's subtracting other from the 'this' and subtracting
- * carry if it has been defined
- * (result = this - other - carry)
- *
- * carry must be zero or one (might be a bigger value than 1)
- * function returns carry (borrow) (1) (if this < other)
- *
- * @const
- * @protected
- */
-BIG_INT_WORD_TYPE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other, BIG_INT_WORD_TYPE carry, out FIX_BIG_INT_VALUE result) {
-	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<S; i++) {
-		carry = BigIntUtil_subTwoWords(me[i], other[i], carry, result[i]);
-	}
-	return carry;
-}
-
-/*
- * @const
- * @public
- */
-FIX_BIG_INT_VALUE UFixBigInt_sub(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
-	assert_msg(other > me, "ERROR substract UArbBigInt a - b with a < b")
-	FIX_BIG_INT_VALUE result;
-	UFixBigInt_sub(me, other, 0, result);
-	return result;
-}
-
-
 
 
 // ----- division -----

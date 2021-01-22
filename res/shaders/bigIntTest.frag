@@ -73,6 +73,9 @@ void main() {
 			UFixBigInt_notEqualTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
 			break;
 
+		case BIG_INT_GPU_TEST_OPERATION_add:
+			ufBigIntRes = UFixBigInt_add(ufBigIntA, ufBigIntB);
+			break;
 		case BIG_INT_GPU_TEST_OPERATION_sub:
 			ufBigIntRes = UFixBigInt_sub(ufBigIntA, ufBigIntB);
 			break;
