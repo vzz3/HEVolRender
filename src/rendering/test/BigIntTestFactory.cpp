@@ -9,6 +9,14 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 	std::vector<BigIntTestCase> testCases;
 	
 	testCases.push_back(createCopyTest());
+	
+	testCases.push_back(createLessThanTest());
+	testCases.push_back(createLessThanOrEqualToTest());
+	testCases.push_back(createGreaterThanTest());
+	testCases.push_back(createGreaterThanOrEqualToTest());
+	testCases.push_back(createEqualToTest());
+	testCases.push_back(createNotEqualToTest());
+	
 	testCases.push_back(createMulTest());
 	
 	return testCases;
@@ -16,7 +24,7 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 
 
 BigIntTestCase BigIntTestFactory::createCopyTest() {
-	size_t s = 13;
+	size_t s = 15;
 	BigIntTestCase tc{"GPU big int copy", BIG_INT_GPU_TEST_OPERATION_copy, s, 1};
 	
 	// assertion Nr: 0
@@ -76,7 +84,984 @@ BigIntTestCase BigIntTestFactory::createCopyTest() {
 		{{PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2)}}
 		, PaillierInt::fromString("1  10101010 01010101 01010101 01010101  01010101 10101010 01010101 10101010", 2)
 	);
+	tc.addAssertion(
+		{{PaillierInt::fromString("1000", 16)}}
+		, PaillierInt::fromString("1000", 16)
+	);
+	tc.addAssertion(
+		{{PaillierInt::fromString("1001", 16)}}
+		, PaillierInt::fromString("1001", 16)
+	);
 	
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createLessThanTest() {
+	size_t s = 28;
+	BigIntTestCase tc{"GPU big int lessThanTest (<)", BIG_INT_GPU_TEST_OPERATION_lessThan, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 < 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 < 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 < 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 < 2
+	
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 9 < 10
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 14 < 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 < 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 16 < 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createLessThanOrEqualToTest() {
+	size_t s = 33;
+	BigIntTestCase tc{"GPU big int lessThanOrEqualTo (<=)", BIG_INT_GPU_TEST_OPERATION_lessThanOrEqualTo, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 <= 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 <= 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 <= 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 <= 2
+	
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 9 <= 10
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 14 <= 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 <= 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 <= 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 16 <= 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1001", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000001", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 30
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createGreaterThanTest() {
+	size_t s = 37;
+	BigIntTestCase tc{"GPU big int greaterThan (>)", BIG_INT_GPU_TEST_OPERATION_greaterThan, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 > 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 > 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 > 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 > 2
+	
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 2 > 1
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 9 > 10
+	
+	a = PaillierInt::fromString("A", 16);
+	b = PaillierInt::fromString("9", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 10 > 9
+	
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 14 > 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 > 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("E", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 > 14
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 > 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 16 > 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1001", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("1010", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1100", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("10000001", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 30
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 35
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createGreaterThanOrEqualToTest() {
+	size_t s = 37;
+	BigIntTestCase tc{"GPU big int greaterThanOrEqualTo (>=)", BIG_INT_GPU_TEST_OPERATION_greaterThanOrEqualTo, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 >= 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 >= 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 >= 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 >= 2
+	
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 2 >= 1
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 9 >= 10
+	
+	a = PaillierInt::fromString("A", 16);
+	b = PaillierInt::fromString("9", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 10 >= 9
+	
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 14 >= 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 >= 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("E", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 >= 14
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 >= 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 16 >= 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1001", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("1010", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1100", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("10000001", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 30
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 35
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createEqualToTest() {
+	size_t s = 41;
+	BigIntTestCase tc{"GPU big int equalTo (==)", BIG_INT_GPU_TEST_OPERATION_equalTo, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 == 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 == 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 == 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 1 == 2
+	
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 2 == 1
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 2 == 2
+	
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 9 == 10
+	
+	a = PaillierInt::fromString("A", 16);
+	b = PaillierInt::fromString("9", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 10 == 9
+	
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 14 == 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 == 15
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("E", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 == 14
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 == 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 16 == 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1001", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1010", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1100", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000001", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 30
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 35
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	b = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 40
+	a = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	b = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345688", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createNotEqualToTest() {
+	size_t s = 41;
+	BigIntTestCase tc{"GPU big int notEqualTo (!=)", BIG_INT_GPU_TEST_OPERATION_notEqualTo, s, 2};
+	
+	PaillierInt a, b;
+	
+	// assertion Nr: 0
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 0 != 0
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("0", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 != 0
+	
+	a = PaillierInt::fromString("0", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 0 != 1
+	
+	a = PaillierInt::fromString("1", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 1 != 2
+	
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("1", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 2 != 1
+	
+	// assertion Nr: 5
+	a = PaillierInt::fromString("2", 16);
+	b = PaillierInt::fromString("2", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 2 != 2
+	
+	a = PaillierInt::fromString("9", 16);
+	b = PaillierInt::fromString("A", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 9 != 10
+	
+	a = PaillierInt::fromString("A", 16);
+	b = PaillierInt::fromString("9", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 10 != 9
+	
+	a = PaillierInt::fromString("E", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 14 != 15
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("F", 16);
+	tc.addAssertion({a,b}, PaillierInt(false)); // 15 != 15
+	
+	// assertion Nr: 10
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("E", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 != 14
+	
+	a = PaillierInt::fromString("F", 16);
+	b = PaillierInt::fromString("10", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 15 != 16
+	
+	a = PaillierInt::fromString("10", 16);
+	b = PaillierInt::fromString("0F", 16);
+	tc.addAssertion({a,b}, PaillierInt(true)); // 16 != 15
+	
+	a = PaillierInt::fromString("FF", 16);
+	b = PaillierInt::fromString("FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("0FF", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 15
+	a = PaillierInt::fromString("0FF", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("100", 16);
+	b = PaillierInt::fromString("100", 16);
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1001", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1001", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 20
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1010", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1010", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1000", 16); // 16 bit
+	b = PaillierInt::fromString("1100", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("1100", 16); // 16 bit
+	b = PaillierInt::fromString("1000", 16); // 16 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 25
+	a = PaillierInt::fromString("10000000", 16); // 32 bit
+	b = PaillierInt::fromString("10000001", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000001", 16); // 32 bit
+	b = PaillierInt::fromString("10000000", 16); // 32 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000001", 16); // 64 bit
+	b = PaillierInt::fromString("10000000 00000000", 16); // 64 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 30
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000001", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("0FFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	// assertion Nr: 35
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	b = PaillierInt::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	a = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	b = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("10000000 00000000 00000000 00000000", 16); // 128 bit
+	b = PaillierInt::fromString("00000000 00000000 00000000 10000000", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
+	
+	a = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	b = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(false));
+	
+	// assertion Nr: 40
+	a = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345687", 16); // 128 bit
+	b = PaillierInt::fromString("F0E00C00 0000B000 A000D000 12345688", 16); // 128 bit
+	tc.addAssertion({a,b}, PaillierInt(true));
 	
 	return tc;
 }

@@ -13,6 +13,14 @@ namespace ppvr {
 				
 			//private:
 				static BigIntTestCase createCopyTest();
+				
+				static BigIntTestCase createLessThanTest();
+				static BigIntTestCase createLessThanOrEqualToTest();
+				static BigIntTestCase createGreaterThanTest();
+				static BigIntTestCase createGreaterThanOrEqualToTest();
+				static BigIntTestCase createEqualToTest();
+				static BigIntTestCase createNotEqualToTest();
+				
 				static BigIntTestCase createMulTest();
 			};
 		}

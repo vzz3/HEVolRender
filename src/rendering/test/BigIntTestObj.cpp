@@ -386,7 +386,7 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 			dstVal.fixSignumAfterUnsafeOperation(false);
 			if(refVal != dstVal) {
 				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test \"" + testCase.name + "\" faild! \n"
-					+ "\t" + refVal.toStringHex() + " != " + dstVal.toStringHex();
+					+ "\t" +  dstVal.toStringHex() + " != " + refVal.toStringHex();
 				//throw std::logic_error(msg);
 				std::cout << msg << std::endl;
 				

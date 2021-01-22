@@ -1,5 +1,7 @@
 
 #include "./BigIntUtil.h.glsl"
+#include "./UFixBigInt.h.glsl"
+
 
 // ----- statics -----
 
@@ -159,4 +161,56 @@ FIX_BIG_INT_VALUE UFixBigInt_mul(const in FIX_BIG_INT_VALUE me, const in FIX_BIG
 	FIX_BIG_INT_VALUE result;
 	UFixBigInt_mulSchool(me, b, result);
 	return result;
+}
+
+
+/* ---------- comparisons ---------- */
+
+bool UFixBigInt_lessThan(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	for (BIG_INT_WORD_COUNT_TYPE i = (S - 1); i > 0; i--) {
+		if (me[i] < other[i]) {
+			return true;
+		}
+
+		if (me[i] > other[i]) {
+			return false;
+		}
+	}
+	return (me[0] < other[0]);
+}
+
+bool UFixBigInt_lessThanOrEqualTo(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	if (UFixBigInt_lessThan(me, other)) {
+		return true;
+	}
+
+	if (UFixBigInt_equalTo(me, other)) {
+		return true;
+	}
+
+	return false;
+}
+
+bool UFixBigInt_greaterThan(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	return (!(UFixBigInt_lessThanOrEqualTo(me, other)));
+}
+
+bool UFixBigInt_greaterThanOrEqualTo(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	return (!(UFixBigInt_lessThan(me, other)));
+}
+
+bool UFixBigInt_equalTo(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	if (UFixBigInt_lessThan(me, other)) {
+		return false;
+	}
+
+	if (UFixBigInt_lessThan(other, me)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool UFixBigInt_notEqualTo(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	return (!(UFixBigInt_equalTo(me, other)));
 }

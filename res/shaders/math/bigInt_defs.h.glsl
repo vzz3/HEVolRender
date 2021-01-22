@@ -68,5 +68,3 @@
  *
  */
 #define FIX_BIG_INT_VALUE uint[PAILLIER_INT_WORD_SIZE]
-
-#define S PAILLIER_INT_WORD_SIZE

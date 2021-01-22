@@ -49,11 +49,32 @@ void main() {
 
 
 	FIX_BIG_INT_VALUE ufBigIntRes;
+	FIX_BIG_INT_VALUE ufBigIntA = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(0, gl_FragCoord.y, 0));
+	FIX_BIG_INT_VALUE ufBigIntB = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(1, gl_FragCoord.y, 0));
+
 	switch (testOperationType) {
+		/* ---------- comparisons ---------- */
+		case BIG_INT_GPU_TEST_OPERATION_lessThan: // <
+			UFixBigInt_lessThan(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_lessThanOrEqualTo: // <=
+			UFixBigInt_lessThanOrEqualTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_greaterThan: // >
+			UFixBigInt_greaterThan(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_greaterThanOrEqualTo: // >=
+			UFixBigInt_greaterThanOrEqualTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_equalTo: // ==
+			UFixBigInt_equalTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_notEqualTo: // !=
+			UFixBigInt_notEqualTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
+			break;
+
 		case BIG_INT_GPU_TEST_OPERATION_mul:
-			FIX_BIG_INT_VALUE a = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(0, gl_FragCoord.y, 0));
-			FIX_BIG_INT_VALUE b = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(1, gl_FragCoord.y, 0));
-			ufBigIntRes = UFixBigInt_mul(a, b);
+			ufBigIntRes = UFixBigInt_mul(ufBigIntA, ufBigIntB);
 			break;
 		case BIG_INT_GPU_TEST_OPERATION_copy:
 		    //result = cubicOut();
