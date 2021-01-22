@@ -13,7 +13,7 @@ using namespace ppvr::rendering::test;
 
 
 
-BigIntTestObj::BigIntTestObj(VulkanDevice& yDev, const BigIntTestCase& yTestCase): dev(yDev), testCase(yTestCase), gpuVolumeSet(yDev) {
+BigIntTestObj::BigIntTestObj(VulkanDevice& yDev, BigIntTestCase& yTestCase): dev(yDev), testCase(yTestCase), gpuVolumeSet(yDev) {
 	//createTest();
 }
 
@@ -22,7 +22,7 @@ BigIntTestObj::~BigIntTestObj() {
 };
 
 void BigIntTestObj::initGpuResources() {
-	gpuVolumeSet.uploadVolume(testCase.srcVolume);
+	gpuVolumeSet.uploadVolume(testCase.getSrcVolume());
 	this->createDescriptorSetLayout();
 }
 
@@ -367,10 +367,10 @@ void BigIntTestObj::draw(VkCommandBuffer& yCmdBuf, size_t yCurrentSwapChainImage
 }
 
 void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
-	if(yFBO.getWidth() != testCase.refImage.width()) {
+	if(yFBO.getWidth() != testCase.getRefImage().width()) {
 		throw std::logic_error("Frame buffer width does not match the width of the reference image.");
 	}
-	if(yFBO.getHeight() != testCase.refImage.height()) {
+	if(yFBO.getHeight() != testCase.getRefImage().height()) {
 		throw std::logic_error("Frame buffer width does not match the height of the reference image.");
 	}
 	
@@ -379,9 +379,9 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 	
 	dstImage.resize (yFBO.getWidth(), yFBO.getHeight(), 0);
 	data::ImageUtil::framebuffer2Image(dev, yFBO, dstImage);
-	for(size_t y=0; y < testCase.refImage.height(); y++) {
-		for(size_t x=0; x < testCase.refImage.width(); x++) {
-			const PaillierInt& refVal = testCase.refImage.get(x, y);
+	for(size_t y=0; y < testCase.getRefImage().height(); y++) {
+		for(size_t x=0; x < testCase.getRefImage().width(); x++) {
+			const PaillierInt& refVal = testCase.getRefImage().get(x, y);
 			PaillierInt& dstVal = dstImage.get(x, y);
 			dstVal.fixSignumAfterUnsafeOperation(false);
 			if(refVal != dstVal) {

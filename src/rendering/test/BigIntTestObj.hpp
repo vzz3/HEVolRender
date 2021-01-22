@@ -23,7 +23,7 @@ namespace ppvr {
 		
 		
 			public:
-				BigIntTestObj(VulkanDevice& yDev, const BigIntTestCase& yTestCase);
+				BigIntTestObj(VulkanDevice& yDev, BigIntTestCase& yTestCase);
 				~BigIntTestObj();
 				
 				void initGpuResources();
@@ -97,7 +97,7 @@ namespace ppvr {
 				
 				// ------------
 				Image<PaillierInt> dstImage;
-				const BigIntTestCase& testCase;
+				BigIntTestCase& testCase;
 				data::BigIntGpuVolumeSet gpuVolumeSet;
 				
 			};

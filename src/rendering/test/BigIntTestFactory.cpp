@@ -26,8 +26,7 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 
 
 BigIntTestCase BigIntTestFactory::createCopyTest() {
-	size_t s = 15;
-	BigIntTestCase tc{"GPU big int copy", BIG_INT_GPU_TEST_OPERATION_copy, s, 1};
+	BigIntTestCase tc{"GPU big int copy", BIG_INT_GPU_TEST_OPERATION_copy, 1};
 	
 	// assertion Nr: 0
 	tc.addAssertion(
@@ -100,8 +99,7 @@ BigIntTestCase BigIntTestFactory::createCopyTest() {
 }
 
 BigIntTestCase BigIntTestFactory::createLessThanTest() {
-	size_t s = 28;
-	BigIntTestCase tc{"GPU big int lessThanTest (<)", BIG_INT_GPU_TEST_OPERATION_lessThan, s, 2};
+	BigIntTestCase tc{"GPU big int lessThanTest (<)", BIG_INT_GPU_TEST_OPERATION_lessThan, 2};
 	
 	PaillierInt a, b;
 	
@@ -227,8 +225,7 @@ BigIntTestCase BigIntTestFactory::createLessThanTest() {
 }
 
 BigIntTestCase BigIntTestFactory::createLessThanOrEqualToTest() {
-	size_t s = 33;
-	BigIntTestCase tc{"GPU big int lessThanOrEqualTo (<=)", BIG_INT_GPU_TEST_OPERATION_lessThanOrEqualTo, s, 2};
+	BigIntTestCase tc{"GPU big int lessThanOrEqualTo (<=)", BIG_INT_GPU_TEST_OPERATION_lessThanOrEqualTo, 2};
 	
 	PaillierInt a, b;
 	
@@ -376,7 +373,7 @@ BigIntTestCase BigIntTestFactory::createLessThanOrEqualToTest() {
 
 BigIntTestCase BigIntTestFactory::createGreaterThanTest() {
 	size_t s = 37;
-	BigIntTestCase tc{"GPU big int greaterThan (>)", BIG_INT_GPU_TEST_OPERATION_greaterThan, s, 2};
+	BigIntTestCase tc{"GPU big int greaterThan (>)", BIG_INT_GPU_TEST_OPERATION_greaterThan, 2};
 	
 	PaillierInt a, b;
 	
@@ -541,7 +538,7 @@ BigIntTestCase BigIntTestFactory::createGreaterThanTest() {
 
 BigIntTestCase BigIntTestFactory::createGreaterThanOrEqualToTest() {
 	size_t s = 37;
-	BigIntTestCase tc{"GPU big int greaterThanOrEqualTo (>=)", BIG_INT_GPU_TEST_OPERATION_greaterThanOrEqualTo, s, 2};
+	BigIntTestCase tc{"GPU big int greaterThanOrEqualTo (>=)", BIG_INT_GPU_TEST_OPERATION_greaterThanOrEqualTo, 2};
 	
 	PaillierInt a, b;
 	
@@ -706,7 +703,7 @@ BigIntTestCase BigIntTestFactory::createGreaterThanOrEqualToTest() {
 
 BigIntTestCase BigIntTestFactory::createEqualToTest() {
 	size_t s = 41;
-	BigIntTestCase tc{"GPU big int equalTo (==)", BIG_INT_GPU_TEST_OPERATION_equalTo, s, 2};
+	BigIntTestCase tc{"GPU big int equalTo (==)", BIG_INT_GPU_TEST_OPERATION_equalTo, 2};
 	
 	PaillierInt a, b;
 	
@@ -888,7 +885,7 @@ BigIntTestCase BigIntTestFactory::createEqualToTest() {
 
 BigIntTestCase BigIntTestFactory::createNotEqualToTest() {
 	size_t s = 41;
-	BigIntTestCase tc{"GPU big int notEqualTo (!=)", BIG_INT_GPU_TEST_OPERATION_notEqualTo, s, 2};
+	BigIntTestCase tc{"GPU big int notEqualTo (!=)", BIG_INT_GPU_TEST_OPERATION_notEqualTo, 2};
 	
 	PaillierInt a, b;
 	
@@ -1073,7 +1070,7 @@ BigIntTestCase BigIntTestFactory::createAddTest() {
 	if(PAILLIER_INT_STORAGE_BIT_LENGTH >=192) {
 		s += 4;
 	}
-	BigIntTestCase tc{"GPU big int add", BIG_INT_GPU_TEST_OPERATION_add, s, 2};
+	BigIntTestCase tc{"GPU big int add", BIG_INT_GPU_TEST_OPERATION_add, 2};
 	
 	PaillierInt a, b;
 	
@@ -1155,7 +1152,7 @@ BigIntTestCase BigIntTestFactory::createSubTest() {
 	if(PAILLIER_INT_STORAGE_BIT_LENGTH >=192) {
 		s += 2;
 	}
-	BigIntTestCase tc{"GPU big int sub", BIG_INT_GPU_TEST_OPERATION_sub, s, 2};
+	BigIntTestCase tc{"GPU big int sub", BIG_INT_GPU_TEST_OPERATION_sub, 2};
 	
 	PaillierInt a, b;
 	
@@ -1211,7 +1208,7 @@ BigIntTestCase BigIntTestFactory::createSubTest() {
 
 BigIntTestCase BigIntTestFactory::createMulTest() {
 	size_t s = 36;
-	BigIntTestCase tc{"GPU big int mul", BIG_INT_GPU_TEST_OPERATION_mul, s, 2};
+	BigIntTestCase tc{"GPU big int mul", BIG_INT_GPU_TEST_OPERATION_mul, 2};
 	
 	PaillierInt a, b;
 	
