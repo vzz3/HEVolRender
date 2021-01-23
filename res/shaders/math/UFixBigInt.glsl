@@ -330,6 +330,9 @@ BIG_INT_WORD_TYPE UFixBigInt_rcr_moveBits(inout FIX_BIG_INT_VALUE me, const in u
 
 	for(i=int(S)-1 ; i>=0 ; --i) {
 		newC    = me[i] << move;
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		newC &= BIG_INT_WORD_ALL_BIT_MASK;
+#endif
 		me[i] = (me[i] >> bits) | c;
 		c        = newC;
 	}
