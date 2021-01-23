@@ -73,6 +73,13 @@ void main() {
 			UFixBigInt_notEqualTo(ufBigIntA, ufBigIntB) ? UFixBigInt_setOne(ufBigIntRes) : UFixBigInt_setZero(ufBigIntRes);
 			break;
 
+		case BIG_INT_GPU_TEST_OPERATION_shiftLeft:
+			ufBigIntRes = UFixBigInt_rcl(ufBigIntA, ufBigIntB[0]);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_shiftRight:
+			ufBigIntRes = UFixBigInt_rcr(ufBigIntA, ufBigIntB[0]);
+			break;
+
 		case BIG_INT_GPU_TEST_OPERATION_add:
 			ufBigIntRes = UFixBigInt_add(ufBigIntA, ufBigIntB);
 			break;
@@ -86,7 +93,7 @@ void main() {
 		    //result = cubicOut();
 		    //break;
 		default:
-			ufBigIntRes = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(gl_FragCoord.xy, 0));
+			ufBigIntRes = ufBigIntA; //UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(gl_FragCoord.xy, 0));
 	}
 
 	outFragColor = UFixBigInt_toColorOut(ufBigIntRes);

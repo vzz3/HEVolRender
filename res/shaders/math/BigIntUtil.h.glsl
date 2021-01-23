@@ -237,3 +237,65 @@ BIG_INT_WORD_TYPE BigIntUtil_subInt(const in BIG_INT_WORD_TYPE word, const in BI
  * @public
  */
 void BigIntUtil_mulTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, out BIG_INT_WORD_TYPE resultHigh, out BIG_INT_WORD_TYPE resultLow);
+
+
+
+// ----- division -----
+
+// -- divTwoWords
+
+/**
+ * this method calculates 64bits word a:b / 32bits c (a higher, b lower word)
+ * result = a:b / divisor and rest - remainder
+ * 		a: higher word of the dividend
+ *		b: higher word of the dividend
+ *
+ *
+ * WARNING:
+ * the divisor has to be suitably large for the result being keeped in one word,
+ * if divisor is equal zero there'll be a hardware interruption (0)
+ * and probably the end of your program
+ *
+ * @static
+ * @public
+ *
+ */
+void BigIntUtil_divTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, const in BIG_INT_WORD_TYPE divisor, out BIG_INT_WORD_TYPE result, const in bool includeRemainder, out BIG_INT_WORD_TYPE remainder);// = NULL);
+
+// -- divTwoWordsKnuth
+
+/**
+ *
+ * the same algorithm like the division algorithm for all words which is based on
+ * "The art of computer programming 2" (4.3.1 page 272)
+ * Donald E. Knuth
+ * but now with the radix=2^32
+ *
+ * @static
+ * @private
+ */
+void BigIntUtil_divTwoWordsKnuth(in BIG_INT_WORD_TYPE a, in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE c, out BIG_INT_WORD_TYPE result, const in bool includeRemainder, out BIG_INT_WORD_TYPE remainder);// = NULL);
+
+/*
+ * @static
+ * @private
+ */
+uint BigIntUtil_divTwoWordsKnuth_normalize(inout BIG_INT_WORD_TYPE a, inout BIG_INT_WORD_TYPE b, inout BIG_INT_WORD_TYPE c);
+
+/*
+ * @static
+ * @private
+ */
+BIG_INT_WORD_TYPE BigIntUtil_divTwoWordsKnuth_unnormalize(in BIG_INT_WORD_TYPE u, const in uint d);
+
+/*
+ * @static
+ * @private
+ */
+ BIG_INT_WORD_TYPE BigIntUtil_divTwoWordsKnuth_calculate(const in BIG_INT_WORD_TYPE u, const in BIG_INT_WORD_TYPE u3, const in BIG_INT_WORD_TYPE v);
+
+/*
+ * @static
+ * @private
+ */
+void BigIntUtil_divTwoWordsKnuth_multiplySubtract(inout BIG_INT_WORD_TYPE u, inout BIG_INT_WORD_TYPE u3, inout BIG_INT_WORD_TYPE q, const in BIG_INT_WORD_TYPE v);

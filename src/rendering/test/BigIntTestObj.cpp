@@ -288,7 +288,7 @@ void BigIntTestObj::cleanupPipeline() {
 }
 
 void BigIntTestObj::createPipeline(const VulkanSwapChain& ySwapChain) {
-	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_WORD_COUNT;
+	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_SIZE;
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &piplineLayout), "failed to create pipeline layout!");

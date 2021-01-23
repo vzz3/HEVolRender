@@ -301,6 +301,7 @@ namespace ppvr {
 			
 			// -- divTwoWordsKnuth
 			
+		private:
 			/**
 			 *
 			 * the same algorithm like the division algorithm for all words which is based on
@@ -309,10 +310,10 @@ namespace ppvr {
 			 * but now with the radix=2^32
 			 */
 			static void divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE c, BIG_INT_WORD_TYPE* result, BIG_INT_WORD_TYPE* remainder = NULL);
-			static BIG_INT_WORD_TYPE divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c);
-			static BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE d);
-			static unsigned int divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v);
-			static void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, const BIG_INT_WORD_TYPE v);
+			static uint divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c);
+			static BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const uint d);
+			static BIG_INT_WORD_TYPE divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v);
+			static void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE &u3, BIG_INT_WORD_TYPE &q, const BIG_INT_WORD_TYPE v);
 		};
 	}
 }

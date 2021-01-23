@@ -229,10 +229,10 @@ void BigIntUtil::divTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 			
 			temp1 = BigIntUtil::getLowAsHighBits(a); // this->setHighFromLowBits(temp1, a); 	// temp1.high 	= a.low
 			temp1 = BigIntUtil::setLowFromHighBits(temp1, b); 								// temp1.low 	= b.high
-			res = BigIntUtil::setHighFromLowBits(res, (temp1 / divisor)); 					// res_.high 	= (temp1.u / c).low
+			res   = BigIntUtil::setHighFromLowBits(res, (temp1 / divisor)); 					// res_.high 	= (temp1.u / c).low
 			temp2 = BigIntUtil::setHighFromLowBits(temp2, (temp1 % divisor)); 				// temp2.high 	= (temp1.u % c).low
 			temp2 = BigIntUtil::setLowFromLowBits(temp2, b); 									// temp2.low 	= b.low
-			res = BigIntUtil::setLowFromLowBits(res, (temp2 / divisor)); 						// res_.low 	= (temp2.u / c).low
+			res   = BigIntUtil::setLowFromLowBits(res, (temp2 / divisor)); 						// res_.low 	= (temp2.u / c).low
 			*result = res;
 			
 			if(remainder != NULL) {
@@ -254,7 +254,7 @@ void BigIntUtil::divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_
 	BIG_INT_WORD_TYPE temp_qLow, temp_qHigh;
 	
 	// normalizing
-	BIG_INT_WORD_TYPE d = BigIntUtil::divTwoWordsKnuth_normalize(a, b, c);
+	uint d = BigIntUtil::divTwoWordsKnuth_normalize(a, b, c);
 	
 	u = a;
 	
@@ -284,7 +284,7 @@ void BigIntUtil::divTwoWordsKnuth(BIG_INT_WORD_TYPE a, BIG_INT_WORD_TYPE b, BIG_
 	}
 }
 
-BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) {
+uint BigIntUtil::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, BIG_INT_WORD_TYPE &b, BIG_INT_WORD_TYPE &c) {
 	uint d = 0;
 	
 	for( ; (c & BIG_INT_WORD_HIGHEST_BIT) == 0 ; ++d ) {
@@ -303,7 +303,7 @@ BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_normalize(BIG_INT_WORD_TYPE &a, B
 	return d;
 }
 
-BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE d) {
+BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const uint d) {
 	if( d == 0 ) {
 		return u;
 	}
@@ -313,7 +313,7 @@ BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, 
 	return u;
 }
 
-unsigned int BigIntUtil::divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v) {
+BIG_INT_WORD_TYPE BigIntUtil::divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v) {
 	bool nextTest;
 	BIG_INT_WORD_TYPE qp, rp, temp;
 	
@@ -351,7 +351,7 @@ unsigned int BigIntUtil::divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, c
 	return BigIntUtil::getLowAsLowBits(qp); // return qp.low
 }
 
-void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE & u3, BIG_INT_WORD_TYPE & q, const BIG_INT_WORD_TYPE v) {
+void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE &u3, BIG_INT_WORD_TYPE &q, const BIG_INT_WORD_TYPE v) {
 	BIG_INT_WORD_TYPE temp, res_high, res_low;
 	BigIntUtil::mulTwoWords(v, q,  &res_high, &res_low);
 	

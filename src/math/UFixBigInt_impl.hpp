@@ -461,10 +461,10 @@ BIG_INT_WORD_COUNT_TYPE UFixBigInt<S>::getWordSize() const {
 // ----- shift left -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
+void UFixBigInt<S>::rcl_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, const BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
-	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
+	BIG_INT_WORD_TYPE mask      = ( c > 0) ? BIG_INT_WORD_MAX_VALUE : 0;
 	
 	
 	if( allWords >= S ) {
@@ -568,15 +568,15 @@ UFixBigInt<S> UFixBigInt<S>::operator<< (const uint bits) const {
 // ----- shift right -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, BIG_INT_WORD_TYPE c) {
+void UFixBigInt<S>::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, const uint bits, const BIG_INT_WORD_TYPE c) {
 	restBits      = bits % BIG_INT_BITS_PER_WORD;
 	uint allWords = bits / BIG_INT_BITS_PER_WORD;
-	BIG_INT_WORD_TYPE mask      = ( c ) ? BIG_INT_WORD_MAX_VALUE : 0;
+	BIG_INT_WORD_TYPE mask      = ( c > 0 ) ? BIG_INT_WORD_MAX_VALUE : 0;
 	
 	
 	if( allWords >= S ) {
 		if( allWords == S && restBits == 0 ) {
-			lastC = (this->value[S-1] & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0;
+			lastC = ((this->value[S-1] & BIG_INT_WORD_HIGHEST_BIT) > 0) ? 1 : 0;
 		}
 		// else: last_c is default set to 0
 		
@@ -592,7 +592,7 @@ void UFixBigInt<S>::rcr_moveWords(uint &restBits, BIG_INT_WORD_TYPE &lastC, cons
 		// 0 < all_words < value_size
 		
 		uint first, second;
-		lastC = (this->value[allWords - 1] & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0; // all_words is > 0
+		lastC = ((this->value[allWords - 1] & BIG_INT_WORD_HIGHEST_BIT) > 0) ? 1 : 0; // all_words is > 0
 		
 		// copying the first part of the value
 		for(first=0, second=allWords ; second<S ; ++first, ++second) {
@@ -625,7 +625,7 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::rcr_moveBits(const uint bits, BIG_INT_WORD_TYPE
 		c        = newC;
 	}
 	
-	c = (c & BIG_INT_WORD_HIGHEST_BIT) ? 1 : 0;
+	c = ((c & BIG_INT_WORD_HIGHEST_BIT) > 0) ? 1 : 0;
 	
 	//if(this->wordSize > 1 && this->value[this->wordSize-1] == 0) {
 	//	this->wordSize--;
@@ -962,7 +962,7 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor) {
 // -- divKnuth
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, uint m, uint n) const {
+void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, const uint m, const uint n) const {
 	// this: dividend
 	assert(n >= 2);
 	//assert(this != &remainder);
@@ -1051,7 +1051,7 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, BIG_INT_WORD_TYPE u_max) const {
+void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, const BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE const n, const BIG_INT_WORD_TYPE u_max) const {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	//for(i=0 ; i<n ; ++i, ++j)
@@ -1073,7 +1073,7 @@ void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, BIG_INT_WORD_C
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n) {
+void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, const BIG_INT_WORD_COUNT_TYPE j, const BIG_INT_WORD_COUNT_TYPE n) {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	for(i=0 ; i<n ; ++i) {
@@ -1090,7 +1090,7 @@ void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, BIG_INT
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, uint n, uint & d) {
+BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, const uint n, uint& d) {
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 	
@@ -1113,13 +1113,13 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, uint
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d) {
+void UFixBigInt<S>::divKnuth_unnormalize(const BIG_INT_WORD_COUNT_TYPE d) {
 	this->rcr(d,0);
 	//*remainder = *this;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
+BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_calculate(const BIG_INT_WORD_TYPE u2, const BIG_INT_WORD_TYPE u1, const BIG_INT_WORD_TYPE u0, const BIG_INT_WORD_TYPE v1, const BIG_INT_WORD_TYPE v0) const {
 	//UInt<2> u_temp;
 	// u_temp in qp (quotient) umbenant
 	//BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;

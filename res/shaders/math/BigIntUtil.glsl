@@ -245,3 +245,183 @@ void BigIntUtil_mulTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_
 	BIG_INT_WORD_TYPE c = BigIntUtil_addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
 	BigIntUtil_addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
 }
+
+
+
+
+// ----- division -----
+
+// -- divTwoWords
+
+void BigIntUtil_divTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, const in BIG_INT_WORD_TYPE divisor, out BIG_INT_WORD_TYPE result, const in bool includeRemainder, out BIG_INT_WORD_TYPE remainder) {
+	// c = divisor
+	// (a < c ) for the result to be one word
+	assert( divisor != 0 && a < divisor );
+
+	if( a == 0 ) {
+		result    = b / divisor;
+		if(includeRemainder) {
+			remainder = b % divisor;
+		}
+	} else {
+		if( BigIntUtil_getHighAsLowBits(divisor) == 0 ) {
+			// higher half of 'divisor' is zero
+			// then higher half of 'a' is zero too (look at the asserts at the beginning - 'a' is smaller than 'divisor')
+			BIG_INT_WORD_TYPE res, temp1, temp2;
+
+			temp1 = BigIntUtil_getLowAsHighBits(a); // this->setHighFromLowBits(temp1, a); 	// temp1.high 	= a.low
+			temp1 = BigIntUtil_setLowFromHighBits(temp1, b); 								// temp1.low 	= b.high
+			res   = BigIntUtil_setHighFromLowBits(res, (temp1 / divisor)); 					// res_.high 	= (temp1.u / c).low
+			temp2 = BigIntUtil_setHighFromLowBits(temp2, (temp1 % divisor)); 				// temp2.high 	= (temp1.u % c).low
+			temp2 = BigIntUtil_setLowFromLowBits(temp2, b); 									// temp2.low 	= b.low
+			res   = BigIntUtil_setLowFromLowBits(res, (temp2 / divisor)); 						// res_.low 	= (temp2.u / c).low
+			result = res;
+
+			if(includeRemainder) {
+				remainder = temp2 % divisor;
+			}
+		} else {
+			BigIntUtil_divTwoWordsKnuth(a, b, divisor,  result,  includeRemainder, remainder);
+		}
+	}
+}
+
+// -- divTwoWordsKnuth
+
+void BigIntUtil_divTwoWordsKnuth(in BIG_INT_WORD_TYPE a, in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE c, out BIG_INT_WORD_TYPE result, const in bool includeRemainder, out BIG_INT_WORD_TYPE remainder ) {
+	// a is not zero
+	// c.high is not zero
+
+	BIG_INT_WORD_TYPE u, q, u3;
+	BIG_INT_WORD_TYPE temp_qLow, temp_qHigh;
+
+	// normalizing
+	BIG_INT_WORD_TYPE d = BigIntUtil_divTwoWordsKnuth_normalize(a, b, c);
+
+	u = a;
+
+	u3 = BigIntUtil_getHighAsLowBits(b); // u3 = b.high
+	q = BigIntUtil_setHighFromLowBits(q, BigIntUtil_divTwoWordsKnuth_calculate(u, u3, c)); // q.high = this->divTwoWordsCalculate(u, u3, c)
+
+	temp_qHigh = BigIntUtil_getHighAsLowBits(q);
+	BigIntUtil_divTwoWordsKnuth_multiplySubtract(u, u3, temp_qHigh, c); // this->divTwoWordsMultiplySubtract(u, u3, q.high, c)
+	q = BigIntUtil_setHighFromLowBits(q, temp_qHigh);
+
+	u = BigIntUtil_setHighFromLowBits(u, u); // u.high = u.low
+	u = BigIntUtil_setLowFromLowBits(u, u3); // u.low = u3
+	u3 = BigIntUtil_getLowAsLowBits(b); // u3 = b.low
+	q = BigIntUtil_setLowFromLowBits(q, BigIntUtil_divTwoWordsKnuth_calculate(u, u3, c)); // q.low = this->divTwoWordsCalculate(u, u3, c)
+
+	temp_qLow = BigIntUtil_getLowAsLowBits(q);
+	BigIntUtil_divTwoWordsKnuth_multiplySubtract(u, u3, temp_qLow, c); // this->divTwoWordsMultiplySubtract(u_, u3, q_.u_.low, c_);
+	q = BigIntUtil_setLowFromLowBits(q, temp_qLow);
+
+	result = q;
+
+	if(includeRemainder) {
+		// unnormalizing for the remainder
+		u = BigIntUtil_getLowAsHighBits(u); // this->setHighFromLowBits(u, u); // u.high = u.low
+		u = BigIntUtil_setLowFromLowBits(u, u3); // u.low = u3;
+		remainder = BigIntUtil_divTwoWordsKnuth_unnormalize(u, d);
+	}
+}
+
+uint BigIntUtil_divTwoWordsKnuth_normalize(inout BIG_INT_WORD_TYPE a, inout BIG_INT_WORD_TYPE b, inout BIG_INT_WORD_TYPE c) {
+	uint d = 0;
+
+	for( ; (c & BIG_INT_WORD_HIGHEST_BIT) == 0 ; ++d ) {
+		c = c << 1;
+
+		BIG_INT_WORD_TYPE bc = b & BIG_INT_WORD_HIGHEST_BIT; // carry from 'b'
+
+		b = b << 1;
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		b &= BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+		a = a << 1; // carry bits from 'a' are simply skipped
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		a &= BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+
+		if( bc > 0 ) {
+			a = a | 1;
+		}
+	}
+
+	return d;
+}
+
+BIG_INT_WORD_TYPE BigIntUtil_divTwoWordsKnuth_unnormalize(in BIG_INT_WORD_TYPE u, const in uint d) {
+	if( d == 0 ) {
+		return u;
+	}
+
+	u = u >> d;
+
+	return u;
+}
+
+BIG_INT_WORD_TYPE BigIntUtil_divTwoWordsKnuth_calculate(const in BIG_INT_WORD_TYPE u, const in BIG_INT_WORD_TYPE u3, const in BIG_INT_WORD_TYPE v) {
+	bool nextTest;
+	BIG_INT_WORD_TYPE qp, rp, temp;
+
+	qp = u / BigIntUtil_getHighAsLowBits(v); // qp = u / v.high
+	rp = u % BigIntUtil_getHighAsLowBits(v); // rp = u % v.high
+
+	assert( BigIntUtil_getHighAsLowBits(qp) == 0 || BigIntUtil_getHighAsLowBits(qp) == 1); // assert( qp.hight == 0 || qp.high == 1);
+
+	do {
+		bool decrease = false;
+		if( BigIntUtil_getHighAsLowBits(qp) == 1 ) { // if( qp.high == 1)
+			decrease = true;
+		} else {
+			temp = BigIntUtil_setHighFromLowBits(temp, rp); // temp.hight = rp.low
+			temp = BigIntUtil_setLowFromLowBits(temp, u3); // temp.low = u3.low
+
+			if( qp * BigIntUtil_getLowAsLowBits(v) > temp) { // if( qp * v.low > temp )
+				decrease = true;
+			}
+		}
+
+		nextTest = false;
+
+		if( decrease ) {
+			--qp;
+			rp += BigIntUtil_getHighAsLowBits(v); // rp += v.high
+
+			if( BigIntUtil_getHighAsLowBits(rp) == 0) { // if( rp.high == 0 )
+				nextTest = true;
+			}
+		}
+	}
+	while( nextTest );
+
+	return BigIntUtil_getLowAsLowBits(qp); // return qp.low
+}
+
+void BigIntUtil_divTwoWordsKnuth_multiplySubtract(inout BIG_INT_WORD_TYPE u, inout BIG_INT_WORD_TYPE u3, inout BIG_INT_WORD_TYPE q, const in BIG_INT_WORD_TYPE v) {
+	BIG_INT_WORD_TYPE temp, res_high, res_low;
+	BigIntUtil_mulTwoWords(v, q,  res_high, res_low);
+
+	BIG_INT_WORD_TYPE sub_res_high, sub_res_low;
+
+	temp = BigIntUtil_setHighFromLowBits(temp, u); // temp.high = u.low
+	temp = BigIntUtil_setLowFromLowBits(temp, u3); // temp.low = u3.low
+
+	BIG_INT_WORD_TYPE c = BigIntUtil_subTwoWords(temp, res_low, 0, sub_res_low);
+
+	temp = BigIntUtil_setHighFromLowBits(temp, 0); // temp.high = 0
+	temp = BigIntUtil_setLowFromHighBits(temp, u); // temp.low = u.high
+	c = BigIntUtil_subTwoWords(temp, res_high, c, sub_res_high);
+
+	if( c > 0) {
+		--q;
+
+		c = BigIntUtil_addTwoWords(sub_res_low, v, 0, sub_res_low);
+		BigIntUtil_addTwoWords(sub_res_high, 0, c, sub_res_high);
+	}
+
+	u = BigIntUtil_setHighFromLowBits(u, sub_res_high); // u.high = sub_res_high.low
+	u = BigIntUtil_setLowFromHighBits(u, sub_res_low); // u.low = sub_res_low.high
+	u3 = BigIntUtil_getLowAsLowBits(sub_res_low); // u3 = sub_res_low.low;
+}

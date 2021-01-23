@@ -9,7 +9,10 @@
 #define BIG_INT_GPU_TEST_OPERATION_equalTo 					25
 #define BIG_INT_GPU_TEST_OPERATION_notEqualTo 				26
 
-#define BIG_INT_GPU_TEST_OPERATION_add 						30
-#define BIG_INT_GPU_TEST_OPERATION_sub 						40
-#define BIG_INT_GPU_TEST_OPERATION_mul 						50
-#define BIG_INT_GPU_TEST_OPERATION_div 						60
+#define BIG_INT_GPU_TEST_OPERATION_shiftLeft 				110
+#define BIG_INT_GPU_TEST_OPERATION_shiftRight 				120
+
+#define BIG_INT_GPU_TEST_OPERATION_add 						210
+#define BIG_INT_GPU_TEST_OPERATION_sub 						220
+#define BIG_INT_GPU_TEST_OPERATION_mul 						230
+#define BIG_INT_GPU_TEST_OPERATION_div 						240

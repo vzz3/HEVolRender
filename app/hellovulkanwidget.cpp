@@ -241,6 +241,10 @@ void MainWindow::testGpuBigInt() {
 	
 	std::vector<BigIntTestCase> testCases = BigIntTestFactory::createAllTest();
 	for(BigIntTestCase& testCase : testCases) {
+		if(testCase.getRequiredFboSize().height() <= 0) {
+			std::cout << "The Test Case " << testCase.name << " does not have any assertions." << std::endl;
+			continue;
+		}
 		encRenderer->setBigIntTestCase(&testCase);
 		
 		encRenderer->initGpuResources();
