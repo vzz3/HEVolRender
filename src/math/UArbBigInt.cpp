@@ -1141,18 +1141,17 @@ void UArbBigInt::divKnuth_unnormalize(BIG_INT_WORD_COUNT_TYPE d) {
 }
 
 BIG_INT_WORD_TYPE UArbBigInt::divKnuth_calculate(BIG_INT_WORD_TYPE u2, BIG_INT_WORD_TYPE u1, BIG_INT_WORD_TYPE u0, BIG_INT_WORD_TYPE v1, BIG_INT_WORD_TYPE v0) const {
-	//UInt<2> u_temp;
-	// u_temp in qp (quotient) umbenant
-	BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
-	BIG_INT_WORD_TYPE qpValue[2];
-	UArbBigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
-
+	
 	BIG_INT_WORD_TYPE rp, c;
 	bool next_test;
 
 	assert( v1 != 0 );
 
-
+	//UInt<2> u_temp;
+	// u_temp in qp (quotient) umbenant
+	BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
+	BIG_INT_WORD_TYPE qpValue[2];
+	UArbBigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
 	qp.value[1] = u2;
 	qp.value[0] = u1;
 	//u_temp.DivInt(v1, &rp);

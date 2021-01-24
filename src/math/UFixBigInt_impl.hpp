@@ -773,7 +773,7 @@ UFixBigInt<S> UFixBigInt<S>::operator- (const UFixBigInt<S>& other) const {
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 //template <BIG_INT_WORD_COUNT_TYPE R>
-void UFixBigInt<S>::mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
+void UFixBigInt<S>::mulInt(const BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
 	//assert(S < R);
 	result.setZero();
 	
@@ -794,7 +794,7 @@ void UFixBigInt<S>::mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const {
 		
 		if( x1size == 0 ) {
 			// this is 0: 0*x => 0
-			result.setZero();
+			//result.setZero();
 			return;
 		}
 		
@@ -924,7 +924,7 @@ UFixBigInt<S> UFixBigInt<S>::operator* (const UFixBigInt<S>& other) const {
 template <BIG_INT_WORD_COUNT_TYPE S>
 BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(const BIG_INT_WORD_TYPE divisor, UFixBigInt<S>& result) const {
 	if(divisor == 0) {
-		std::string msg = "UArbBigInt devision by (uint)0.";
+		std::string msg = "UFixBigInt devision by (uint)0.";
 		std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
@@ -1015,7 +1015,7 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 		v1 = divisor.value[n-1]; // divisor  high
 		v0 = divisor.value[n-2]; // divident low
 		
-		BIG_INT_WORD_TYPE qp = this->divKnuth_calculate(u2,u1,u0, v1,v0);
+		BIG_INT_WORD_TYPE qp = this->divKnuth_calculate(u2, u1, u0, v1, v0);
 		
 		remainder.divKnuth_makeNewU(uu, j, n, u2);
 		remainder.divKnuth_multiplySubtract(uu, vv, qp);
@@ -1114,25 +1114,24 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, cons
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::divKnuth_unnormalize(const BIG_INT_WORD_COUNT_TYPE d) {
-	this->rcr(d,0);
+	this->rcr(d, 0);
 	//*remainder = *this;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_calculate(const BIG_INT_WORD_TYPE u2, const BIG_INT_WORD_TYPE u1, const BIG_INT_WORD_TYPE u0, const BIG_INT_WORD_TYPE v1, const BIG_INT_WORD_TYPE v0) const {
-	//UInt<2> u_temp;
-	// u_temp in qp (quotient) umbenant
-	//BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
-	//BIG_INT_WORD_TYPE qpValue[2];
-	//UArbBigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
-	UFixBigInt<2> qp;
 	
 	BIG_INT_WORD_TYPE rp, c;
 	bool next_test;
 	
 	assert( v1 != 0 );
 	
-	
+	//UInt<2> u_temp;
+	// u_temp in qp (quotient) umbenant
+	//BIG_INT_WORD_COUNT_TYPE qpWordCount = 2;
+	//BIG_INT_WORD_TYPE qpValue[2];
+	//UArbBigInt qp(&qpValue[0], qpWordCount, (u2 > 0 ? qpWordCount : qpWordCount-1));
+	UFixBigInt<2> qp;
 	qp.value[1] = u2;
 	qp.value[0] = u1;
 	//u_temp.DivInt(v1, &rp);
@@ -1214,7 +1213,7 @@ template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::divKnuth(const UFixBigInt<S>& divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder) const {
 	const UFixBigInt<S>& dividend = *this;
 	if(divisor.isZero()) {
-		std::string msg = "UArbBigInt devision by (UArbBigInt)0.";
+		std::string msg = "UFixBigInt devision by (UFixBigInt)0.";
 		std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}

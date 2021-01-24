@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "./BigIntTestCase.hpp"
+#include <array>
 
 
 namespace ppvr {
@@ -21,12 +22,13 @@ namespace ppvr {
 				static BigIntTestCase createEqualToTest();
 				static BigIntTestCase createNotEqualToTest();
 				
-				static BigIntTestCase createShiftLeft();
-				static BigIntTestCase createShiftRight();
+				static BigIntTestCase createShiftLeftTest();
+				static BigIntTestCase createShiftRightTest();
 				
 				static BigIntTestCase createAddTest();
 				static BigIntTestCase createSubTest();
 				static BigIntTestCase createMulTest();
+				static std::array<BigIntTestCase,2> createDivAndModTest();
 			};
 		}
 	}

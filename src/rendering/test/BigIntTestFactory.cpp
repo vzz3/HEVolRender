@@ -17,12 +17,16 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 	testCases.push_back(createEqualToTest());
 	testCases.push_back(createNotEqualToTest());
 	
-	testCases.push_back(createShiftLeft());
-	testCases.push_back(createShiftRight());
+	testCases.push_back(createShiftLeftTest());
+	testCases.push_back(createShiftRightTest());
 	
 	testCases.push_back(createAddTest());
 	testCases.push_back(createSubTest());
 	testCases.push_back(createMulTest());
+	
+	std::array<BigIntTestCase,2> divAndModTCs = createDivAndModTest();
+	testCases.push_back(divAndModTCs[0]);
+	testCases.push_back(divAndModTCs[1]);
 	
 	return testCases;
 }
@@ -1064,12 +1068,9 @@ BigIntTestCase BigIntTestFactory::createNotEqualToTest() {
 	return tc;
 }
 
-BigIntTestCase BigIntTestFactory::createShiftLeft() {
+BigIntTestCase BigIntTestFactory::createShiftLeftTest() {
 	BigIntTestCase tc{"GPU big int shiftLeft", BIG_INT_GPU_TEST_OPERATION_shiftLeft, 2};
 	
-	PaillierInt a, b;
-	
-
 	// 1 Byte (8bit)
 	// assertion Nr: 0
 	tc.addAssertion({PaillierInt::fromString("1", 2), PaillierInt( 0)}, PaillierInt::fromString("1", 2) );
@@ -1321,15 +1322,11 @@ BigIntTestCase BigIntTestFactory::createShiftLeft() {
 	return tc;
 }
 
-BigIntTestCase BigIntTestFactory::createShiftRight() {
+BigIntTestCase BigIntTestFactory::createShiftRightTest() {
 	BigIntTestCase tc{"GPU big int shiftRight", BIG_INT_GPU_TEST_OPERATION_shiftRight, 2};
 	
-	PaillierInt a, b;
-	
-
 	// 1 Byte (8bit)
 	// assertion Nr: 0
-	//tc.addAssertion({PaillierInt(  0), PaillierInt(  0)}, PaillierInt(  0 ));
 	tc.addAssertion({PaillierInt::fromString("10000000", 2), PaillierInt( 0)}, PaillierInt::fromString("10000000", 2) );
 	tc.addAssertion({PaillierInt::fromString("10000000", 2), PaillierInt( 1)}, PaillierInt::fromString( "1000000", 2) );
 	tc.addAssertion({PaillierInt::fromString("10000000", 2), PaillierInt( 2)}, PaillierInt::fromString(  "100000", 2) );
@@ -1487,9 +1484,6 @@ BigIntTestCase BigIntTestFactory::createShiftRight() {
 BigIntTestCase BigIntTestFactory::createAddTest() {
 	BigIntTestCase tc{"GPU big int add", BIG_INT_GPU_TEST_OPERATION_add, 2};
 	
-	PaillierInt a, b;
-	
-
 	// 1 Byte (8bit)
 	// assertion Nr: 0
 	tc.addAssertion({PaillierInt(  0), PaillierInt(  0)}, PaillierInt(  0 ));
@@ -1565,8 +1559,6 @@ BigIntTestCase BigIntTestFactory::createAddTest() {
 BigIntTestCase BigIntTestFactory::createSubTest() {
 	BigIntTestCase tc{"GPU big int sub", BIG_INT_GPU_TEST_OPERATION_sub, 2};
 	
-	PaillierInt a, b;
-	
 	// assertion Nr: 0
 	// 1 Byte (8bit)
 	tc.addAssertion({PaillierInt(  0), PaillierInt(  0)}, PaillierInt(0)); // 0 - 0 = 0
@@ -1607,6 +1599,7 @@ BigIntTestCase BigIntTestFactory::createSubTest() {
 	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("010000000000000000", 16)}, PaillierInt::fromString("01", 16)      ); // (2^64 + 1) - 2^64 = 1
 	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("01", 16)}, PaillierInt::fromString("010000000000000000", 16) ); // (2^64 + 1) - 1 = 2^64
 	tc.addAssertion({PaillierInt::fromString("010000000000000001", 16), PaillierInt::fromString("02", 16)}, PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16)   ); // (2^64 + 1) - 2 = 2^64 - 1
+	tc.addAssertion({PaillierInt::fromString("020000000000000001", 16), PaillierInt::fromString("02", 16)}, PaillierInt::fromString("1FFFFFFFFFFFFFFFF", 16)   ); // (2^64 + 1) - 2 = 2^64 - 1
 
 	if(PAILLIER_INT_STORAGE_BIT_LENGTH >= 192) {
 		// assertion Nr: 25
@@ -1777,3 +1770,168 @@ BigIntTestCase BigIntTestFactory::createMulTest() {
 	return tc;
 }
 
+std::array<BigIntTestCase,2> BigIntTestFactory::createDivAndModTest() {
+	BigIntTestCase tcDiv{"GPU big int div", BIG_INT_GPU_TEST_OPERATION_div, 2};
+	BigIntTestCase tcMod{"GPU big int mod", BIG_INT_GPU_TEST_OPERATION_mod, 2};
+	
+	// 1 Byte (8bit)
+	// assertion Nr: 0
+	//tc.addAssertion({PaillierInt::fromString("10000000", 2), PaillierInt( 0)}, PaillierInt::fromString("10000000", 2) );
+	tcDiv.addAssertion({PaillierInt(  0), PaillierInt(  1)}, PaillierInt(  0 ) );
+	tcMod.addAssertion({PaillierInt(  0), PaillierInt(  1)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(  1), PaillierInt(  1)}, PaillierInt(  1 ) );
+	tcMod.addAssertion({PaillierInt(  1), PaillierInt(  1)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(  1), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcMod.addAssertion({PaillierInt(  1), PaillierInt(  2)}, PaillierInt(  1 ) );
+	tcDiv.addAssertion({PaillierInt(  2), PaillierInt(  1)}, PaillierInt(  2 ) );
+	tcMod.addAssertion({PaillierInt(  2), PaillierInt(  1)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(  2), PaillierInt(  2)}, PaillierInt(  1 ) );
+	tcMod.addAssertion({PaillierInt(  2), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(  4), PaillierInt(  2)}, PaillierInt(  2 ) );
+	tcMod.addAssertion({PaillierInt(  4), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt( 10), PaillierInt(  1)}, PaillierInt( 10 ) );
+	tcMod.addAssertion({PaillierInt( 10), PaillierInt(  1)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt( 10), PaillierInt(  2)}, PaillierInt(  5 ) );
+	tcMod.addAssertion({PaillierInt( 10), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt( 10), PaillierInt(  3)}, PaillierInt(  3 ) );
+	tcMod.addAssertion({PaillierInt( 10), PaillierInt(  3)}, PaillierInt(  1 ) );
+	tcDiv.addAssertion({PaillierInt( 10), PaillierInt(  5)}, PaillierInt(  2 ) );
+	tcMod.addAssertion({PaillierInt( 10), PaillierInt(  5)}, PaillierInt(  0 ) );
+	// assertion Nr: 10
+	tcDiv.addAssertion({PaillierInt( 11), PaillierInt(  2)}, PaillierInt(  5 ) );
+	tcMod.addAssertion({PaillierInt( 11), PaillierInt(  2)}, PaillierInt(  1 ) );
+	tcDiv.addAssertion({PaillierInt( 12), PaillierInt(  2)}, PaillierInt(  6 ) );
+	tcMod.addAssertion({PaillierInt( 12), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(252), PaillierInt(  2)}, PaillierInt(126 ) );
+	tcMod.addAssertion({PaillierInt(252), PaillierInt(  2)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(253), PaillierInt(  2)}, PaillierInt(126 ) );
+	tcMod.addAssertion({PaillierInt(253), PaillierInt(  2)}, PaillierInt(  1 ) );
+	tcDiv.addAssertion({PaillierInt(254), PaillierInt(  2)}, PaillierInt(127 ) );
+	tcMod.addAssertion({PaillierInt(254), PaillierInt(  2)}, PaillierInt(  0 ) );
+	// assertion Nr: 15
+	tcDiv.addAssertion({PaillierInt(255), PaillierInt(  2)}, PaillierInt(127 ) );
+	tcMod.addAssertion({PaillierInt(255), PaillierInt(  2)}, PaillierInt(  1 ) );
+	tcDiv.addAssertion({PaillierInt(255), PaillierInt(255)}, PaillierInt(  1 ) );
+	tcMod.addAssertion({PaillierInt(255), PaillierInt(255)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(254), PaillierInt(127)}, PaillierInt(  2 ) );
+	tcMod.addAssertion({PaillierInt(254), PaillierInt(127)}, PaillierInt(  0 ) );
+	tcDiv.addAssertion({PaillierInt(255), PaillierInt(127)}, PaillierInt(  2 ) );
+	tcMod.addAssertion({PaillierInt(255), PaillierInt(127)}, PaillierInt(  1 ) );
+
+
+	// 2 Bytes (16 bit)
+	// assertion Nr: 19
+	tcDiv.addAssertion({PaillierInt::fromString("0100", 16), PaillierInt::fromString("  2", 16)}, PaillierInt::fromString("  128", 10) );
+	tcMod.addAssertion({PaillierInt::fromString("0100", 16), PaillierInt::fromString("  2", 16)}, PaillierInt::fromString("    0", 10) );
+	tcDiv.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("  4", 16)}, PaillierInt::fromString("  128", 10) );
+	tcMod.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("  4", 16)}, PaillierInt::fromString("    0", 10) );
+	tcDiv.addAssertion({PaillierInt::fromString("0100", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("    1", 10) );
+	tcMod.addAssertion({PaillierInt::fromString("0100", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("    0", 10) );
+	tcDiv.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("    2", 10) ); // 24 bit temp space
+	tcMod.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("    0", 10) ); // 24 bit temp space
+	tcDiv.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("    1", 10) );
+	tcMod.addAssertion({PaillierInt::fromString("0200", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("    0", 10) );
+	// assertion Nr: 24
+	tcDiv.addAssertion({PaillierInt::fromString("0300", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("    1", 10) );
+	tcMod.addAssertion({PaillierInt::fromString("0300", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("  100", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("0400", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("    2", 10) ); // 24 bit temp space
+	tcMod.addAssertion({PaillierInt::fromString("0400", 16), PaillierInt::fromString("200", 16)}, PaillierInt::fromString("    0", 10) ); // 24 bit temp space
+	tcDiv.addAssertion({PaillierInt::fromString("FF9C", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("   ff", 16) ); // 24 bit temp space
+	tcMod.addAssertion({PaillierInt::fromString("FF9C", 16), PaillierInt::fromString("100", 16)}, PaillierInt::fromString("   9C", 16) ); // 24 bit temp space
+	tcDiv.addAssertion({PaillierInt::fromString("FF9C", 16), PaillierInt::fromString("532", 10)}, PaillierInt::fromString("  123", 10) ); // 24 bit temp space
+	tcMod.addAssertion({PaillierInt::fromString("FF9C", 16), PaillierInt::fromString("532", 10)}, PaillierInt::fromString("    0", 10) ); // 24 bit temp space
+	tcDiv.addAssertion({PaillierInt::fromString("DA96", 16), PaillierInt::fromString("571", 10)}, PaillierInt::fromString("   98", 10) ); // 24 bit temp space
+	tcMod.addAssertion({PaillierInt::fromString("DA96", 16), PaillierInt::fromString("571", 10)}, PaillierInt::fromString("    0", 10) ); // 24 bit temp space
+
+	// assertion Nr: 29
+	tcDiv.addAssertion({PaillierInt::fromString("FF00", 16), PaillierInt::fromString("0FF", 16)}, PaillierInt::fromString("0100", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("FF00", 16), PaillierInt::fromString("0FF", 16)}, PaillierInt::fromString("   0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("10EF", 16), PaillierInt::fromString("0FF", 16)}, PaillierInt::fromString("0011", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("10EF", 16), PaillierInt::fromString("0FF", 16)}, PaillierInt::fromString("   0", 16) );
+	
+	// 4 Bytes (32bit)
+	// assertion Nr: 31
+	tcDiv.addAssertion({PaillierInt::fromString(" FFFE0001", 16), PaillierInt::fromString("FFFF", 16)}, PaillierInt::fromString(  "FFFF", 16) ); // first test of D5. [Test Remainder] and D6. [add back] (at 8bit words)
+	tcMod.addAssertion({PaillierInt::fromString(" FFFE0001", 16), PaillierInt::fromString("FFFF", 16)}, PaillierInt::fromString(     "0", 16) );
+
+	tcDiv.addAssertion({PaillierInt::fromString("  010000", 16), PaillierInt::fromString("0100", 16)}, PaillierInt::fromString(   "0100", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("  010000", 16), PaillierInt::fromString("0100", 16)}, PaillierInt::fromString(      "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("  0F0000", 16), PaillierInt::fromString("0F00", 16)}, PaillierInt::fromString(   "0100", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("  0F0000", 16), PaillierInt::fromString("0F00", 16)}, PaillierInt::fromString(      "0", 16) );
+
+	// assertion Nr: 34
+	tcDiv.addAssertion({PaillierInt::fromString("FFFFFFFF", 16), PaillierInt::fromString( "003", 16)}, PaillierInt::fromString("55555555", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("FFFFFFFF", 16), PaillierInt::fromString( "003", 16)}, PaillierInt::fromString(       "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("  E00021", 16), PaillierInt::fromString(  "EF", 16)}, PaillierInt::fromString(    "EFEF", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("  E00021", 16), PaillierInt::fromString(  "EF", 16)}, PaillierInt::fromString(       "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("E0E02121", 16), PaillierInt::fromString("EFEF", 16)}, PaillierInt::fromString(    "EFEF", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("E0E02121", 16), PaillierInt::fromString("EFEF", 16)}, PaillierInt::fromString(       "0", 16) );
+
+	// 8 Bytes (64bit)
+	// assertion Nr: 37
+	tcDiv.addAssertion({PaillierInt::fromString("FFFFFFFE00000001", 16), PaillierInt::fromString("FFFFFFFF", 16)}, PaillierInt::fromString("FFFFFFFF", 16) ); // test of D5. [Test Remainder] and D6. [add back] (at 8bit words)
+	tcMod.addAssertion({PaillierInt::fromString("FFFFFFFE00000001", 16), PaillierInt::fromString("FFFFFFFF", 16)}, PaillierInt::fromString(       "0", 16) );
+
+	tcDiv.addAssertion({PaillierInt::fromString(       "1FFFFFFFE", 16),                                           PaillierInt::fromString(      "02", 16)}, PaillierInt::fromString("FFFFFFFF", 16) );
+	tcMod.addAssertion({PaillierInt::fromString(       "1FFFFFFFE", 16),                                           PaillierInt::fromString(      "02", 16)}, PaillierInt::fromString(       "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString("121FA00A35068740", 16),                                           PaillierInt::fromString("12345678", 16)}, PaillierInt::fromString("FEDCBA98", 16) );
+	tcMod.addAssertion({PaillierInt::fromString("121FA00A35068740", 16),                                           PaillierInt::fromString("12345678", 16)}, PaillierInt::fromString(       "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString(        "FEDCBA98", 16) * PaillierInt::fromString("12345678", 16), PaillierInt::fromString("12345678", 16)}, PaillierInt::fromString("FEDCBA98", 16) );
+	tcMod.addAssertion({PaillierInt::fromString(        "FEDCBA98", 16) * PaillierInt::fromString("12345678", 16), PaillierInt::fromString("12345678", 16)}, PaillierInt::fromString(       "0", 16) );
+	
+	// 16 Bytes (128bit)
+	// assertion Nr: 41
+	tcDiv.addAssertion({PaillierInt::fromString(       "FFFFFFFFFFFFFFFE0000000000000001", 16), PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16)}, PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16) ); // test of D5. [Test Remainder] and D6. [add back] (at 8bit words)
+	tcMod.addAssertion({PaillierInt::fromString(       "FFFFFFFFFFFFFFFE0000000000000001", 16), PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16)}, PaillierInt::fromString(               "0", 16) );
+
+	tcDiv.addAssertion({PaillierInt::fromString(                      "1FFFFFFFFFFFFFFFE", 16), PaillierInt::fromString("            0x02", 16)}, PaillierInt::fromString("FFFFFFFFFFFFFFFF", 16) );
+	tcMod.addAssertion({PaillierInt::fromString(                      "1FFFFFFFFFFFFFFFE", 16), PaillierInt::fromString("            0x02", 16)}, PaillierInt::fromString(               "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString( "24090311171252216041959356964269510400", 10), PaillierInt::fromString("123456789ABCDEF0", 16)}, PaillierInt::fromString("FEDCBA9876543210", 16) ); // 24090311171252216041959356964269510400 / 1311768467463790320 = 18364758544493064720
+	tcMod.addAssertion({PaillierInt::fromString( "24090311171252216041959356964269510400", 10), PaillierInt::fromString("123456789ABCDEF0", 16)}, PaillierInt::fromString(               "0", 16) );
+	tcDiv.addAssertion({PaillierInt::fromString(       "121fa00ad77d7422236d88fe5618cf00", 16), PaillierInt::fromString("123456789ABCDEF0", 16)}, PaillierInt::fromString("FEDCBA9876543210", 16) ); // 24090311171252216041959356964269510400 / 1311768467463790320 = 18364758544493064720
+	tcMod.addAssertion({PaillierInt::fromString(       "121fa00ad77d7422236d88fe5618cf00", 16), PaillierInt::fromString("123456789ABCDEF0", 16)}, PaillierInt::fromString(               "0", 16) );
+	
+	// -------
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >= 372) {
+		// assertion Nr: 45
+		tcDiv.addAssertion({PaillierInt::fromString(    "121fa 00ad77d7 422236d8 8fe5618c f13419a0 b84f54b6 445a4618 e3b7a5bf 121fa00a d77d7422 236d88fe 5618cf00", 16), PaillierInt::fromString( "fedcba9876543210000000000000000fedcba9876543210", 16)}, PaillierInt::fromString(  "123456789abcdef000000000000000123456789abcdef0", 16));
+		tcMod.addAssertion({PaillierInt::fromString(    "121f a00ad77d7 422236d8 8fe5618c f13419a0 b84f54b6 445a4618 e3b7a5bf 121fa00a d77d7422 236d88fe 5618cf00", 16), PaillierInt::fromString( "fedcba9876543210000000000000000fedcba9876543210", 16)}, PaillierInt::fromString(                                               "0", 16));
+		tcDiv.addAssertion({PaillierInt::fromString( "121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10), PaillierInt::fromString("987654321000000000000000000000000000009876543210", 10)}, PaillierInt::fromString("123456789000000000000000000000000000001234567890", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10), PaillierInt::fromString("987654321000000000000000000000000000009876543210", 10)}, PaillierInt::fromString(                                               "0", 10));
+	}
+	// ------
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >= 352) {
+		// assertion Nr: 47
+		tcDiv.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("1", 10)}, PaillierInt::fromString("6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("1", 10)}, PaillierInt::fromString(                                                                                                         "0", 10));
+		tcDiv.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("2", 10)}, PaillierInt::fromString("3282327327325825708273258273273258263263232825825739394992080780749242493932813447459093582582732732572788", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("2", 10)}, PaillierInt::fromString(                                                                                                         "1", 10));
+		tcDiv.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("147", 10)}, PaillierInt::fromString("44657514657494227323445690792833445758683439807152916938667765724479489713371611530055695001125615409153", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("147", 10)}, PaillierInt::fromString(                                                                                                      "86", 10));
+		tcDiv.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10)}, PaillierInt::fromString("1", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10)}, PaillierInt::fromString("0", 10));
+		tcDiv.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("5555555555555544455555555555555555444441122235654445554547555", 10)}, PaillierInt::fromString("1181637837837299615890772977303005548172635842", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "6564654654651651416546516546546516526526465651651478789984161561498484987865626894918187165165465465145577", 10), PaillierInt::fromString("5555555555555544455555555555555555444441122235654445554547555", 10)}, PaillierInt::fromString("102256964850719633725637788587322669027978740977851378679267", 10));
+	}
+	
+	
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >= 248) {
+		// assertion Nr: 52
+		tcDiv.addAssertion({PaillierInt::fromString( "121212121121212454564757645640000000000000000000546424465744466464313145643", 10), PaillierInt::fromString("46464644515442612", 10)}, PaillierInt::fromString("2608695759652855584042902602291341403871593244214364153233", 10));
+		tcMod.addAssertion({PaillierInt::fromString( "121212121121212454564757645640000000000000000000546424465744466464313145643", 10), PaillierInt::fromString("46464644515442612", 10)}, PaillierInt::fromString("5925350727381047", 10));
+	}
+	
+	if(PAILLIER_INT_STORAGE_BIT_LENGTH >= 224) {
+		// assertion Nr: 53
+		tcDiv.addAssertion({PaillierInt::fromString( "AEDBBBBBDDDFFFFFFFFFFF65156895651516500000000000000000F", 16), PaillierInt::fromString("FFFFFFFFFF56556165465466546546546546122222222F", 16)}, PaillierInt::fromString("aedbbbbbd", 16));
+		tcMod.addAssertion({PaillierInt::fromString( "AEDBBBBBDDDFFFFFFFFFFF65156895651516500000000000000000F", 16), PaillierInt::fromString("FFFFFFFFFF56556165465466546546546546122222222F", 16)}, PaillierInt::fromString("e53e3992ef3e65ed83201fbc921bdf68de2743627f6e5c", 16));
+	}
+	
+	// 24 bit
+	// assertion Nr: 54
+	tcDiv.addAssertion({PaillierInt::fromString( "15485863", 10), PaillierInt::fromString("17", 10)}, PaillierInt::fromString("910933", 10));
+	tcMod.addAssertion({PaillierInt::fromString( "15485863", 10), PaillierInt::fromString("17", 10)}, PaillierInt::fromString(     "2", 10));
+	
+	
+	return std::array<BigIntTestCase,2>{tcDiv, tcMod};
+}

@@ -381,7 +381,7 @@ namespace ppvr {
 			 * The result size R need to be greater then the size of this value therefore there can not be a carry
 			 */
 			//template <BIG_INT_WORD_COUNT_TYPE R>
-			void mulInt(BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const;
+			void mulInt(const BIG_INT_WORD_TYPE ss2, UFixBigInt<S>& result) const;
 
 		private:
 			void mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UFixBigInt<S>& result) const;

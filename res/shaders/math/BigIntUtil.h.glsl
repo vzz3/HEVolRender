@@ -5,14 +5,20 @@
 /**
  * this method returns the number of the highest set bit in word
  * if the 'word' is zero this method returns '-1'
+ *
+ * @static
+ * @public
  */
-//static int findHighestSetBitInWord(BIG_INT_WORD_TYPE word);
+int BigIntUtil_findHighestSetBitInWord(in BIG_INT_WORD_TYPE word);
 
 /**
  * this method returns the number of the lowest set bit in word
  * if the 'word' is zero this method returns '-1'
+ *
+ * @static
+ * @public
  */
-//static int findLowestSetBitInWord(BIG_INT_WORD_TYPE word);
+int BigIntUtil_findLowestSetBitInWord(in BIG_INT_WORD_TYPE word);
 
 /**
  * Replace target.low with src.low bits.

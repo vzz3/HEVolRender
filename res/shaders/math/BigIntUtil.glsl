@@ -4,6 +4,40 @@
 
 // ----- bit utilities -----
 
+int BigIntUtil_findHighestSetBitInWord(in BIG_INT_WORD_TYPE word) {
+	if( word == 0 ) {
+		return -1;
+	}
+
+	int bit = BIG_INT_BITS_PER_WORD - 1;
+
+	while( (word & BIG_INT_WORD_HIGHEST_BIT) == 0 ) {
+		word = word << 1;
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		word &= BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+		--bit;
+	}
+
+	return bit;
+}
+
+
+int BigIntUtil_findLowestSetBitInWord(in BIG_INT_WORD_TYPE word) {
+	if( word == 0 ) {
+		return -1;
+	}
+
+	int bit = 0;
+
+	while( (word & 1) == 0 ) {
+		word = word >> 1;
+		bit++;
+	}
+
+	return bit;
+}
+
 
 BIG_INT_WORD_TYPE BigIntUtil_setLowFromLowBits(const in BIG_INT_WORD_TYPE target, const in BIG_INT_WORD_TYPE src) {
 	BIG_INT_WORD_TYPE res =

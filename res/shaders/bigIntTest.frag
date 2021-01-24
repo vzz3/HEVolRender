@@ -89,6 +89,13 @@ void main() {
 		case BIG_INT_GPU_TEST_OPERATION_mul:
 			ufBigIntRes = UFixBigInt_mul(ufBigIntA, ufBigIntB);
 			break;
+		case BIG_INT_GPU_TEST_OPERATION_div:
+			ufBigIntRes = UFixBigInt_div(ufBigIntA, ufBigIntB);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_mod:
+			ufBigIntRes = UFixBigInt_mod(ufBigIntA, ufBigIntB);
+			break;
+
 		case BIG_INT_GPU_TEST_OPERATION_copy:
 		    //result = cubicOut();
 		    //break;
