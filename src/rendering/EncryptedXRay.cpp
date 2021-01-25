@@ -148,7 +148,7 @@ void EncryptedXRay::createDescriptorPool(size_t ySwapChainImageCount) {
 		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * 2)) 		// front and back postions of cube
 	};
 	VkDescriptorPoolCreateInfo poolInfo = VulkanInitializers::descriptorPoolCreateInfo(poolSizes, static_cast<uint32_t>(ySwapChainImageCount));
-	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
 }
 
 void EncryptedXRay::cleanupDescriptorSet() {

@@ -13,7 +13,7 @@ namespace ppvr {
 		namespace data {
 			class GpuVolume {
 			public:
-				GpuVolume(VulkanDevice& yDev);
+				GpuVolume(VulkanDevice* yDev);
 				~GpuVolume();
 				
 				void releaseGpuResources();
@@ -67,7 +67,7 @@ namespace ppvr {
 				
 			private:
 				// from constructor
-				VulkanDevice& dev;
+				VulkanDevice* dev;
 				
 				size_t mWidth, mHeight, mDepth;
 				VkFormat mVolumeFormat = VK_FORMAT_R16_UNORM; //VK_FORMAT_R16_UNORM; // VK_FORMAT_R8G8B8A8_SRGB

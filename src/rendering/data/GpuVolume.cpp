@@ -8,7 +8,7 @@
 using namespace ppvr::rendering::data;
 using ppvr::rendering::VulkanDevice;
 
-GpuVolume::GpuVolume(VulkanDevice& yDev): dev(yDev) {
+GpuVolume::GpuVolume(VulkanDevice* yDev): dev(yDev) {
 	//this->createStagingBuffer();
 }
 
@@ -40,20 +40,20 @@ void GpuVolume::releaseGpuResources() {
 	
 	this->cleanupImageView();
 	
-	dev.funcs->vkDestroyImage(dev.vkDev, volumeImage, nullptr);
+	dev->funcs->vkDestroyImage(dev->vkDev, volumeImage, nullptr);
 	volumeImage = VK_NULL_HANDLE;
-    dev.funcs->vkFreeMemory(dev.vkDev, volumeImageMemory, nullptr);
+    dev->funcs->vkFreeMemory(dev->vkDev, volumeImageMemory, nullptr);
     volumeImageMemory = VK_NULL_HANDLE;
 }
 
 void GpuVolume::cleanupStagingBuffer() {
-	dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	dev->funcs->vkUnmapMemory(dev->vkDev, stagingBufferMemory);
 	
 	// cleanup the staging buffer
-	dev.funcs->vkDestroyBuffer(dev.vkDev, stagingBuffer, nullptr);
+	dev->funcs->vkDestroyBuffer(dev->vkDev, stagingBuffer, nullptr);
 	stagingBuffer = VK_NULL_HANDLE;
 	
-	dev.funcs->vkFreeMemory(dev.vkDev, stagingBufferMemory, nullptr);
+	dev->funcs->vkFreeMemory(dev->vkDev, stagingBufferMemory, nullptr);
 	stagingBufferMemory = VK_NULL_HANDLE;
 }
 
@@ -71,13 +71,13 @@ void* GpuVolume::createStagingBuffer(const VkFormat yVolumeFormat, const size_t 
 
 	constexpr VkBufferUsageFlags stagingBufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 	constexpr VkMemoryPropertyFlags stagingBufferProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-	VulkanUtility::createBuffer(dev, imageSize, stagingBufferUsage, stagingBufferProperties, stagingBuffer, stagingBufferMemory);
+	VulkanUtility::createBuffer(*dev, imageSize, stagingBufferUsage, stagingBufferProperties, stagingBuffer, stagingBufferMemory);
 	
 	// copy the volume to the staging buffer
 	void* data;
-	dev.funcs->vkMapMemory(dev.vkDev, stagingBufferMemory, 0, imageSize, 0, &data);
+	dev->funcs->vkMapMemory(dev->vkDev, stagingBufferMemory, 0, imageSize, 0, &data);
 	return data;
-	// dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	// dev->funcs->vkUnmapMemory(dev->vkDev, stagingBufferMemory);
 }
 
 void GpuVolume::createGpuImageFromStagingBuffer() {
@@ -86,12 +86,12 @@ void GpuVolume::createGpuImageFromStagingBuffer() {
 	constexpr VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 	constexpr VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	VulkanUtility::createImage(dev, imageType, mWidth, mHeight, mDepth, mVolumeFormat, tiling, usage, properties, volumeImage, volumeImageMemory);
+	VulkanUtility::createImage(*dev, imageType, mWidth, mHeight, mDepth, mVolumeFormat, tiling, usage, properties, volumeImage, volumeImageMemory);
 
 	// copy the image from the staging buffer to the image memory on the GPU
-	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		VulkanUtility::copyBufferToImage(dev, stagingBuffer, volumeImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), static_cast<uint32_t>(mDepth));
-	VulkanUtility::transitionImageLayout(dev, volumeImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	VulkanUtility::transitionImageLayout(*dev, volumeImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		VulkanUtility::copyBufferToImage(*dev, stagingBuffer, volumeImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), static_cast<uint32_t>(mDepth));
+	VulkanUtility::transitionImageLayout(*dev, volumeImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
@@ -100,7 +100,7 @@ void GpuVolume::uploadVolume(const Volume<uint16_t>& yVolume) {
 
 	void* data = this->createStagingBuffer(format, sizeof(uint16_t), yVolume.width(), yVolume.height(), yVolume.depth());
 		memcpy(data, yVolume.data(), static_cast<size_t>(this->imageSize()));
-	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	//dev->funcs->vkUnmapMemory(dev->vkDev, stagingBufferMemory);
 	
 	// create the image in GPU memory
 	this->createGpuImageFromStagingBuffer();
@@ -129,7 +129,7 @@ void GpuVolume::uploadBigIntVolumePart(const Volume<PaillierInt>& yVolume, const
     		data[dataOffset + w] = word;
     	}
 	}
-	//dev.funcs->vkUnmapMemory(dev.vkDev, stagingBufferMemory);
+	//dev->funcs->vkUnmapMemory(dev->vkDev, stagingBufferMemory);
 	
 	// create the image in GPU memory
 	this->createGpuImageFromStagingBuffer();
@@ -156,7 +156,7 @@ VkImageView GpuVolume::getImageView() {
 }
 
 void GpuVolume::cleanupImageView() {
-	dev.funcs->vkDestroyImageView(dev.vkDev, volumeImageView, nullptr);
+	dev->funcs->vkDestroyImageView(dev->vkDev, volumeImageView, nullptr);
 	volumeImageView = VK_NULL_HANDLE;
 }
 
@@ -171,5 +171,5 @@ void GpuVolume::createImageView() {
 	colorImageView.subresourceRange.baseArrayLayer = 0;
 	colorImageView.subresourceRange.layerCount = 1;
 	colorImageView.image = volumeImage;
-	VK_CHECK_RESULT(dev.funcs->vkCreateImageView(dev.vkDev, &colorImageView, nullptr, &volumeImageView), "failed to bind volume image view!");
+	VK_CHECK_RESULT(dev->funcs->vkCreateImageView(dev->vkDev, &colorImageView, nullptr, &volumeImageView), "failed to bind volume image view!");
 }

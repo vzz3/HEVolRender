@@ -46,7 +46,7 @@ void PlainVulkanRenderer::initResources()
 	//test = (*m_volume)[1][2][3];
 	data::VolumeFactory::createVolume(m_volume, 100);
 	
-	m_gpuVolume = new data::GpuVolume(m_device);
+	m_gpuVolume = new data::GpuVolume(&m_device);
 	m_gpuVolume->uploadVolume(m_volume);
 	roXRay = new XRay(m_device);
 	roXRay->initGpuResources();

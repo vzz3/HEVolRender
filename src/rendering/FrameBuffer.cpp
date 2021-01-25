@@ -183,7 +183,7 @@ void FrameBuffer::createDepthAttachment() {
 	image.tiling = VK_IMAGE_TILING_OPTIMAL;
 	image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-	VK_CHECK_RESULT(vkCreateImage(dev.vkDev, &image, nullptr, &this->depth.image), "failed to create depth image for offscreen frame buffer!");
+	VK_CHECK_RESULT(dev.funcs->vkCreateImage(dev.vkDev, &image, nullptr, &this->depth.image), "failed to create depth image for offscreen frame buffer!");
 
 	VkMemoryRequirements memReqs;
 	dev.funcs->vkGetImageMemoryRequirements(dev.vkDev, this->depth.image, &memReqs);
@@ -191,8 +191,8 @@ void FrameBuffer::createDepthAttachment() {
 	VkMemoryAllocateInfo memAlloc = VulkanInitializers::memoryAllocateInfo();
 	memAlloc.allocationSize = memReqs.size;
 	memAlloc.memoryTypeIndex = VulkanUtility::findMemoryType(dev, memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	VK_CHECK_RESULT(vkAllocateMemory(dev.vkDev, &memAlloc, nullptr, &this->depth.mem), "failed to allocate memory for off screen frame buffer depth image!");
-	VK_CHECK_RESULT(vkBindImageMemory(dev.vkDev, this->depth.image, this->depth.mem, 0), "failed to bind off screen frame buffer depth image!");
+	VK_CHECK_RESULT(dev.funcs->vkAllocateMemory(dev.vkDev, &memAlloc, nullptr, &this->depth.mem), "failed to allocate memory for off screen frame buffer depth image!");
+	VK_CHECK_RESULT(dev.funcs->vkBindImageMemory(dev.vkDev, this->depth.image, this->depth.mem, 0), "failed to bind off screen frame buffer depth image!");
 
 	VkImageViewCreateInfo depthStencilView = VulkanInitializers::imageViewCreateInfo();
 	depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -205,7 +205,7 @@ void FrameBuffer::createDepthAttachment() {
 	depthStencilView.subresourceRange.baseArrayLayer = 0;
 	depthStencilView.subresourceRange.layerCount = 1;
 	depthStencilView.image = this->depth.image;
-	VK_CHECK_RESULT(vkCreateImageView(dev.vkDev, &depthStencilView, nullptr, &this->depth.view), "failed to bind off screen depth image view!");
+	VK_CHECK_RESULT(dev.funcs->vkCreateImageView(dev.vkDev, &depthStencilView, nullptr, &this->depth.view), "failed to bind off screen depth image view!");
 }
 
 void FrameBuffer::cleanupRenderPass() {

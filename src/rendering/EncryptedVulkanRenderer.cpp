@@ -147,7 +147,7 @@ void EncryptedVulkanRenderer::initGpuResources() {
 		
 		data::VolumeFactory::createVolume(m_volume, 100);
 		
-		m_gpuVolume = new data::GpuVolume(device);
+		m_gpuVolume = new data::GpuVolume(&device);
 		m_gpuVolume->uploadVolume(m_volume);
 		
 		roEncXRay = new EncryptedXRay(device);

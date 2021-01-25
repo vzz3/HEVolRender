@@ -92,10 +92,6 @@ patch -p1 < ../qt_patches/23fd7bd.diff
 ```
 
 
-
-
-
-
 build QT:
 ```
 ./configure -opensource -confirm-license -developer-build -I /usr/local/include/ -I "$(pwd)/../MoltenVK/include/" -feature-vulkan -v -skip qtwebengine
@@ -108,9 +104,84 @@ more infos can be found on: https://doc.qt.io/qt-5/macos-building.html
 from https://stackoverflow.com/questions/60466377/qt-5-14-0-vulkan-under-qml-causes-stdsystem-error-mutex-lock-failed
 -->
 
-## Debug Mac OS
+
+### build HEVolRender
+
+```
+cd ../../
+mkdir build
+cd build
+cmake -G Xcode ../
+```
+
+
+## Debugging on Mac OS
 ### QT
 Set the environment variable `DYLD_IMAGE_SUFFIX=_debug` (Xcode -> menu Product-> Scheme -> Run -> Arguments -> Environment Variables). This loads the _debug binaries from the framework folders (e.g.: `external/qtbase-everywhere-src-5.12.10/lib/QtCore.framework/QtCore_debug`). https://doc.qt.io/qt-5/debug.html
 
 ### MoltonVK
 Set the environment variable `MVK_LOG_LEVEL_INFO`
+
+
+
+
+## Build on Linux (Ubuntu 20.4)
+Install required software
+```
+apt install vulkan-tools git cmake build-essential libglu1-mesa-dev '^libxcb.*-dev' libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev
+	# libxrender-dev libxi-dev libvulkan-dev curl
+```
+
+Clone GIT Repository:
+```
+git clone --recurse-submodules ssh://$DOMAIN\\$USER@$HOST/~/git/HEVolRender-Cpp.git
+	# for already cloned repositories
+	git submodule update --init --recursive
+```
+
+<!--
+Install google glsl shader compiler (*glslc*)
+```
+cd HEVolRender-Cpp/external
+curl 'https://storage.googleapis.com/shaderc/badges/build_link_linux_clang_release.html' --location > google_shaderc_linux_clang_release.tgz
+tar xvf google_shaderc_linux_clang_release.tgz
+mv install/ google_shaderc_linux_clang_release/
+cd ..
+```
+-->
+Install Vulkan SDK (see https://vulkan.lunarg.com/sdk/home#linux)
+```
+wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.162-focal.list https://packages.lunarg.com/vulkan/1.2.162/lunarg-vulkan-1.2.162-focal.list
+sudo apt update
+sudo apt install vulkan-sdk
+```
+
+#### Build QT5
+- https://wiki.qt.io/Building_Qt_5_from_Git
+download and extract QT
+```
+cd HEVolRender-Cpp/external
+curl 'http://download.qt.io/official_releases/qt/5.12/5.12.10/submodules/qtbase-everywhere-src-5.12.10.tar.xz' --location > qtbase-everywhere-src-5.12.10.tar.xz
+tar xvf qtbase-everywhere-src-5.12.10.tar.xz
+cd qtbase-everywhere-src-5.12.10
+```
+
+build QT:
+```
+./configure -opensource -confirm-license -developer-build -feature-vulkan -xcb -fontconfig -v -skip qtwebengine
+	# -recheck-all
+time make
+# use 20 cores for the build:
+	time make -j 20
+cd ../../
+```
+
+### build HEVolRender
+
+```
+mkdir build
+cd build
+cmake ../
+make
+```

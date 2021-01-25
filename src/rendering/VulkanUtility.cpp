@@ -69,7 +69,7 @@ uint32_t VulkanUtility::findMemoryType(VulkanDevice& yDev, uint32_t yTypeFilter,
 	// https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation
 	
 	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(yDev.vkPhysicalDev, &memProperties);
+	yDev.vkInstance->funcs->vkGetPhysicalDeviceMemoryProperties(yDev.vkPhysicalDev, &memProperties);
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 		if ((yTypeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & yProperties) == yProperties) {
@@ -175,7 +175,7 @@ VkCommandBuffer VulkanUtility::beginSingleTimeCommands(VulkanDevice& yDev) {
 void VulkanUtility::endSingleTimeCommands(  VulkanDevice& yDev, VkCommandBuffer yCommandBuffer) {
 	// https://vulkan-tutorial.com/Texture_mapping/Images
 	
-	vkEndCommandBuffer(yCommandBuffer);
+	yDev.funcs->vkEndCommandBuffer(yCommandBuffer);
 
 	// --- execute the command buffer to complete the transfer ---
 	VkSubmitInfo submitInfo{};
@@ -313,7 +313,7 @@ void VulkanUtility::transitionImageLayout(
 		throw std::invalid_argument("unsupported layout transition!");
 	}
 
-	vkCmdPipelineBarrier(
+	yDev.funcs->vkCmdPipelineBarrier(
 		yCommandBuffer,
 		sourceStage, destinationStage,
 		0,

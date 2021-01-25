@@ -5,6 +5,7 @@
 #include "vertex/ColoredVertex.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include "VulkanInitializers.hpp"
+#include <chrono>
 
 
 using namespace ppvr::rendering;
@@ -133,7 +134,7 @@ void Cube::createDescriptorPool(size_t ySwapChainImageCount) {
 	poolInfo.pPoolSizes = &poolSize;
 	poolInfo.maxSets = static_cast<uint32_t>(ySwapChainImageCount);
 
-	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
 }
 
 void Cube::cleanupDescriptorSets() {

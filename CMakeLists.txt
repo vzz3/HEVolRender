@@ -14,20 +14,20 @@ IF(UNIX AND NOT APPLE)
 	set(LINUX TRUE)
 ENDIF()
 
-if(APPLE)
+#if(APPLE)
 	# https://docs.hunter.sh/en/latest/packages/pkg/Qt.html
 	#hunter_add_package(Qt COMPONENTS qtbase)
 	#hunter_add_package(Qt COMPONENTS qtwebsockets)
 	#hunter_add_package(OpenCV)
 
-	message(STATUS "Install required components on mac OS:")
-	message(STATUS "	$ sudo port install qt513-qtbase +openssl qt513-qttools")
-elseif(UNIX)
-	message(STATUS "unfortunatly you need to install QT manualy")
+#	message(STATUS "Install required components on mac OS:")
+#	message(STATUS "	$ sudo port install qt513-qtbase +openssl qt513-qttools")
+#elseif(UNIX)
+#	message(STATUS "unfortunatly you need to install QT manualy")
 	#message(STATUS "	UBUNTU: sudo apt-get install qt5-default libqt5websockets5-dev qtconnectivity5-dev libopencv-dev")
 	# QT version of Ubuntu 16.04LTS: 5.5.1+dfsg-16ubuntu7
 	# QT version of Ubuntu 18.04LTS: 5.9.5+dfsg-0ubuntu1
-endif()
+#endif()
 
 
 macro(ADD_FRAMEWORK fwname appname)
@@ -103,8 +103,8 @@ ENDIF()
 # GLM
 #set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/glm/cmake/")
 set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/glm/cmake/")
-find_package(GLM REQUIRED PATHS  "${CMAKE_CURRENT_SOURCE_DIR}/external/")
-IF (NOT GLM_FOUND)
+find_package(glm REQUIRED PATHS  "${CMAKE_CURRENT_SOURCE_DIR}/external/")
+IF (NOT glm_FOUND)
 	message(FATAL_ERROR "Could not find GLM library!")
 ELSE()
 	message(STATUS "GLM included at \"${GLM_INCLUDE_DIRS}\"")
@@ -119,7 +119,8 @@ ENDIF()
 #)
 # https://stackoverflow.com/questions/60420700/cmake-invocation-of-glslc-with-respect-to-includes-dependencies
 function(add_shader TARGET SHADER)
-    find_program(GLSLC glslc)
+    #find_program(GLSLC glslc PATHS ${CMAKE_CURRENT_SOURCE_DIR}/external/google_shaderc_linux_clang_release/bin)
+	find_program(GLSLC glslc)
 
     set(current-shader-path ${CMAKE_CURRENT_SOURCE_DIR}/res/shaders/${SHADER})
     #set(current-output-path ${CMAKE_BINARY_DIR}/shaders/${SHADER}.spv)

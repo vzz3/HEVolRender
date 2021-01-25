@@ -135,7 +135,7 @@ void ImageDebugView::createDescriptorPool(size_t yIndex, size_t ySwapChainImageC
 		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount))
 	};
 	VkDescriptorPoolCreateInfo poolInfo = VulkanInitializers::descriptorPoolCreateInfo(poolSizes, static_cast<uint32_t>(ySwapChainImageCount));
-	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &imgDescs[yIndex].descriptorPool), "failed to create descriptor pool!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &imgDescs[yIndex].descriptorPool), "failed to create descriptor pool!");
 }
 
 void ImageDebugView::cleanupDescriptorSet(size_t yIndex) {

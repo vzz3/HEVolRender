@@ -129,7 +129,7 @@ void BigIntTestObj::createDescriptorPool(size_t ySwapChainImageCount) {
 		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * GPU_INT_TEXTURE_SIZE)) 		// volume image
 	};
 	VkDescriptorPoolCreateInfo poolInfo = VulkanInitializers::descriptorPoolCreateInfo(poolSizes, static_cast<uint32_t>(ySwapChainImageCount));
-	VK_CHECK_RESULT (vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
+	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
 }
 
 void BigIntTestObj::cleanupDescriptorSet() {
