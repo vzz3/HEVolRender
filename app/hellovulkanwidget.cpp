@@ -237,6 +237,21 @@ void MainWindow::renderEcrypted() {
 }
 
 void MainWindow::testGpuBigInt() {
+	std::string textureFormatName = "Unknown (" + std::to_string(GPU_INT_TEXTURE_FORMAT) + ")";
+	switch (GPU_INT_TEXTURE_FORMAT) {
+		case VK_FORMAT_R8G8B8A8_UINT: textureFormatName = "GPU_INT_TEXTURE_FORMAT"; break;
+		case VK_FORMAT_R32G32B32A32_UINT: textureFormatName = "VK_FORMAT_R32G32B32A32_UINT"; break;
+	}
+	std::cout << "BigInt GPU info: molulusLength=" << PAILLIER_MODULUS_BIT_LENGTH << "bit"
+	 	<< ", storageLength=" << PAILLIER_INT_STORAGE_BIT_LENGTH << "bit"
+		<< ", calculationLength=" << PAILLIER_INT_BIT_LENGTH << "bit"
+		<< ", bitPerWord=" << BIG_INT_BITS_PER_WORD << "bit"
+		<< ", vulkanTextureFormat=" << textureFormatName
+		<< ", vulkanWordsPerTexture=" << GPU_INT_TEXTURE_WORD_COUNT
+		<< ", vulkanTextureCount=" << GPU_INT_TEXTURE_SIZE
+		<< std::endl;
+	
+	
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera(), true);
 	
 	std::vector<BigIntTestCase> testCases = BigIntTestFactory::createAllTest();

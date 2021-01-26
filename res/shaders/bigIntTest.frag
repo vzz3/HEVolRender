@@ -98,7 +98,8 @@ void main() {
 
 		case BIG_INT_GPU_TEST_OPERATION_copy:
 		    //result = cubicOut();
-		    //break;
+			ufBigIntRes = ufBigIntA;
+		    break;
 		default:
 			ufBigIntRes = ufBigIntA; //UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(gl_FragCoord.xy, 0));
 	}
