@@ -15,33 +15,53 @@ using ppvr::paillier::math::EncryptedNumber;
 using ppvr::paillier::math::PaillierContext;
 using ppvr::math::SArbBigInt;
 
-struct {
-	const size_t sk32modulusLen = 32;
-	const SecureKey sk32 = SecureKey::create(sk32modulusLen);
+struct TestKeys {
+	private:
+		static TestKeys* instance;
+	public:
+		static TestKeys* get() {
+			if(instance == nullptr) {
+				instance = new TestKeys();
+			}
+			return instance;
+		}
 
-	const size_t sk256modulusLen = 256;
-	const SecureKey sk256 = SecureKey::create(sk256modulusLen);
-} TestFixtures;
+	private:
+		TestKeys()
+			: sk32{SecureKey::create(sk32modulusLen)}
+			, sk256{SecureKey::create(sk256modulusLen)}
+		{
+		}
+	
+	public:
+		const size_t sk32modulusLen = 32;
+		const SecureKey sk32;
+
+		const size_t sk256modulusLen = 256;
+		const SecureKey sk256;
+};
+TestKeys* TestKeys::instance{nullptr};
+
 
 TEST_CASE( "paillier FP create  EncodingScheme", "[paillierMath]" ) {
-	REQUIRE_THROWS (EncodingScheme(TestFixtures.sk32.publicKey, false,  8, 1)); // baes neet to be >=2
-	REQUIRE_THROWS (EncodingScheme(TestFixtures.sk32.publicKey, false,  0, 16)); // does not met: precision > 0
-	REQUIRE_NOTHROW(EncodingScheme(TestFixtures.sk32.publicKey, false,  1, 16));
-	REQUIRE_THROWS (EncodingScheme(TestFixtures.sk32.publicKey, true,   1, 16)); // does not met: precision > 1 	if encoding is signed
-	REQUIRE_NOTHROW(EncodingScheme(TestFixtures.sk32.publicKey, true,   2, 16));
-	REQUIRE_NOTHROW (EncodingScheme(TestFixtures.sk32.publicKey, false, TestFixtures.sk32modulusLen, 16));
-	REQUIRE_THROWS (EncodingScheme(TestFixtures.sk32.publicKey, false, TestFixtures.sk32modulusLen+1, 16)); // does not met: precision < len(publicKey)
-	REQUIRE_NOTHROW(EncodingScheme(TestFixtures.sk32.publicKey, false, TestFixtures.sk32modulusLen-1, 16));
+	REQUIRE_THROWS (EncodingScheme(TestKeys::get()->sk32.publicKey, false,  8, 1)); // baes neet to be >=2
+	REQUIRE_THROWS (EncodingScheme(TestKeys::get()->sk32.publicKey, false,  0, 16)); // does not met: precision > 0
+	REQUIRE_NOTHROW(EncodingScheme(TestKeys::get()->sk32.publicKey, false,  1, 16));
+	REQUIRE_THROWS (EncodingScheme(TestKeys::get()->sk32.publicKey, true,   1, 16)); // does not met: precision > 1 	if encoding is signed
+	REQUIRE_NOTHROW(EncodingScheme(TestKeys::get()->sk32.publicKey, true,   2, 16));
+	REQUIRE_NOTHROW (EncodingScheme(TestKeys::get()->sk32.publicKey, false, TestKeys::get()->sk32modulusLen, 16));
+	REQUIRE_THROWS (EncodingScheme(TestKeys::get()->sk32.publicKey, false, TestKeys::get()->sk32modulusLen+1, 16)); // does not met: precision < len(publicKey)
+	REQUIRE_NOTHROW(EncodingScheme(TestKeys::get()->sk32.publicKey, false, TestKeys::get()->sk32modulusLen-1, 16));
 
 
-	REQUIRE( EncodingScheme(TestFixtures.sk32.publicKey, false, TestFixtures.sk32modulusLen-1, 16).isSigned() == false );
-	REQUIRE( EncodingScheme(TestFixtures.sk32.publicKey, true,  TestFixtures.sk32modulusLen-1, 16).isSigned() == true );
+	REQUIRE( EncodingScheme(TestKeys::get()->sk32.publicKey, false, TestKeys::get()->sk32modulusLen-1, 16).isSigned() == false );
+	REQUIRE( EncodingScheme(TestKeys::get()->sk32.publicKey, true,  TestKeys::get()->sk32modulusLen-1, 16).isSigned() == true );
 }
 
 TEST_CASE( "paillier FP signum", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk32modulusLen;
-	const size_t precision = TestFixtures.sk32modulusLen;
-	const SecureKey sk32 = TestFixtures.sk32;
+	const size_t modulusLen = TestKeys::get()->sk32modulusLen;
+	const size_t precision = TestKeys::get()->sk32modulusLen;
+	const SecureKey sk32 = TestKeys::get()->sk32;
 
 	EncodingScheme es32u(sk32.publicKey, false,  8, 10);
 	REQUIRE( es32u.signum(EncodedNumber(PaillierInt::fromInt64(0), 1)) == 0);
@@ -58,9 +78,9 @@ TEST_CASE( "paillier FP signum", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP encode integer", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	// unsigned encoding
 	EncodingScheme esU(sk.publicKey, false,  precision, 10);
@@ -139,9 +159,9 @@ TEST_CASE( "paillier FP encode integer", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP encode float", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	// unsigned encoding
 	EncodingScheme esU(sk.publicKey, false,  precision, 10);
@@ -252,9 +272,9 @@ TEST_CASE( "paillier FP encode float", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP decode integer", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	// unsigned encoding
 	EncodingScheme esU(sk.publicKey, false,  precision, 12);
@@ -288,9 +308,9 @@ TEST_CASE( "paillier FP decode integer", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP decode float", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	// unsigned encoding
 	EncodingScheme esU(sk.publicKey, false,  precision, 12);
@@ -372,9 +392,9 @@ TEST_CASE( "paillier FP decode float", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP paillier context encrypt/decrypt", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	const PaillierContext pcS(sk.publicKey, true, precision, 10);
 	//const EncodingScheme& esS = pcS.encoder;
@@ -461,9 +481,9 @@ TEST_CASE( "paillier FP paillier context encrypt/decrypt", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP paillier context add", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	const PaillierContext pcS(sk.publicKey, true, precision, 10);
 
@@ -514,9 +534,9 @@ TEST_CASE( "paillier FP paillier context add", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP paillier context additiveInverse", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	const PaillierContext pcS(sk.publicKey, true, precision, 10);
 
@@ -544,9 +564,9 @@ TEST_CASE( "paillier FP paillier context additiveInverse", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP paillier context subtract", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	const PaillierContext pcS(sk.publicKey, true, precision, 10);
 
@@ -597,9 +617,9 @@ TEST_CASE( "paillier FP paillier context subtract", "[paillierMath]" ) {
 }
 
 TEST_CASE( "paillier FP paillier context multiply", "[paillierMath]" ) {
-	const size_t modulusLen = TestFixtures.sk256modulusLen;
-	const size_t precision = TestFixtures.sk256modulusLen;
-	const SecureKey sk = TestFixtures.sk256;
+	const size_t modulusLen = TestKeys::get()->sk256modulusLen;
+	const size_t precision = TestKeys::get()->sk256modulusLen;
+	const SecureKey sk = TestKeys::get()->sk256;
 
 	const PaillierContext pcS(sk.publicKey, true, precision, 10);
 

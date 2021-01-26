@@ -185,3 +185,11 @@ cd build
 cmake ../
 make
 ```
+
+
+
+# TODO
+- summation for xray rendering should be possible already
+- modPow() for unsigned fixed length big integers on C++ and GLSL (required for Paillier Multiplication)
+- floating point numbers on GPU. Where to write the exponent? Z-Buffer?
+- The PaillierMath.cpp unit test file pails out with an assertion error if build with g++ under ubuntu. 
