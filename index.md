@@ -1,19 +1,19 @@
 
-## important QT links:
-download: http://download.qt.io/official_releases/qt/5.12/5.12.9/submodules/
-list of examples: https://doc.qt.io/qt-5/qtexamples.html
-used example: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hellovulkanwidget
+## Important QT links:
+- QT Download: http://download.qt.io/official_releases/qt/5.12/5.12.9/submodules/
+- List of examples: https://doc.qt.io/qt-5/qtexamples.html
+- Example I used as a base for this Project: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hellovulkanwidget
 
-## important Vulkan links
-vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
-examples: https://github.com/KhronosGroup/Vulkan-Samples
-Headless example: https://github.com/SaschaWillems/Vulkan/tree/master/examples/renderheadless
-https://developer.nvidia.com/blog/vulkan-dos-donts/
-uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
-Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
-C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
-SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
-Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debug_printf.html, https://vulkan.lunarg.com/issue/home?limit=10;q=;mine=false;org=false;khronos=false;lunarg=false;indie=false;status=new,open, https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md
+## Important Vulkan links
+- Vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
+- Examples from KhronosGroup: https://github.com/KhronosGroup/Vulkan-Samples
+- Headless example: https://github.com/SaschaWillems/Vulkan/tree/master/examples/renderheadless
+- Vulkan Dos and Don’ts: https://developer.nvidia.com/blog/vulkan-dos-donts/
+- Uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+- Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
+- C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
+- SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
+- Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debug_printf.html, https://vulkan.lunarg.com/issue/home?limit=10;q=;mine=false;org=false;khronos=false;lunarg=false;indie=false;status=new,open, https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md
 
 
 
@@ -21,13 +21,19 @@ Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debu
 Blog Post about Vulkan support in QT under mac OS: https://www.qt.io/blog/2018/05/30/vulkan-for-qt-on-macos
 (https://forum.qt.io/topic/104553/vulkan-on-macos)
 
-#### Install the QT Designer
-install QT Designer for form editing from mac ports:
+### Clone the Repository
+```
+git clone --recurse-submodules ssh://$DOMAIN\\$USER@$HOST/~/git/HEVolRender-Cpp.git
+cd HEVolRender-Cpp.git
+```
+
+### Install the QT Designer
+Install the QT Designer for form editing of UI files, from mac ports:
 ```
 sudo port install qt513-qttools
 ```
 
-#### Install MoltenVK
+### Install MoltenVK
 Install the Vulkan SDK for mac OS (MoltenVK) which can be downloaded from https://vulkan.lunarg.com/
 
 ```
@@ -47,27 +53,32 @@ cd /Volumes/vulkansdk-macos-1.2.162.0/
 exit
 
 hdiutil detach /Volumes/vulkansdk-macos-1.2.162.0/
+cd ..
 ```
 If an older version is already in place, use `./install_vulkan.py --force-install` to override the existing version.
 
+### Build QT5
+More infos about build QT from source on macOS can be found at: https://doc.qt.io/qt-5/macos-building.html .
+<!--
+../qt5/configure -developer-build -skip qtquick3d -skip qtwebengine -opensource -nomake examples -nomake tests -confirm-license -vulkan -I $VULKAN_SDK/../MoltenVK/include -L $VULKAN_SDK/lib
+from https://stackoverflow.com/questions/60466377/qt-5-14-0-vulkan-under-qml-causes-stdsystem-error-mutex-lock-failed
+-->
 
-#### Build QT5
-
-download and extract QT
+#### Build QT 5.12.10 for macOS 10.13
+Download and extract QT:
 ```
 cd external
-#curl 'http://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz' --location > qtbase-everywhere-src-5.15.2.tar.xz
 curl 'http://download.qt.io/official_releases/qt/5.12/5.12.10/submodules/qtbase-everywhere-src-5.12.10.tar.xz'  --location > qtbase-everywhere-src-5.12.10.tar.xz
 tar xvzf qtbase-everywhere-src-5.12.10.tar.xz
 cd qtbase-everywhere-src-5.12.10
 ```
 
-patch for mac OS 10.13 (should not be required for newer mac OS versions, see https://bugreports.qt.io/browse/QTBUG-76777).
+Apply patch for mac OS 10.13 (should not be required for newer mac OS versions, see https://bugreports.qt.io/browse/QTBUG-76777).
 ```
 patch -p2 < ../qt_patches/qcore_for_sdk_10_13_1.patch
 ```
 
-patch for the QT versions before 5.15.0 Beta2 https://bugreports.qt.io/browse/QTBUG-82600
+Apply patch for the QT versions before 5.15.0 Beta2 https://bugreports.qt.io/browse/QTBUG-82600
 * Do not constantly create new surfaces with MoltenVK on macOS (`7b86168.diff`): https://codereview.qt-project.org/c/qt/qtbase/+/292567
 * macOS: MoltenVK: Pass in the layer instead of the view (`23fd7bd.diff`): https://codereview.qt-project.org/c/qt/qtbase/+/292568
 
@@ -84,31 +95,56 @@ patch for the QT versions before 5.15.0 Beta2 https://bugreports.qt.io/browse/QT
 > vkDebug: Validation: 0: Validation Error: [ VUID-vkGetPhysicalDeviceSurfaceFormatsKHR-surface-parameter ] Object 0: VK_NULL_HANDLE, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0xf36628f4 | Invalid VkSurfaceKHR Object 0x20000000002. The Vulkan spec states: surface must be a valid VkSurfaceKHR handle (https://vulkan.lunarg.com/doc/view/1.2.162.0/mac/1.2-extensions/vkspec.html#VUID-vkGetPhysicalDeviceSurfaceFormatsKHR-surface-parameter)
 2021-01-02 21:56:42.129550+0100 ppvr_vulkan[63094:2863037] vkDebug: Validation: 0: Validation Error: [ UNASSIGNED-Threading-Info ] Object 0: handle = 0x20000000002, type = VK_OBJECT_TYPE_SURFACE_KHR; | MessageID = 0x5d6b67e2 | Couldn't find VkSurfaceKHR Object 0x20000000002. This should not happen and may indicate a bug in the application.
 
-
 ```
 patch -p1 < ../qt_patches/7b86168.diff
 patch -p1 < ../qt_patches/23fd7bd.diff
 	# stdout: Hunk #1 succeeded at 80 (offset -1 lines).
 ```
 
-
-build QT:
+Compile QT:
 ```
 ./configure -opensource -confirm-license -developer-build -I /usr/local/include/ -I "$(pwd)/../MoltenVK/include/" -feature-vulkan -v -skip qtwebengine
 time make
+# use 20 cores for the build:
+	time make -j 20
 # make install
+cd ../
 ```
-more infos can be found on: https://doc.qt.io/qt-5/macos-building.html
-<!--
-../qt5/configure -developer-build -skip qtquick3d -skip qtwebengine -opensource -nomake examples -nomake tests -confirm-license -vulkan -I $VULKAN_SDK/../MoltenVK/include -L $VULKAN_SDK/lib
-from https://stackoverflow.com/questions/60466377/qt-5-14-0-vulkan-under-qml-causes-stdsystem-error-mutex-lock-failed
--->
 
+Make a symlink to the compiled QT version. CMake need this in order to find the QT version we have just compiled.
+```
+ln -s qtbase-everywhere-src-5.12.10 qtbase-everywhere-src-5
+cd ../
+```
 
-### build HEVolRender
+#### Build QT 5.15.10 for macOS 10.15
+Download and extract QT:
+```
+cd external
+curl 'http://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz' --location > qtbase-everywhere-src-5.15.2.tar.xz
+tar xvzf qtbase-everywhere-src-5.15.2.tar.xz
+cd qtbase-everywhere-src-5.15.2
+```
+
+Compile QT:
+```
+./configure -opensource -confirm-license -developer-build -I /usr/local/include/ -I "$(pwd)/../MoltenVK/include/" -feature-vulkan -v -skip qtwebengine
+time make
+# use 20 cores for the build:
+	time make -j 20
+# make install
+cd ../
+```
+
+Make a symlink to the compiled QT version. CMake need this in order to find the QT version we have just compiled.
+```
+ln -s qtbase-everywhere-src-5.15.2 qtbase-everywhere-src-5
+cd ../
+```
+
+### Create Xcode project for HEVolRender
 
 ```
-cd ../../
 mkdir build
 cd build
 cmake -G Xcode ../
@@ -116,39 +152,29 @@ cmake -G Xcode ../
 
 
 ## Debugging on Mac OS
-### QT
+### Use QT Framework Version with Debug Symbols
 Set the environment variable `DYLD_IMAGE_SUFFIX=_debug` (Xcode -> menu Product-> Scheme -> Run -> Arguments -> Environment Variables). This loads the _debug binaries from the framework folders (e.g.: `external/qtbase-everywhere-src-5.12.10/lib/QtCore.framework/QtCore_debug`). https://doc.qt.io/qt-5/debug.html
 
-### MoltonVK
-Set the environment variable `MVK_LOG_LEVEL_INFO`
+### Enable MoltonVK Debug Outputs
+Set the environment variable `MVK_LOG_LEVEL_INFO`.
 
 
 
 
 ## Build on Linux (Ubuntu 20.4)
-Install required software
+Install required software build tools and system library headers with *apt*:
 ```
 apt install vulkan-tools git cmake build-essential libglu1-mesa-dev '^libxcb.*-dev' libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig-dev
 	# libxrender-dev libxi-dev libvulkan-dev curl
 ```
 
-Clone GIT Repository:
+Clone the git repository:
 ```
 git clone --recurse-submodules ssh://$DOMAIN\\$USER@$HOST/~/git/HEVolRender-Cpp.git
 	# for already cloned repositories
 	git submodule update --init --recursive
 ```
 
-<!--
-Install google glsl shader compiler (*glslc*)
-```
-cd HEVolRender-Cpp/external
-curl 'https://storage.googleapis.com/shaderc/badges/build_link_linux_clang_release.html' --location > google_shaderc_linux_clang_release.tgz
-tar xvf google_shaderc_linux_clang_release.tgz
-mv install/ google_shaderc_linux_clang_release/
-cd ..
-```
--->
 Install Vulkan SDK (see https://vulkan.lunarg.com/sdk/home#linux)
 ```
 wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
@@ -158,8 +184,9 @@ sudo apt install vulkan-sdk
 ```
 
 #### Build QT5
-- https://wiki.qt.io/Building_Qt_5_from_Git
-download and extract QT
+More infos about build QT from source on Linux can be found at: https://wiki.qt.io/Building_Qt_5_from_Git
+
+Download and extract QT
 ```
 cd HEVolRender-Cpp/external
 curl 'http://download.qt.io/official_releases/qt/5.12/5.12.10/submodules/qtbase-everywhere-src-5.12.10.tar.xz' --location > qtbase-everywhere-src-5.12.10.tar.xz
@@ -167,14 +194,21 @@ tar xvf qtbase-everywhere-src-5.12.10.tar.xz
 cd qtbase-everywhere-src-5.12.10
 ```
 
-build QT:
+Compile QT:
 ```
 ./configure -opensource -confirm-license -developer-build -feature-vulkan -xcb -fontconfig -v -skip qtwebengine
 	# -recheck-all
 time make
 # use 20 cores for the build:
 	time make -j 20
-cd ../../
+# make install
+cd ../
+```
+
+Make a symlink to the compiled QT version. CMake need this in order to find the QT version we have just compiled.
+```
+ln -s qtbase-everywhere-src-5.12.10 qtbase-everywhere-src-5
+cd ../
 ```
 
 ### build HEVolRender
@@ -192,4 +226,4 @@ make
 - summation for xray rendering should be possible already
 - modPow() for unsigned fixed length big integers on C++ and GLSL (required for Paillier Multiplication)
 - floating point numbers on GPU. Where to write the exponent? Z-Buffer?
-- The PaillierMath.cpp unit test file pails out with an assertion error if build with g++ under ubuntu. 
+- The PaillierMath.cpp unit test file pails out with an assertion error if build with g++ under ubuntu.

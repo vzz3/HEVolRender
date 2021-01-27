@@ -153,7 +153,7 @@ TEST_CASE( "unsigned infinit big integer check word definitions for 64bit", "[UA
 		REQUIRE( UArbBigInt::fromUint64(BIG_INT_WORD_HIGHEST_BIT) == UArbBigInt::fromString("10000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000", 2) );
 		REQUIRE( UArbBigInt::fromUint64(BIG_INT_WORD_HIGHEST_BIT) == UArbBigInt::fromString("1", 2) << 63);
 	} else {
-		REQUIRE( "" == "unkunknowen type big int word type  BIG_INT_WORD_TYPE");
+		REQUIRE(  std::string("") == std::string("unknowen BigInt word type BIG_INT_WORD_TYPE"));
 	}
 }
 

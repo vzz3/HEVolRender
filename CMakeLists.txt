@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(ppvr_vulkan)
+project(HEVolRender)
 
 IF(UNIX AND NOT APPLE)
 	set(LINUX TRUE)
@@ -28,6 +28,12 @@ ENDIF()
 	# QT version of Ubuntu 16.04LTS: 5.5.1+dfsg-16ubuntu7
 	# QT version of Ubuntu 18.04LTS: 5.9.5+dfsg-0ubuntu1
 #endif()
+
+# Generate XCode schemes
+set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
+
+# Organize files in folder for IDEs
+#set(USE_FOLDERS TRUE)
 
 
 macro(ADD_FRAMEWORK fwname appname)
@@ -59,7 +65,7 @@ set(CMAKE_CXX_FLAGS  "-Werror=return-type ${GCC_COVERAGE_COMPILE_FLAGS}")
 
 ###########################
 # config for QT
-set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/qtbase-everywhere-src-5.12.10/lib/cmake/")
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/qtbase-everywhere-src-5/lib/cmake/")
 set(QTVersion "5.12")
 # Find includes in corresponding build directories (only required for cmake version < 3.7)
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -189,6 +195,9 @@ file(GLOB TEST_FILES
 	"test/*/*/*.c"	"test/*/*/*.cpp"	"test/*/*/*.h"	"test/*/*/*.hpp"
 )
 
+# Set sheme working directory for Xcode (important, because otherwise the compiled shaders can not be found at application startup)
+set(CMAKE_XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # add the executable
 add_executable(${PROJECT_NAME} ${SRC_FILES}
 	${SHADER_FILES}
@@ -202,7 +211,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES}
 )
 #add_framework(Security ppvr)
 
-add_executable(ppvr-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES})
+add_executable(${PROJECT_NAME}-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES})
 #add_framework(Security ppvr-test)
 
 target_link_libraries(${PROJECT_NAME}
@@ -237,6 +246,7 @@ configure_file(app/vk_layer_settings.txt vk_layer_settings.txt COPYONLY)
 
 
 # for Xcode file tree
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/app" PREFIX "app" FILES ${APP_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/test" PREFIX "test" FILES ${TEST_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${SRC_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res/shaders" PREFIX "shaders" FILES ${SHADER_FILES})

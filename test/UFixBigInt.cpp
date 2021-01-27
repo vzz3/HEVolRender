@@ -100,7 +100,7 @@ TEST_CASE( "Test macro that calculates the minumum word count for a given bit si
 		REQUIRE( BIG_INT_BIT_TO_SIZE(2048) == 32 );
 		REQUIRE( BIG_INT_BIT_TO_SIZE(2049) == 33 );
 	} else {
-		REQUIRE( "" == "unkunknowen type big int word type  BIG_INT_WORD_TYPE");
+		REQUIRE(  std::string("") == std::string("unknowen BigInt word type BIG_INT_WORD_TYPE"));
 	}
 }
 
@@ -266,7 +266,7 @@ TEST_CASE( "unsigned fixed big integer check word definitions for 64bit", "[UFBi
 		REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(BIG_INT_WORD_HIGHEST_BIT) == UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("10000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000", 2) );
 		REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(BIG_INT_WORD_HIGHEST_BIT) == UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("1", 2) << 63);
 	} else {
-		REQUIRE( "" == "unkunknowen type big int word type  BIG_INT_WORD_TYPE");
+		REQUIRE(  std::string("") == std::string("unknowen BigInt word type BIG_INT_WORD_TYPE"));
 	}
 }
 
