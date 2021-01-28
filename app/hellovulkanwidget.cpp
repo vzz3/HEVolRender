@@ -226,9 +226,12 @@ void MainWindow::onGrabRequested()
 }
 
 void MainWindow::renderEcrypted() {
-	// create key
+	// rendering config
 	size_t volumeSize = 100;
 	QSize imageSize{150, 150};
+	PaillierInt rayNrmalizationDivisor = PaillierInt::fromInt64(volumeSize/2);
+	
+	// create key
 	SecureKey sk = SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH);
 	PublicKey pk = sk.publicKey;
 	std::cout << "Key: P=" << sk.p.toStringHex() << ", Q=" << sk.q.toStringHex() << ", M=" << pk.modulus.toStringHex() << ", M^2=" << pk.getModulusSquared().toStringHex() << std::endl;
@@ -237,13 +240,14 @@ void MainWindow::renderEcrypted() {
 	Volume<uint16_t> plainVolume;
 	PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
 	
-	
+	// encrypt volume
 	Volume<PaillierInt> encryptedVolume;
 	PRINT_DURATION(CryptoUtil::encrypt(sk.publicKey, plainVolume, encryptedVolume), "encrypt volume");
 	
 	Image<PaillierInt> encryptedImage;
 	Image<uint16_t> paintextImage;
 	
+	// inizialize GPU rendering
 	Camera cameraCopy = m_window->m_vulkanRenderer->camera();
 	cameraCopy.setViewportSize(imageSize.width(), imageSize.height());
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), cameraCopy);
@@ -251,16 +255,23 @@ void MainWindow::renderEcrypted() {
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
 	
+	// draw cube postions textures and render an encrypted image from the encrypted Volume
 	PRINT_DURATION(encRenderer->draw(0), "draw on GPU");
+	
+	// copy the result from the GPU memory to the main memory
 	//QImage img = encRenderer->framebuffer2host();
 	encRenderer->framebuffer2host(encryptedImage);
-	PRINT_DURATION( CryptoUtil::decrypt(sk, PaillierInt::fromInt64(volumeSize/2), encryptedImage, paintextImage), "decrypt");
+	
+	// decrypt (and normalize) the resulting image
+	PRINT_DURATION( CryptoUtil::decrypt(sk, rayNrmalizationDivisor, encryptedImage, paintextImage), "decrypt");
 	QImage img = ppvr::rendering::data::ImageUtil::convertToNewQImage(paintextImage);
 	
+	// cleanup GPU resources
 	encRenderer->releaseSwapChainResources();
 	encRenderer->releaseGpuResources();
 	delete encRenderer;
 	
+	// show image in QT GUI
 	m_scene4EncryptedImageView->clear();
 	m_scene4EncryptedImageView->addPixmap(QPixmap::fromImage(img));
     m_scene4EncryptedImageView->setSceneRect(img.rect());

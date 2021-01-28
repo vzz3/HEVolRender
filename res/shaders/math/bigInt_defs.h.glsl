@@ -11,11 +11,11 @@
 #define BIG_INT_WORD_COUNT_TYPE uint
 
 // --- 8bit
-#define BIG_INT_WORD_TYPE uint
-#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFu)
-#define BIG_INT_WORD_ALL_BIT_MASK BIG_INT_WORD_TYPE(0xFFu)
-#define BIG_INT_BITS_PER_WORD 8
-#define BIG_INT_LESS_BITS_THEN_WORD_TYPE 1		// set this if the type in BIG_INT_WORD_TYPE has more bits then BIG_INT_BITS_PER_WORD
+//#define BIG_INT_WORD_TYPE uint
+//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFu)
+//#define BIG_INT_WORD_ALL_BIT_MASK BIG_INT_WORD_TYPE(0xFFu)
+//#define BIG_INT_BITS_PER_WORD 8
+//#define BIG_INT_LESS_BITS_THEN_WORD_TYPE 1		// set this if the type in BIG_INT_WORD_TYPE has more bits then BIG_INT_BITS_PER_WORD
 // ---
 
 // --- 16bit
@@ -25,10 +25,10 @@
 // ---
 
 // --- 32bit
-//#define BIG_INT_WORD_TYPE uint
-//#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFFu)
-//#define BIG_INT_WORD_ALL_BIT_MASK BIG_INT_WORD_TYPE(0xFFFFFFFFu)
-//#define BIG_INT_BITS_PER_WORD 32
+#define BIG_INT_WORD_TYPE uint
+#define BIG_INT_WORD_LOW_BIT_MASK BIG_INT_WORD_TYPE(0xFFFFu)
+#define BIG_INT_WORD_ALL_BIT_MASK BIG_INT_WORD_TYPE(0xFFFFFFFFu)
+#define BIG_INT_BITS_PER_WORD 32
 // ---
 
 // --- --- ---
@@ -54,7 +54,7 @@
  *
  * see src/paillier/Paillier_typeDev.h
  */
-#define PAILLIER_MODULUS_BIT_LENGTH 		64
+#define PAILLIER_MODULUS_BIT_LENGTH 		256
 
 
 #define PAILLIER_INT_BIT_LENGTH 			(PAILLIER_MODULUS_BIT_LENGTH*4)
