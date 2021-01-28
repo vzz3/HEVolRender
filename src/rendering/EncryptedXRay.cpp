@@ -279,9 +279,15 @@ void EncryptedXRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 
 	uniform::EncryptedXRayUniformBufferObject ubo{};
 	ubo.volumeInfo.volumeDepth = (*volumeSet)[0].depth();
-	//std::copy_n(pk->modulus.getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulus);
-	std::copy_n(pk->getModulusSquared().getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulusSquared);
-
+	//std::copy_n(pk->getModulusSquared().getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulusSquared);
+	const PaillierInt pkM2 = pk->getModulusSquared();
+	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) {
+		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
+			ubo.volumeInfo.modulusSquared[texIndex][channelIndex] = pkM2.getData()[texIndex*4 + channelIndex];
+		}
+	}
+		
+	
 	constexpr VkDeviceSize uboSize = sizeof(uniform::EncryptedXRayUniformBufferObject);
 	void* data;
 	dev.funcs->vkMapMemory(dev.vkDev, uniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);

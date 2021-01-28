@@ -32,8 +32,8 @@ namespace ppvr {
 				//alignas(16) glm::mat4x4 modelMatrix; // modelToWorld
 				alignas(16) float volumeDepth;
 				//BIG_INT_WORD_TYPE modulus[PAILLIER_INT_WORD_SIZE];
-				alignas(16) BIG_INT_WORD_TYPE modulusSquared[PAILLIER_INT_WORD_SIZE];
-				
+				//alignas(16) BIG_INT_WORD_TYPE modulusSquared[PAILLIER_INT_WORD_SIZE];
+				alignas(16) glm::uvec4  modulusSquared[GPU_INT_UVEC4_STORAGE_SIZE];
 			};
 		}
 	}

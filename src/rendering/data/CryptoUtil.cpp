@@ -9,7 +9,7 @@ void CryptoUtil::encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& yS
 	size_t n = ySrc.length();
 	for (size_t i=0; i<n; i++) {
 		//yDst.set(i, yPublicKey.encrypt(ySrc.get(i)));
-		yDst.set(i, yPublicKey.encryptWithoutObfuscation(ySrc.get(i)));
+		yDst.set(i, yPublicKey.encryptWithoutObfuscation(PaillierInt::fromInt64(ySrc.get(i))));
 	}
 }
 
@@ -26,7 +26,7 @@ void CryptoUtil::decrypt(const SecureKey& ySecureKey, const PaillierInt& yScale,
 		yDst.set(i, (uint16_t)bigVal.toInt64());
 		
 		//if(src > test1) {
-		//	std::cout << "Fount Rendering Result at index " << i << ", value: " << src << ", decrypted: " << bigVal <<std::endl;
+		//	std::cout << "Fount Rendering Result at index " << i << ", value: " << src.toStringHex() << ", decrypted: " << bigVal.toStringHex() <<std::endl;
 		//}
 	}
 }
