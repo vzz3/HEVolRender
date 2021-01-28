@@ -9,11 +9,13 @@
 #include "./Cube.hpp"
 #include "./CubeMap.hpp"
 #include "./data/Volume.hpp"
-#include "./data/GpuVolume.hpp"
 #include "./EncryptedXRay.hpp"
 #include "./FrameBuffer.hpp"
 #include <QImage>
 #include "./test/BigIntTestObj.hpp"
+#include "../paillier/crypto/PublicKey.hpp"
+
+using ppvr::paillier::crypto::PublicKey;
 
 namespace ppvr {
 	namespace rendering {
@@ -29,7 +31,9 @@ namespace ppvr {
 				void initVulkan(QVulkanInstance* yQVulkanInstance, VkPhysicalDevice yVkPhysicalDevice );
 				void cleanupVulakn();
 			
-		public:
+			public:
+				void setEncryptedVolume(PublicKey* yPK, Volume<PaillierInt>* yEncryptedVolume);
+			
 				void initGpuResources();
 				void releaseGpuResources();
 			
@@ -50,7 +54,8 @@ namespace ppvr {
 				void endFrame(VkCommandBuffer yCommandBuffer);
 			public:
 				void draw(size_t yCurrentSwapChainImageIndex);
-				QImage framebuffer2host();
+				//QImage framebuffer2host();
+				void framebuffer2host(Image<PaillierInt>& yDstImage);
 			
 				void setBigIntTestCase(test::BigIntTestCase* yBigIntTestCase);
 				void evaluateTest();
@@ -81,9 +86,10 @@ namespace ppvr {
 			
 			
 			
-			
-				Volume<uint16_t> m_volume;
-				data::GpuVolume* m_gpuVolume = nullptr;
+				PublicKey* pk;
+				Volume<PaillierInt>* encryptedVolume;
+				//data::GpuVolume* m_gpuVolume = nullptr;
+				data::BigIntGpuVolumeSet* gpuVolumeSet = nullptr;
 				EncryptedXRay* roEncXRay = nullptr;
 			
 				test::BigIntTestCase* bigIntTestCase = nullptr;

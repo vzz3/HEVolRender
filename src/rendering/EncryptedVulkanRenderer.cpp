@@ -10,6 +10,7 @@
 #include "./data/ImageUtil.hpp"
 
 #include <fstream>
+#include <chrono>
 
 using namespace ppvr::rendering;
 
@@ -96,6 +97,11 @@ void EncryptedVulkanRenderer::initVulkan(QVulkanInstance* yQVulkanInstance, VkPh
 	VK_CHECK_RESULT( device.funcs->vkCreateCommandPool(device.vkDev, &cmdPoolInfo, nullptr, &device.graphicsCommandPool), "Can not create command pool.");
 }
 
+void EncryptedVulkanRenderer::setEncryptedVolume(PublicKey* yPK, Volume<PaillierInt>* yEncryptedVolume) {
+	pk = yPK;
+	encryptedVolume = yEncryptedVolume;
+}
+
 void EncryptedVulkanRenderer::releaseGpuResources() {
 	if(initBigIntTest) {
 		if(roBigIntTester != nullptr) {
@@ -110,9 +116,9 @@ void EncryptedVulkanRenderer::releaseGpuResources() {
 		delete roEncXRay;
 		roEncXRay = nullptr;
 		
-		delete m_gpuVolume;
-		m_gpuVolume = nullptr;
-		
+		//gpuVolumeSet->releaseGpuResources();
+		delete gpuVolumeSet;
+		gpuVolumeSet = nullptr;
 		
 		if(roCubeMap != nullptr) {
 			roCubeMap->releaseGpuResources();
@@ -139,16 +145,14 @@ void EncryptedVulkanRenderer::initGpuResources() {
 		roBigIntTester = new test::BigIntTestObj(device, *bigIntTestCase);
 		roBigIntTester->initGpuResources();
 	} else {
-
+		if(encryptedVolume == nullptr || pk == nullptr) {
+			throw std::logic_error("A EncryptedVulkanRenderer that was inizialized for xRay rendering requires a encrypted Volume befor the GPU resources can be inizialized.");
+		}
 		roCubeMap = new CubeMap(device, false);
 		roCubeMap->initGpuResources();
 		
-		
-		
-		data::VolumeFactory::createVolume(m_volume, 100);
-		
-		m_gpuVolume = new data::GpuVolume(&device);
-		m_gpuVolume->uploadVolume(m_volume);
+		gpuVolumeSet = new data::BigIntGpuVolumeSet(device);
+		gpuVolumeSet->uploadVolume(*encryptedVolume);
 		
 		roEncXRay = new EncryptedXRay(device);
 		roEncXRay->initGpuResources();
@@ -187,7 +191,7 @@ void EncryptedVulkanRenderer::initSwapChainResources(QSize yTargetSize, size_t y
 		roBigIntTester->initSwapChainResources(swapChain);
 	} else {
 		roCubeMap->initSwapChainResources(swapChain);
-		roEncXRay->initSwapChainResources(swapChain, m_gpuVolume, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
+		roEncXRay->initSwapChainResources(swapChain, pk, gpuVolumeSet, roCubeMap->getFrontImageView(), roCubeMap->getBackImageView());
 	}
 }
 
@@ -293,11 +297,14 @@ void EncryptedVulkanRenderer::draw(size_t yCurrentSwapChainImageIndex) {
 	this->endFrame(cmdBuf);
 }
 
-QImage EncryptedVulkanRenderer::framebuffer2host() {
-	//data::ImageUtil::framebuffer2ppm(device, *fbo, "headless_");
-	return data::ImageUtil::framebuffer2QImage(device, *fbo, 0);
+//QImage EncryptedVulkanRenderer::framebuffer2host() {
+//	//data::ImageUtil::framebuffer2ppm(device, *fbo, "headless_");
+//	return data::ImageUtil::framebuffer2QImage(device, *fbo, 0);
+//}
+void EncryptedVulkanRenderer::framebuffer2host(Image<PaillierInt>& yDstImage) {
+	yDstImage.resize(fbo->getWidth(), fbo->getHeight(), 0);
+	data::ImageUtil::framebuffer2Image(device, *fbo, yDstImage);
 }
-
 
 void EncryptedVulkanRenderer::setBigIntTestCase(test::BigIntTestCase* yBigIntTestCase) {
 	bigIntTestCase = yBigIntTestCase;

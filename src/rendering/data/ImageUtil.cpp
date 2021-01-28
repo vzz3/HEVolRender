@@ -269,6 +269,7 @@ void ImageUtil::framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO
 				PaillierInt& bigIntVal = yDstImage.get(x,y);
 				for (size_t w = 0; w < GPU_INT_TEXTURE_WORD_COUNT; w++) {
 					bigIntVal.getDataUnsafe()[wordOffset + w] = *row;
+					bigIntVal.fixSignumAfterUnsafeOperation(false);
 					row++;
 				}
 			}
@@ -280,4 +281,26 @@ void ImageUtil::framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO
 		yDevice.funcs->vkFreeMemory(yDevice.vkDev, dstImageMemories[i], nullptr); dstImageMemories[i] = nullptr;
 		yDevice.funcs->vkDestroyImage(yDevice.vkDev, dstImages[i], nullptr); dstImages[i] = nullptr;
 	}
+}
+
+QImage ImageUtil::convertToNewQImage(const Image<uint16_t> ySrc) {
+	QImage dstImg = QImage(ySrc.width(), ySrc.height(), QImage::Format_RGBA8888);
+	memcpy(dstImg.bits(), ySrc.data(), ySrc.length() * sizeof(uint16_t));
+	for(size_t y = 0; y < ySrc.height(); y++) {
+		for(size_t x = 0; x < ySrc.width(); x++) {
+			uint val = (ySrc.get(x, y) >> 8) & 0xFF; // use only the most significant 8 bits from the provided 16 bit
+			dstImg.setPixel(x, y, (
+					255 << 24	// alpha
+					| val << 16	// red
+					| val << 8	// green
+					| val		// blue
+			));
+			
+			//dstImg.setPixel(x, y, (
+			//		255 << 24	// alpha
+			//		| (ySrc.get(x, y) & 0xFFFFFF)
+			//));
+		}
+	}
+	return dstImg;
 }

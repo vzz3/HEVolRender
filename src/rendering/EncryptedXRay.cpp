@@ -3,7 +3,7 @@
 
 #include "VulkanUtility.hpp"
 #include "VulkanInitializers.hpp"
-#include "uniform/XRayUniformBufferObject.hpp"
+#include "uniform/EncryptedXRayUniformBufferObject.hpp"
 #include <array>
 
 
@@ -26,8 +26,9 @@ void EncryptedXRay::releaseGpuResources() {
 	this->cleanupDescriptorSetLayout();
 }
 
-void EncryptedXRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack) {
-	volume = yVolume;
+void EncryptedXRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, PublicKey* yPK, data::BigIntGpuVolumeSet* yVolumeSet, VkImageView yCubeFront, VkImageView yCubeBack) {
+	pk = yPK;
+	volumeSet = yVolumeSet;
 	cubePosView[0] = yCubeFront;
 	cubePosView[1] = yCubeBack;
 	this->createVolumeDescriptors(ySwapChain);
@@ -37,7 +38,8 @@ void EncryptedXRay::initSwapChainResources(const VulkanSwapChain& ySwapChain, da
 void EncryptedXRay::releaseSwapChainResources() {
 	this->cleanupPipeline();
 	this->cleanupVolumeDescriptors();
-	volume = nullptr;
+	pk = nullptr;
+	volumeSet = nullptr;
 }
 
 void EncryptedXRay::cleanup() {
@@ -76,9 +78,9 @@ void EncryptedXRay::cleanupVolumeSampler() {
 void EncryptedXRay::createVolumeSampler(const VulkanSwapChain& ySwapChain) {
 	// Create sampler to sample from the attachment in the fragment shader
 	VkSamplerCreateInfo samplerInfo = VulkanInitializers::samplerCreateInfo();
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.magFilter = VK_FILTER_NEAREST;// VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_NEAREST;//VK_FILTER_LINEAR;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;//VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.addressModeV = samplerInfo.addressModeU;
 	samplerInfo.addressModeW = samplerInfo.addressModeU;
@@ -122,7 +124,7 @@ void EncryptedXRay::cleanupUniformBuffer() {
 }
 
 void EncryptedXRay::createUniformBuffer(size_t ySwapChainImageCount) {
-	constexpr VkDeviceSize bufferSize = sizeof(uniform::XRayUniformBufferObject);
+	constexpr VkDeviceSize bufferSize = sizeof(uniform::EncryptedXRayUniformBufferObject);
 
 	uniformBuffers.resize(ySwapChainImageCount);
     uniformBuffersMemory.resize(ySwapChainImageCount);
@@ -142,10 +144,10 @@ void EncryptedXRay::cleanupDescriptorPool() {
 
 void EncryptedXRay::createDescriptorPool(size_t ySwapChainImageCount) {
 	std::vector<VkDescriptorPoolSize> poolSizes = {
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(ySwapChainImageCount)),			// uniform buffer for XRayUniformBufferObject
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),	// sampler+image for volume
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),				// sampler for cube postion images
-		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * 2)) 		// front and back postions of cube
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, static_cast<uint32_t>(ySwapChainImageCount)),			// uniform buffer for EncryptedXRayUniformBufferObject
+		//VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount)),	// sampler+image for volume
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, static_cast<uint32_t>(ySwapChainImageCount + ySwapChainImageCount)),				// sampler for cube postion images + sampler for volume
+		VulkanInitializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, static_cast<uint32_t>(ySwapChainImageCount * 2 + ySwapChainImageCount * GPU_INT_TEXTURE_SIZE)) 		// front and back postions of cube + volume image
 	};
 	VkDescriptorPoolCreateInfo poolInfo = VulkanInitializers::descriptorPoolCreateInfo(poolSizes, static_cast<uint32_t>(ySwapChainImageCount));
 	VK_CHECK_RESULT (dev.funcs->vkCreateDescriptorPool(dev.vkDev, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
@@ -171,12 +173,25 @@ void EncryptedXRay::createDescriptorSet(size_t ySwapChainImageCount) {
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(uniform::XRayUniformBufferObject);
+		bufferInfo.range = sizeof(uniform::EncryptedXRayUniformBufferObject);
 		
-		VkDescriptorImageInfo volumeImageInfo{};
-		volumeImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		volumeImageInfo.imageView = volume->getImageView();
-		volumeImageInfo.sampler = volumeSampler;
+		//VkDescriptorImageInfo volumeImageInfo{};
+		//volumeImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		//volumeImageInfo.imageView = volume->getImageView();
+		//volumeImageInfo.sampler = volumeSampler;
+		
+		VkDescriptorImageInfo volumeSamplerInfo{};
+		volumeSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		volumeSamplerInfo.imageView = nullptr;
+		volumeSamplerInfo.sampler = volumeSampler;
+		
+		constexpr size_t volumeTexArraySize = GPU_INT_TEXTURE_SIZE;
+		VkDescriptorImageInfo volumeImageInfo[volumeTexArraySize];
+		for (size_t i = 0; i < volumeTexArraySize; i++) {
+			volumeImageInfo[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			volumeImageInfo[i].imageView = (*volumeSet)[i].getImageView();
+			volumeImageInfo[i].sampler = nullptr;
+		}
 		
 		VkDescriptorImageInfo cubePosSamplerInfo{};
 		cubePosSamplerInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -199,27 +214,42 @@ void EncryptedXRay::createDescriptorSet(size_t ySwapChainImageCount) {
 				1,											// dstBinding
 				&bufferInfo									// pBufferInfo
 			),
-			// Binding 1 : Fragment shader texture sampler
-			VulkanInitializers::writeDescriptorSet(
-				descriptorSets[i],							// dstSet
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// descriptorType
-				2,											// dstBinding
-				&volumeImageInfo							// pImageInfo
-			),
 			// Binding 3 : Fragment shader sampler
 			VulkanInitializers::writeDescriptorSet(
 				descriptorSets[i],							// dstSet
 				VK_DESCRIPTOR_TYPE_SAMPLER,					// descriptorType
-				3,											// dstBinding
+				2,											// dstBinding
 				&cubePosSamplerInfo							// pImageInfo
 			),
 			// Binding 4 : Fragment shader texture
 			VulkanInitializers::writeDescriptorSet(
 				descriptorSets[i],							// dstSet
 				VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// descriptorType
-				4,											// dstBinding
+				3,											// dstBinding
 				&cubePosImageInfo[0],						// pImageInfo
 				cubePosTexArraySize							// descriptorCount
+			),
+			// Binding 1 : Fragment shader texture sampler
+			//VulkanInitializers::writeDescriptorSet(
+			//	descriptorSets[i],							// dstSet
+			//	VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// descriptorType
+			//	2,											// dstBinding
+			//	&volumeImageInfo							// pImageInfo
+			//),
+			// Binding 1 : Fragment shader sampler
+			VulkanInitializers::writeDescriptorSet(
+				descriptorSets[i],							// dstSet
+				VK_DESCRIPTOR_TYPE_SAMPLER,					// descriptorType
+				4,											// dstBinding
+				&volumeSamplerInfo							// pImageInfo
+			),
+			// Binding 2 : Fragment shader texture
+			VulkanInitializers::writeDescriptorSet(
+				descriptorSets[i],							// dstSet
+				VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// descriptorType
+				5,											// dstBinding
+				&volumeImageInfo[0],						// pImageInfo
+				volumeTexArraySize							// descriptorCount
 			),
 		};
 		dev.funcs->vkUpdateDescriptorSets(dev.vkDev, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
@@ -247,10 +277,12 @@ void EncryptedXRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 //		memcpy(data, &ubo, uboSize);
 //	dev.funcs->vkUnmapMemory(dev.vkDev, imgDescs[yIndex].uniformBuffersMemory[yCurrentSwapChainImageIndex]);
 
-	uniform::XRayUniformBufferObject ubo{};
-	ubo.volumeInfo.volumeDepth = volume->depth();
+	uniform::EncryptedXRayUniformBufferObject ubo{};
+	ubo.volumeInfo.volumeDepth = (*volumeSet)[0].depth();
+	//std::copy_n(pk->modulus.getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulus);
+	std::copy_n(pk->getModulusSquared().getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulusSquared);
 
-	constexpr VkDeviceSize uboSize = sizeof(uniform::XRayUniformBufferObject);
+	constexpr VkDeviceSize uboSize = sizeof(uniform::EncryptedXRayUniformBufferObject);
 	void* data;
 	dev.funcs->vkMapMemory(dev.vkDev, uniformBuffersMemory[yCurrentSwapChainImageIndex], 0, uboSize, 0, &data);
 		memcpy(data, &ubo, uboSize);
@@ -281,21 +313,32 @@ void EncryptedXRay::createDescriptorSetLayout() {
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
 		1));										// binding
 	// Binding 2 : Fragment shader image sampler
-	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
-		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// type
-		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
-		2));										// binding
-	// Binding 4 : Fragment shader sampler
+	//setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
+	//	VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,	// type
+	//	VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
+	//	2));										// binding
+	// Binding 4 : Fragment shader sampler (samplerCubePos)
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_SAMPLER,					// type
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
-		3));										// binding
-	// Binding 4 : Fragment shader image
+		2));										// binding
+	// Binding 4 : Fragment shader image (texturesCubePos)
 	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
 		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// type
 		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
-		4,											// binding
+		3,											// binding
 		2));										// descriptorCount
+	// Binding 4 : Fragment shader sampler (samplerVolumes)
+	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
+		VK_DESCRIPTOR_TYPE_SAMPLER,					// type
+		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
+		4));										// binding
+	// Binding 4 : Fragment shader image (texturesVolumes)
+	setLayoutBindings.push_back(VulkanInitializers::descriptorSetLayoutBinding(
+		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,			// type
+		VK_SHADER_STAGE_FRAGMENT_BIT,				// stageFlags
+		5,											// binding
+		GPU_INT_TEXTURE_SIZE));						// descriptorCount
 
 	VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo = VulkanInitializers::descriptorSetLayoutCreateInfo(setLayoutBindings);
 
@@ -311,7 +354,7 @@ void EncryptedXRay::cleanupPipeline() {
 }
 
 void EncryptedXRay::createPipeline(const VulkanSwapChain& ySwapChain) {
-	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_WORD_COUNT;
+	constexpr uint32_t attachementCount = GPU_INT_TEXTURE_SIZE;
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 	VK_CHECK_RESULT (dev.funcs->vkCreatePipelineLayout(dev.vkDev, &pipelineLayoutInfo, nullptr, &piplineLayout), "failed to create pipeline layout!");

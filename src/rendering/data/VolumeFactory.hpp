@@ -14,7 +14,8 @@ namespace ppvr {
 				//~VolumeFactory();
 			
 				static inline void createVolume(Volume<uint16_t>& yVolume, size_t ySize) {
-					return createVolume2(yVolume, ySize);
+					createVolume2(yVolume, ySize);
+					return;
 				}
 	
 			private:

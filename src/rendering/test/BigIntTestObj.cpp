@@ -382,8 +382,7 @@ void BigIntTestObj::evaluateTest(FrameBuffer& yFBO) {
 	for(size_t y=0; y < testCase.getRefImage().height(); y++) {
 		for(size_t x=0; x < testCase.getRefImage().width(); x++) {
 			const PaillierInt& refVal = testCase.getRefImage().get(x, y);
-			PaillierInt& dstVal = dstImage.get(x, y);
-			dstVal.fixSignumAfterUnsafeOperation(false);
+			const PaillierInt& dstVal = dstImage.get(x, y);
 			if(refVal != dstVal) {
 				std::string msg = "Assertion Nr. " + std::to_string(y) + " of test \"" + testCase.name + "\" faild! \n"
 					+ "\t" +  dstVal.toStringHex() + " != " + refVal.toStringHex();

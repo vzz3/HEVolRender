@@ -114,8 +114,7 @@ void PlainVulkanRenderer::initSwapChainResources()
 	roXRay->initSwapChainResources(m_swapChain, m_gpuVolume, roFrontCubeMap->getFrontImageView(), roFrontCubeMap->getBackImageView());
 }
 
-void PlainVulkanRenderer::releaseSwapChainResources()
-{
+void PlainVulkanRenderer::releaseSwapChainResources() {
     qDebug("PlainVulkanRenderer->releaseSwapChainResources()");
 	
 	roXRay->releaseSwapChainResources();
@@ -126,9 +125,7 @@ void PlainVulkanRenderer::releaseSwapChainResources()
 
 
 
-void PlainVulkanRenderer::startNextFrame()
-{
-    VkDevice dev = m_window->device();
+void PlainVulkanRenderer::startNextFrame() {
     VkCommandBuffer cb = m_window->currentCommandBuffer();
     VkCommandBuffer cmdBuf = cb;
     const QSize sz = m_window->swapChainImageSize();

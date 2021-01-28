@@ -6,6 +6,8 @@
 // ----- statics -----
 
 /**
+ * Fetch from a exact integer pixel postition.
+ *
  * @static
  * @public
  */
@@ -15,6 +17,49 @@ FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utex
 		uvec4 voxelPart = texelFetch(usampler3D(yTex[texIndex], ySampler), yPos, 0);
 		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT; channelIndex++) {
 			val[texIndex*4 + channelIndex] = voxelPart[channelIndex];
+		}
+	}
+
+	for(uint i = PAILLIER_INT_STORAGE_WORD_SIZE; i < PAILLIER_INT_WORD_SIZE; i++) {
+		val[i] = 0;
+	}
+
+	return val;
+}
+
+/**
+ * Fetch from a normalized float position.
+ *
+ * @static
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utexture3D yTex[GPU_INT_TEXTURE_SIZE], in vec3 yPos) {
+	FIX_BIG_INT_VALUE val;
+	for(uint texIndex = 0; texIndex < GPU_INT_TEXTURE_SIZE; texIndex++) {
+		uvec4 voxelPart = texture(usampler3D(yTex[texIndex], ySampler), yPos);
+		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT; channelIndex++) {
+			val[texIndex*4 + channelIndex] = voxelPart[channelIndex];
+		}
+	}
+
+	for(uint i = PAILLIER_INT_STORAGE_WORD_SIZE; i < PAILLIER_INT_WORD_SIZE; i++) {
+		val[i] = 0;
+	}
+
+	return val;
+}
+
+/**
+ * Read from memory alignment optimal uniform. ;-)
+ *
+ * @static
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_STORAGE_SIZE]) {
+	FIX_BIG_INT_VALUE val;
+	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) {
+		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
+			val[texIndex*4 + channelIndex] = yIn[texIndex][channelIndex];
 		}
 	}
 

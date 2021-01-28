@@ -82,16 +82,14 @@ SFixBigInt<S>& SFixBigInt<S>::fromSArbBigInt(const SArbBigInt& src, SFixBigInt<S
 
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::randomNumber(const uint& sizeInBit, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(sizeInBit);
-	SFixBigInt<S> res(0, requiredWords);
+	SFixBigInt<S> res(0);
 	SFixBigInt<S>::randomNumber(sizeInBit, rnd, res);
 	return res;
 }
 
 template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::randomNumber(const SFixBigInt<S>& upperBound, Random& rnd) {
-	BIG_INT_WORD_COUNT_TYPE requiredWords = BIG_INT_REQUIRED_WORDS(upperBound.bitLength());
-	SFixBigInt<S> res(0, requiredWords);
+	SFixBigInt<S> res(0);
 	SFixBigInt<S>::randomNumber(upperBound, rnd, res);
 	return res;
 }

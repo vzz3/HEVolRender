@@ -3,10 +3,10 @@
 
 using namespace ppvr::math;
 
-Random* Random::fixMe = NULL;
+Random* Random::fixMe = nullptr;
 
 Random& Random::getForLocalThread() {
-	if(Random::fixMe == NULL) {
+	if(Random::fixMe == nullptr) {
 		fixMe = new Random();
 	}
 	return *fixMe;

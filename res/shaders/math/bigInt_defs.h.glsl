@@ -54,7 +54,7 @@
  *
  * see src/paillier/Paillier_typeDev.h
  */
-#define PAILLIER_MODULUS_BIT_LENGTH 		256
+#define PAILLIER_MODULUS_BIT_LENGTH 		64
 
 
 #define PAILLIER_INT_BIT_LENGTH 			(PAILLIER_MODULUS_BIT_LENGTH*4)
@@ -67,6 +67,8 @@
 #define GPU_INT_TEXTURE_WORD_COUNT			4							// words per texture
 #define GPU_INT_TEXTURE_SIZE				((PAILLIER_INT_STORAGE_WORD_SIZE + (GPU_INT_TEXTURE_WORD_COUNT-1)) / GPU_INT_TEXTURE_WORD_COUNT)	// = ciel(PAILLIER_INT_WORD_SIZE / GpuVolume::bigIntWordCount); the numbers of textures required for storing PAILLIER_INT_STORAGE_WORD_SIZE words
 
+
+#define GPU_INT_UVEC4_STORAGE_SIZE			GPU_INT_TEXTURE_SIZE
 
 /* *************************************
  * ***     Storage Types for GLSL    ***

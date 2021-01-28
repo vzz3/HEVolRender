@@ -5,9 +5,10 @@
 #include "VulkanDevice.hpp"
 #include "Camera.hpp"
 #include "VulkanSwapChain.hpp"
-#include "data/GpuVolume.hpp"
+#include "data/BigIntGpuVolumeSet.hpp"
+#include "../paillier/crypto/PublicKey.hpp"
 
-
+using ppvr::paillier::crypto::PublicKey;
 
 namespace ppvr {
 	namespace rendering {
@@ -20,7 +21,7 @@ namespace ppvr {
 			void initGpuResources();
 			void releaseGpuResources();
 			
-			void initSwapChainResources(const VulkanSwapChain& ySwapChain, data::GpuVolume* yVolume, VkImageView yCubeFront, VkImageView yCubeBack );
+			void initSwapChainResources(const VulkanSwapChain& ySwapChain, PublicKey* yPK, data::BigIntGpuVolumeSet* yVolumeSet, VkImageView yCubeFront, VkImageView yCubeBack );
 			void releaseSwapChainResources();
 			
 		private:
@@ -68,7 +69,8 @@ namespace ppvr {
 			// from constructor
 			VulkanDevice& dev;
 			
-			data::GpuVolume* volume = nullptr;
+			PublicKey *pk = nullptr;
+			data::BigIntGpuVolumeSet* volumeSet = nullptr;
 			VkImageView cubePosView[2]; // index 0 = front; index 1 = back
 			
 			

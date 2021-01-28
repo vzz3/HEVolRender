@@ -44,7 +44,7 @@ void VolumeFactory::createVolume2(Volume<uint16_t>& yVolume, const size_t ySize)
 	yVolume.resize(ySize, ySize, ySize, uint16_t{0});
 
 	{
-		uint16_t c = ySize/2;
+		//uint16_t c = ySize/2;
 		glm::uvec3 center{(uint16_t)(ySize/2)};
 		uint16_t radius = ySize/2;
 		val = std::numeric_limits<uint16_t>::max()/5; // 0.2

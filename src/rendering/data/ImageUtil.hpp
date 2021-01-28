@@ -30,6 +30,9 @@ namespace ppvr {
 				static void framebuffer2ppm(VulkanDevice& yDevice, const FrameBuffer& yFBO, const std::string& yBaseName);
 				static QImage framebuffer2QImage(VulkanDevice& yDevice, const FrameBuffer& yFBO, const size_t yAttachmentIndex);
 				static void framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO, Image<PaillierInt>& yDstImage);
+				
+				
+				static QImage convertToNewQImage(const Image<uint16_t> ySrc);
 			};
 		}
 	}
