@@ -9,8 +9,8 @@ void CryptoUtil::encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& yS
 	size_t n = ySrc.length();
 	for (size_t i=0; i<n; i++) {
 		PaillierInt pVoxel = PaillierInt::fromInt64(ySrc.get(i));
-		yDst.set(i, yPublicKey.encrypt(pVoxel));
-		//yDst.set(i, yPublicKey.encryptWithoutObfuscation(biVal));
+		//yDst.set(i, yPublicKey.encrypt(pVoxel));
+		yDst.set(i, yPublicKey.encryptWithoutObfuscation(pVoxel));
 	}
 }
 
