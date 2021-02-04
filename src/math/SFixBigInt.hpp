@@ -168,12 +168,12 @@ namespace ppvr {
 			}
 			
 		public:
-			typedef BIG_INT_WORD_TYPE matissaType[S];
-			inline const matissaType& getData() const {
+			typedef BIG_INT_WORD_TYPE mantissaType[S];
+			inline const mantissaType& getData() const {
 				return UFixBigInt<S>::getData();
 			}
 			
-			inline matissaType& getDataUnsafe() {
+			inline mantissaType& getDataUnsafe() {
 				return UFixBigInt<S>::getDataUnsafe();
 			}
 			

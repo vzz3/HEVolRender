@@ -503,38 +503,7 @@ SArbBigInt::~SArbBigInt() {
 
 // ----- memory managment -----
 
-SArbBigInt& SArbBigInt::operator= (const SArbBigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-
-	UArbBigInt::operator=(other);
-	this->signum = other.signum;
-
-	return *this;
-}
-
-SArbBigInt& SArbBigInt::operator= (SArbBigInt&& other) {
-	// If we're not trying to move the object into itself...
-	if (this != &other) {
-		UArbBigInt::operator=(std::move(other)); // call the base class move assignment operator
-	
-		// Delete this original data original data.
-		//if(this->value != nullptr) {
-		//	delete [] this->value;
-		//}
-		
-		// Copy the other string's data into this string.
-		//this->value = other.value;
-		this->signum = other.signum;
-	
-		// Finally, reset the other string's data pointer.
-		//other.value = nullptr;
-		other.signum = 0;
-	}
-    return *this;
-}
+// asignment operators (operator=()) are at the an of the file
 
 // ----- value export - toString / toUint64 -----
 
@@ -853,7 +822,8 @@ SArbBigInt SArbBigInt::sqrt() const {
 	return SArbBigInt(UArbBigInt::sqrt(), false);
 }
 
-/* ---------- modInverse / gcd ---------- */
+
+// ----- modInverse / gcd -----
 
 SArbBigInt SArbBigInt::gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const {
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
@@ -992,110 +962,32 @@ SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
 	return u % m;
 }
 
-/* ---------- modPow ---------- */
 
-SArbBigInt SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &m) const {
-	if (m.signum <= 0) {
+// ----- modPow -----
+
+void SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &modulus, SArbBigInt& result) const {
+	if (modulus.signum <= 0) {
 		//throw new ArithmeticException("BigInteger: modulus not positive");
 		std::string msg = "ERROR SArbBigInt: modulus not positive!";
-		std::cerr << msg << std::endl;
+		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-
-	// Trivial cases: exponent = 0
-	if (exponent.isZero()) {
-		return (m.isOne() ? SArbBigInt(0) : SArbBigInt(1));
-	}
-
-	// Trivial cases: base = 1
-	if (this->isOne()) {
-		return (m.isOne() ? SArbBigInt(0) : SArbBigInt(1));
-	}
-
-	// Trivial cases: base = 0
-	if (this->isZero() &&  exponent.signum >= 0) {
-		return SArbBigInt(0);
-	}
-
+	
+	// Trivial case tests preformed in UArbBigInt::modPow():
+	// 		exponent = 0
+	//		base = 1
+	//		base = 0
+	
 	// Trivial cases: base = -1 && (exponent % 2 = 0)
-	if (*this == SArbBigInt(1, true) && exponent.isEven()) {
-		return (m.isOne() ? SArbBigInt(0) : SArbBigInt(1));
+	if ( (this->isOne() && this->signum < 0) && exponent.isEven()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
 	}
-
-
-	return this->modPow_naiv(exponent, m);
-
-	// faster version from java BigInt ....
-	/*
-	bool invertResult = exponent.signum < 0;
-	SArbBigInt absExponent(exponent); // TODO performance, unessesery copy if exponent is positive
-	if (invertResult) {
-		absExponent.setAbs();
-	}
-
-	//BigInteger base = (this.signum < 0 || this.compareTo(m) >= 0
-	//				   ? this.mod(m) : this);
-	SArbBigInt base = (this->signum < 0 || *this >= m) ? *this % m : *this;
-
-	SArbBigInt result(0);
-	if(m.isOdd()) { // odd modulus
-		result = base.oddModPow(exponent, m);
-	} else {
-		/ *
-		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
-		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
-		 * use Chinese Remainder Theorem to combine results.
-		 * /
-
-		// Tear m apart into odd part (m1) and power of 2 (m2)
-		int p = m.findLowestSetBit();   // Max pow of 2 that divides m
-
-		//BigInteger m1 = m .shiftRight(p);  // m/2**p
-		SArbBigInt m1 = m >> p; // m/2**p
-		//BigInteger m2 = ONE.shiftLeft(p); // 2**p
-		SArbBigInt m2 = SArbBigInt(1) << p; // 2**p
-
-		// Calculate new base from m1
-		//BigInteger base2 = (this.signum < 0 || this.compareTo(m1) >= 0 ? this.mod(m1) : this);
-		SArbBigInt base2 = (this->signum < 0 || *this >= m1) ? *this % m1 : *this;
-
-		// Caculate (base ** exponent) mod m1.
-		//BigInteger a1 = (m1.equals(ONE) ? ZERO : base2.oddModPow(exponent, m1));
-		SArbBigInt a1 = m1.isOne() ? BigInt(0) : base2.oddModPow(exponent, m1);
-
-		// Calculate (this ** exponent) mod m2
-		SArbBigInt a2 = base.modPow2(exponent, p);
-
-		// Combine results using Chinese Remainder Theorem
-		SArbBigInt y1 = m2.modInverse(m1);
-		SArbBigInt y2 = m1.modInverse(m2);
-
-		//if (m.mag.length < MAX_MAG_LENGTH / 2) {
-			// result = a1.multiply(m2).multiply(y1).add(a2.multiply(m1).multiply(y2)).mod(m);
-			result = (a1 * m2 * y1 + a2 * m1 * y2) % m;
-		//} else {
-		//	MutableBigInteger t1 = new MutableBigInteger();
-		//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
-		//	MutableBigInteger t2 = new MutableBigInteger();
-		//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
-		//	t1.add(t2);
-		//	MutableBigInteger q = new MutableBigInteger();
-		//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
-		//}
-	}
-
-	return (invertResult ? result.modInverse(m) : result);
-	 */
-}
-
-SArbBigInt SArbBigInt::modPow_naiv(const SArbBigInt &exponent, const UArbBigInt &modulus) const {
-	if(modulus.UArbBigInt::isOne()) {
-		return SArbBigInt(1);
-	}
-
-	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
-
-	// ensure that the base is < modulus
+	
 	SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 
 	bool invertResult = exponent.signum < 0;
@@ -1104,81 +996,27 @@ SArbBigInt SArbBigInt::modPow_naiv(const SArbBigInt &exponent, const UArbBigInt 
 		absExponent.setAbs();
 	}
 
-	SArbBigInt result(1);
-	while ( !absExponent.isZero() > 0) {
-		if (absExponent.isOdd()) {
-			result = (result * base) % modulus;
-		}
-		absExponent = absExponent >> 1;
-		base = base.pow(2) % modulus;
-	}
+	base.UArbBigInt::modPow(absExponent, modulus, result); // This methods call does the actual work! All other lines in the method are just checks / fixes for negative numbers
+	result.fixSignumAfterUnsafeOperation(false);
 
-	return (invertResult ? result.modInverse(modulus) : result);
+	
+	if(invertResult) {
+		result = result.modInverse(modulus);
+	};
+	
 }
 
-/**
- * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
- * /
-SArbBigInt SArbBigInt::modPow2(SArbBigInt exponent, int p) const {
-	/ *
-	 * Perform exponentiation using repeated squaring trick, chopping off
-	 * high order bits as indicated by modulus.
-	 * /
-	SArbBigInt result(1);
-	SArbBigInt baseToPow2 = this->mod2(p);
-	int expOffset = 0;
-
-	int limit = exponent.bitLength();
-
-	if (this->testBit(0)) {
-		limit = (p-1) < limit ? (p-1) : limit;
-	}
-
-	while (expOffset < limit) {
-		if (exponent.testBit(expOffset)) {
-			//result = result.multiply(baseToPow2).mod2(p);
-			result = (result * baseToPow2).mod2(p);
-		}
-		expOffset++;
-		if (expOffset < limit) {
-			baseToPow2 = baseToPow2.sqrt().mod2(p);
-		}
-	}
-
+SArbBigInt SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &modulus) const {
+	SArbBigInt result(0, modulus.getWordSize());
+	SArbBigInt tmpExponent(exponent);
+	this->modPow(tmpExponent, modulus, result);
 	return result;
 }
 
-/ **
- * Returns a BigInteger whose value is this mod(2**p).
- * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
- * /
-SArbBigInt SArbBigInt::mod2(int p) const {
-	if (this->bitLength() <= p) {
-		return *this;
-	}
-
-	// simple but slow!
-	BigInt q = *this >> p; // q = this / 2**p
-	return *this - q;
-
-	// TODO performance! can be done by bitshifting and masking only!
-	/ *
-	 // Copy remaining ints of mag
-	 int numInts = (p + 31) >>> 5;
-	 int[] mag = new int[numInts];
-	 System.arraycopy(this.mag, (this.mag.length - numInts), mag, 0, numInts);
-
-	 // Mask out any excess bits
-	 int excessBits = (numInts << 5) - p;
-	 mag[0] &= (1L << (32-excessBits)) - 1;
-
-	 return (mag[0] == 0 ? new BigInteger(1, mag) : new BigInteger(mag, 1));
-	 * /
-}
-*/
 
 
-/* ---------- comparisons ---------- */
+
+// ----- comparisons ----
 bool SArbBigInt::operator< (const SArbBigInt& other) const {
 	if(this->signum < other.signum) {
 		return true;
@@ -1229,4 +1067,41 @@ bool SArbBigInt::operator== (const SArbBigInt& other) const {
 
 bool SArbBigInt::operator!= (const SArbBigInt& other) const {
 	return (!(*this == other));
+}
+
+
+
+// ----- asignment operator -----
+
+SArbBigInt& SArbBigInt::operator= (const SArbBigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+
+	UArbBigInt::operator=(other);
+	this->signum = other.signum;
+
+	return *this;
+}
+
+SArbBigInt& SArbBigInt::operator= (SArbBigInt&& other) {
+	// If we're not trying to move the object into itself...
+	if (this != &other) {
+		UArbBigInt::operator=(std::move(other)); // call the base class move assignment operator
+	
+		// Delete this original data original data.
+		//if(this->value != nullptr) {
+		//	delete [] this->value;
+		//}
+		
+		// Copy the other string's data into this string.
+		//this->value = other.value;
+		this->signum = other.signum;
+	
+		// Finally, reset the other string's data pointer.
+		//other.value = nullptr;
+		other.signum = 0;
+	}
+	return *this;
 }

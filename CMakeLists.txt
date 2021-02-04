@@ -176,6 +176,10 @@ file(GLOB SRC_PAILLIER_FILES
 	"src/paillier/*.c" 		"src/paillier/*.cpp"		"src/paillier/*.h"		"src/paillier/*.hpp"
 	"src/paillier/*/*.c"	"src/paillier/*/*.cpp"		"src/paillier/*/*.h"	"src/paillier/*/*.hpp"
 )
+file(GLOB SRC_UTIL_FILES
+	"src/util/*.c" 		"src/util/*.cpp"		"src/util/*.h"		"src/util/*.hpp"
+	"src/util/*/*.c"	"src/util/*/*.cpp"		"src/util/*/*.h"	"src/util/*/*.hpp"
+)
 
 file(GLOB APP_FILES
 	"app/*.c" 		"app/*.cpp"			"app/*.h"		"app/*.hpp"
@@ -211,7 +215,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES}
 )
 #add_framework(Security ppvr)
 
-add_executable(${PROJECT_NAME}-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES})
+add_executable(${PROJECT_NAME}-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES} ${SRC_UTIL_FILES})
 #add_framework(Security ppvr-test)
 
 target_link_libraries(${PROJECT_NAME}

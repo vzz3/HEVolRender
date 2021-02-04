@@ -512,6 +512,56 @@ namespace ppvr {
 			 */
 			UArbBigInt sqrt() const;
 
+			
+		// ----- modPow -----
+		private:
+			void modPow_naiv(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const;
+
+			/**
+			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
+			 */
+			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
+
+			/**
+			 * Returns a BigInteger whose value is this mod(2**p).
+			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
+			 */
+			//SArbBigInt mod2(int p) const;
+
+		protected:
+			
+			
+		public:
+			/**
+			 * Returns a BigInteger whose value is
+			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
+			 * method permits negative exponents.)
+			 *
+			 * @param  exponent the exponent.
+			 * @param  modulus the modulus.
+			 * @param  result <code>this<sup>exponent</sup> mod m</code>
+			 * @throws ArithmeticException {@code m} &le; 0 or the exponent is
+			 *         negative and this BigInteger is not <i>relatively
+			 *         prime</i> to {@code m}.
+			 * @see    #modInverse
+			 */
+			void modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const;
+			
+			/**
+			 * Returns a BigInteger whose value is
+			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
+			 * method permits negative exponents.)
+			 *
+			 * @param  exponent the exponent.
+			 * @param  modulus the modulus.
+			 * @return <code>this<sup>exponent</sup> mod m</code>
+			 * @throws ArithmeticException {@code m} &le; 0 or the exponent is
+			 *         negative and this BigInteger is not <i>relatively
+			 *         prime</i> to {@code m}.
+			 * @see    #modInverse
+			 */
+			UArbBigInt modPow(const UArbBigInt &exponent, const UArbBigInt &modulus) const;
+			
 		// ----- Comparison operators -----
 		public:
 			bool operator< (const UArbBigInt& other) const;

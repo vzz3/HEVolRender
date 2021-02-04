@@ -198,9 +198,13 @@ UArbBigInt& UArbBigInt::randomNumber(const UArbBigInt& upperBound, Random& rnd, 
 
 // ----- constructors -----
 
-UArbBigInt::UArbBigInt(): UArbBigInt(0, 0) {}
+UArbBigInt::UArbBigInt(): UArbBigInt(0, 0) {
+	
+}
 
-UArbBigInt::UArbBigInt(const BIG_INT_WORD_TYPE& value): UArbBigInt(value, 0) {}
+UArbBigInt::UArbBigInt(const BIG_INT_WORD_TYPE& value): UArbBigInt(value, 0) {
+	
+}
 
 UArbBigInt::UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE minCapacity) {
 	BIG_INT_WORD_COUNT_TYPE newCapacity = std::max((BIG_INT_WORD_COUNT_TYPE)1, minCapacity);
@@ -212,7 +216,9 @@ UArbBigInt::UArbBigInt(const BIG_INT_WORD_TYPE& value, BIG_INT_WORD_COUNT_TYPE m
 	//this->_dataRefCount = 1;
 }
 
-UArbBigInt::UArbBigInt(const UArbBigInt& src ) : UArbBigInt(src, 0) {}
+UArbBigInt::UArbBigInt(const UArbBigInt& src ) : UArbBigInt(src, 0) {
+	
+}
 
 UArbBigInt::UArbBigInt(const UArbBigInt& src, BIG_INT_WORD_COUNT_TYPE minCapacity ) {
 	BIG_INT_WORD_COUNT_TYPE newCapacity = std::max(src.wordSize, minCapacity);
@@ -249,44 +255,7 @@ UArbBigInt::~UArbBigInt() {
 
 // ----- memory managment -----
 
-UArbBigInt& UArbBigInt::operator= (const UArbBigInt& other) {
-	// check for self-assignment
-	if(&other == this) {
-		return *this;
-	}
-
-	// reuse storage when possible
-	if(this->wordCapacity < other.wordSize) {
-		delete [] this->value;
-		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
-		this->wordCapacity = other.wordSize;
-	}
-
-	this->wordSize = other.wordSize;
-	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
-
-	return *this;
-}
-
-UArbBigInt& UArbBigInt::operator= (UArbBigInt&& other) {
-	// If we're not trying to move the object into itself...
-	if (this != &other) {
-		// Delete this original data original data.
-		if(this->value != nullptr) {
-			delete [] this->value;
-		}
-		// Copy the other string's data into this string.
-		this->value = other.value;
-		this->wordCapacity = other.wordCapacity;
-		this->wordSize = other.wordSize;
-	
-		// Finally, reset the other string's data pointer.
-		other.value = nullptr;
-		other.wordCapacity = 0;
-		other.wordSize = 0;
-	}
-    return *this;
-}
+// asignment operators (operator=()) are at the an of the file
 
 void UArbBigInt::reserveWords( const BIG_INT_WORD_COUNT_TYPE newCapacity ) {
 	if(newCapacity <= this->wordCapacity) {
@@ -1408,7 +1377,199 @@ UArbBigInt UArbBigInt::sqrt() const {
 }
 
 
-/* ---------- comparisons ---------- */
+// ----- modPow -----
+
+void UArbBigInt::modPow_naiv(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const {
+	result.setOne();
+	if(modulus.UArbBigInt::isOne()) {
+		return;
+	}
+
+	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
+
+	// ensure that the base is < modulus
+	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	UArbBigInt base = (*this >= modulus) ? (*this % modulus) : *this;
+	
+	while ( !exponent.isZero()) {
+		if (exponent.isOdd()) {
+			result = (result * base) % modulus;
+		}
+		exponent = exponent >> 1;
+		base = base.pow(2) % modulus;
+	}
+}
+
+void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const {
+	if (modulus.isZero()) {
+		//throw new ArithmeticException("BigInteger: modulus not positive");
+		std::string msg = "ERROR UArbBigInt: modulus not positive!";
+		std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	// Trivial cases: exponent = 0
+	if (exponent.isZero()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
+	}
+
+	// Trivial cases: base = 1
+	if (this->isOne()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
+	}
+
+	// Trivial cases: base = 0
+	if (this->isZero() && !exponent.isZero()) {
+		result.setZero();
+		return;
+	}
+
+	this->modPow_naiv(exponent, modulus, result);
+	
+	// faster version from java BigInt ....
+	/*
+	bool invertResult = exponent.signum < 0;
+	SArbBigInt absExponent(exponent); // TODO performance, unessesery copy if exponent is positive
+	if (invertResult) {
+		absExponent.setAbs();
+	}
+
+	//BigInteger base = (this.signum < 0 || this.compareTo(m) >= 0
+	//				   ? this.mod(m) : this);
+	SArbBigInt base = (this->signum < 0 || *this >= m) ? *this % m : *this;
+
+	SArbBigInt result(0);
+	if(m.isOdd()) { // odd modulus
+		result = base.oddModPow(exponent, m);
+	} else {
+		/ *
+		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
+		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
+		 * use Chinese Remainder Theorem to combine results.
+		 * /
+
+		// Tear m apart into odd part (m1) and power of 2 (m2)
+		int p = m.findLowestSetBit();   // Max pow of 2 that divides m
+
+		//BigInteger m1 = m .shiftRight(p);  // m/2**p
+		SArbBigInt m1 = m >> p; // m/2**p
+		//BigInteger m2 = ONE.shiftLeft(p); // 2**p
+		SArbBigInt m2 = SArbBigInt(1) << p; // 2**p
+
+		// Calculate new base from m1
+		//BigInteger base2 = (this.signum < 0 || this.compareTo(m1) >= 0 ? this.mod(m1) : this);
+		SArbBigInt base2 = (this->signum < 0 || *this >= m1) ? *this % m1 : *this;
+
+		// Caculate (base ** exponent) mod m1.
+		//BigInteger a1 = (m1.equals(ONE) ? ZERO : base2.oddModPow(exponent, m1));
+		SArbBigInt a1 = m1.isOne() ? BigInt(0) : base2.oddModPow(exponent, m1);
+
+		// Calculate (this ** exponent) mod m2
+		SArbBigInt a2 = base.modPow2(exponent, p);
+
+		// Combine results using Chinese Remainder Theorem
+		SArbBigInt y1 = m2.modInverse(m1);
+		SArbBigInt y2 = m1.modInverse(m2);
+
+		//if (m.mag.length < MAX_MAG_LENGTH / 2) {
+			// result = a1.multiply(m2).multiply(y1).add(a2.multiply(m1).multiply(y2)).mod(m);
+			result = (a1 * m2 * y1 + a2 * m1 * y2) % m;
+		//} else {
+		//	MutableBigInteger t1 = new MutableBigInteger();
+		//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
+		//	MutableBigInteger t2 = new MutableBigInteger();
+		//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
+		//	t1.add(t2);
+		//	MutableBigInteger q = new MutableBigInteger();
+		//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
+		//}
+	}
+
+	return (invertResult ? result.modInverse(m) : result);
+	 */
+}
+
+UArbBigInt UArbBigInt::modPow(const UArbBigInt &exponent, const UArbBigInt &modulus) const {
+	UArbBigInt result(0, modulus.getWordSize());
+	UArbBigInt tmpExponent(exponent);
+	this->modPow(tmpExponent, modulus, result);
+	return result;
+}
+
+/**
+ * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
+ * /
+SArbBigInt SArbBigInt::modPow2(SArbBigInt exponent, int p) const {
+	/ *
+	 * Perform exponentiation using repeated squaring trick, chopping off
+	 * high order bits as indicated by modulus.
+	 * /
+	SArbBigInt result(1);
+	SArbBigInt baseToPow2 = this->mod2(p);
+	int expOffset = 0;
+
+	int limit = exponent.bitLength();
+
+	if (this->testBit(0)) {
+		limit = (p-1) < limit ? (p-1) : limit;
+	}
+
+	while (expOffset < limit) {
+		if (exponent.testBit(expOffset)) {
+			//result = result.multiply(baseToPow2).mod2(p);
+			result = (result * baseToPow2).mod2(p);
+		}
+		expOffset++;
+		if (expOffset < limit) {
+			baseToPow2 = baseToPow2.sqrt().mod2(p);
+		}
+	}
+
+	return result;
+}
+
+/ **
+ * Returns a BigInteger whose value is this mod(2**p).
+ * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
+ * /
+SArbBigInt SArbBigInt::mod2(int p) const {
+	if (this->bitLength() <= p) {
+		return *this;
+	}
+
+	// simple but slow!
+	BigInt q = *this >> p; // q = this / 2**p
+	return *this - q;
+
+	// TODO performance! can be done by bitshifting and masking only!
+	/ *
+	 // Copy remaining ints of mag
+	 int numInts = (p + 31) >>> 5;
+	 int[] mag = new int[numInts];
+	 System.arraycopy(this.mag, (this.mag.length - numInts), mag, 0, numInts);
+
+	 // Mask out any excess bits
+	 int excessBits = (numInts << 5) - p;
+	 mag[0] &= (1L << (32-excessBits)) - 1;
+
+	 return (mag[0] == 0 ? new BigInteger(1, mag) : new BigInteger(mag, 1));
+	 * /
+}
+*/
+
+
+
+// ----- comparisons -----
 bool UArbBigInt::operator< (const UArbBigInt& other) const {
 	if (this->wordSize < other.wordSize) {
 		return true;
@@ -1464,4 +1625,47 @@ bool UArbBigInt::operator== (const UArbBigInt& other) const {
 
 bool UArbBigInt::operator!= (const UArbBigInt& other) const {
 	return (!(*this == other));
+}
+
+
+
+// ----- asignment operator -----
+
+UArbBigInt& UArbBigInt::operator= (const UArbBigInt& other) {
+	// check for self-assignment
+	if(&other == this) {
+		return *this;
+	}
+
+	// reuse storage when possible
+	if(this->wordCapacity < other.wordSize) {
+		delete [] this->value;
+		this->value = new BIG_INT_WORD_TYPE[other.wordSize];
+		this->wordCapacity = other.wordSize;
+	}
+
+	this->wordSize = other.wordSize;
+	std::copy(&other.value[0], (&other.value[0] + other.wordSize), this->value);
+
+	return *this;
+}
+
+UArbBigInt& UArbBigInt::operator= (UArbBigInt&& other) {
+	// If we're not trying to move the object into itself...
+	if (this != &other) {
+		// Delete this original data original data.
+		if(this->value != nullptr) {
+			delete [] this->value;
+		}
+		// Copy the other string's data into this string.
+		this->value = other.value;
+		this->wordCapacity = other.wordCapacity;
+		this->wordSize = other.wordSize;
+	
+		// Finally, reset the other string's data pointer.
+		other.value = nullptr;
+		other.wordCapacity = 0;
+		other.wordSize = 0;
+	}
+	return *this;
 }

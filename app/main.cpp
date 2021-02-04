@@ -48,6 +48,8 @@
 **
 ****************************************************************************/
 
+#include "../src/math/PerformanceTest.hpp"
+
 #include <QApplication>
 #include <QPlainTextEdit>
 #include <QVulkanInstance>
@@ -72,43 +74,28 @@ static void messageHandler(QtMsgType msgType, const QMessageLogContext &logConte
 	}
 }
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
+int showQtWindow(int argc, char *argv[]) {
+	QApplication app(argc, argv);
 
-    oldMessageHandler = qInstallMessageHandler(messageHandler);
-
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
-/*
-    QVulkanInstance inst;
-
-#ifndef Q_OS_ANDROID
-    inst.setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-#else
-    inst.setLayers(QByteArrayList()
-                   << "VK_LAYER_GOOGLE_threading"
-                   << "VK_LAYER_LUNARG_parameter_validation"
-                   << "VK_LAYER_LUNARG_object_tracker"
-                   << "VK_LAYER_LUNARG_core_validation"
-                   << "VK_LAYER_LUNARG_image"
-                   << "VK_LAYER_LUNARG_swapchain"
-                   << "VK_LAYER_GOOGLE_unique_objects");
-#endif
-
-    if (!inst.create()) {
-        qFatal("Failed to create Vulkan instance: %d", inst.errorCode());
-	}
-    VulkanWindow *vulkanWindow = new VulkanWindow;
-    vulkanWindow->setVulkanInstance(&inst);
-*/
-    mainWindow = new MainWindow();
-    mainWindow->onLogMessageReceived(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
-
-    mainWindow->resize(1024, 768);
-    mainWindow->show();
+	oldMessageHandler = qInstallMessageHandler(messageHandler);
+	QLoggingCategory::setFilterRules(QStringLiteral("qt.vulkan=true"));
 	
-    mainWindow->initVulkanWindow();
+	mainWindow = new MainWindow();
+	mainWindow->onLogMessageReceived(QLatin1String(QLibraryInfo::build()) + QLatin1Char('\n'));
+
+	mainWindow->resize(1024, 768);
+	mainWindow->show();
+	
+	mainWindow->initVulkanWindow();
 
 	int result = app.exec();
-    return result;
+	return result;
+}
+
+int main(int argc, char *argv[]) {
+	uint nBits = 2024;
+	std::cout << nBits << " random bits: " << ppvr::math::SArbBigInt::randomNumber(nBits,  ppvr::math::Random::getForLocalThread()).toStringHex() << std::endl << "---" << std::endl;
+	ppvr::math::PerformanceTest::modPow();
+	
+	// showQtWindow(argc, argv);
 }

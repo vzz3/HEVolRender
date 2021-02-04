@@ -167,6 +167,15 @@ namespace ppvr {
 			int_fast8_t getSignum() const {
 				return this->signum;
 			}
+			
+		public:
+			inline void fixSignumAfterUnsafeOperation(bool yNegative) {
+				if( this->isMagnitudeZero() ) {
+					this->signum = 0;
+				} else {
+					this->signum = yNegative ? -1 : +1;
+				}
+			}
 
 		// ----- constructors -----
 		public:
@@ -406,20 +415,9 @@ namespace ppvr {
 
 
 		// ----- modPow -----
-		private:
-			SArbBigInt modPow_naiv(const SArbBigInt &exponent, const UArbBigInt &modulus) const;
-
-			/**
-			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 */
-			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
-
-			/**
-			 * Returns a BigInteger whose value is this mod(2**p).
-			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 */
-			//SArbBigInt mod2(int p) const;
-
+		protected:
+			void modPow(const SArbBigInt &exponent, const SArbBigInt &modulus, SArbBigInt& result) const;
+			
 		public:
 			/**
 			 * Returns a BigInteger whose value is
@@ -427,14 +425,14 @@ namespace ppvr {
 			 * method permits negative exponents.)
 			 *
 			 * @param  exponent the exponent.
-			 * @param  m the modulus.
+			 * @param  modulus the modulus.
 			 * @return <code>this<sup>exponent</sup> mod m</code>
 			 * @throws ArithmeticException {@code m} &le; 0 or the exponent is
 			 *         negative and this BigInteger is not <i>relatively
 			 *         prime</i> to {@code m}.
 			 * @see    #modInverse
 			 */
-			SArbBigInt modPow(const SArbBigInt &exponent, const SArbBigInt &m) const;
+			SArbBigInt modPow(const SArbBigInt &exponent, const SArbBigInt &modulus) const;
 
 		};
 	}

@@ -5,7 +5,7 @@
 
 
 #define USE_FIX_WIDTH_INTEGER 			1
-#define PAILLIER_MODULUS_BIT_LENGTH 	512 // GPU test: 64 // Paillier test: 256 
+#define PAILLIER_MODULUS_BIT_LENGTH 	256 // GPU test: 64 // Paillier test: 256 
 
 
 // Why is the required integer bit length $ bitLengt(M) * 4 $ ?

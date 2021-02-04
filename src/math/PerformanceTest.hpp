@@ -8,6 +8,8 @@ namespace ppvr {
 		public:
 			static void fromString();
 			static void createPrime();
+			
+			static void modPow();
 		
 		// ----- constructors -----
 		public:

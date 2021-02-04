@@ -679,8 +679,8 @@ template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &m) const {
 	if (m.signum <= 0) {
 		//throw new ArithmeticException("BigInteger: modulus not positive");
-		std::string msg = "ERROR SArbBigInt: modulus not positive!";
-		std::cerr << msg << std::endl;
+		std::string msg = "ERROR SFixBigInt: modulus not positive!";
+		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
 
