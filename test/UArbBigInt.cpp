@@ -902,6 +902,88 @@ TEST_CASE( "unsigned infinit big integer shift right", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2) >> 129 == UArbBigInt::fromString("0", 10) );
 }
 
+TEST_CASE( "unsigned infinit big integer XOR", "[UABigint]" ) {
+
+	// 1 Byte (8bit)
+	REQUIRE( (UArbBigInt::fromString("0", 2) ^ UArbBigInt::fromString("0", 2)) == UArbBigInt::fromString("0", 2) );
+	REQUIRE( (UArbBigInt::fromString("0", 2) ^ UArbBigInt::fromString("1", 2)) == UArbBigInt::fromString("1", 2) );
+	REQUIRE( (UArbBigInt::fromString("1", 2) ^ UArbBigInt::fromString("0", 2)) == UArbBigInt::fromString("1", 2) );
+	REQUIRE( (UArbBigInt::fromString("1", 2) ^ UArbBigInt::fromString("1", 2)) == UArbBigInt::fromString("0", 2) );
+	
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0000 0001", 2)) == UArbBigInt::fromString("1010 1011", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0000 0011", 2)) == UArbBigInt::fromString("1010 1001", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0000 0111", 2)) == UArbBigInt::fromString("1010 1101", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0000 1111", 2)) == UArbBigInt::fromString("1010 0101", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0001 1111", 2)) == UArbBigInt::fromString("1011 0101", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0011 1111", 2)) == UArbBigInt::fromString("1001 0101", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("0111 1111", 2)) == UArbBigInt::fromString("1101 0101", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("1111 1111", 2)) == UArbBigInt::fromString("0101 0101", 2) );
+	
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("1111 1110", 2)) == UArbBigInt::fromString("0101 0100", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("1111 1010", 2)) == UArbBigInt::fromString("0101 0000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("1110 1010", 2)) == UArbBigInt::fromString("0100 0000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) ^ UArbBigInt::fromString("1010 1010", 2)) == UArbBigInt::fromString("0000 0000", 2) );
+	
+
+	
+	// 8 Byte (64bit)
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) ^ (UArbBigInt::fromString("1", 2) <<  0)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) );
+	REQUIRE( ((UArbBigInt::fromString("1", 2) <<  0) ^ (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) ); // increas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) ^ (UArbBigInt::fromString("1", 2) << 15)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000", 2) );
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 15) ^ (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000", 2) ); // increas word count
+	
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) ^ (UArbBigInt::fromString("1", 2) <<  64)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) ); // decreas word count
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) ^ UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) ^ UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) ); // decreas word count
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) ^ UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) ); // decreas word count
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) ^ UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("0", 2) ); // decreas word count
+	REQUIRE( (UArbBigInt::fromString("01 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) ^ UArbBigInt::fromString("11 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("10 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10101010 00000000", 2) ^ UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 10101010 00000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10101010 00000000", 2) ^ UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 10101010 00000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) );
+	
+	
+}
+
+TEST_CASE( "unsigned infinit big integer AND", "[UABigint]" ) {
+
+	// 1 Byte (8bit)
+	REQUIRE( (UArbBigInt::fromString("0", 2) & UArbBigInt::fromString("0", 2)) == UArbBigInt::fromString("0", 2) );
+	REQUIRE( (UArbBigInt::fromString("0", 2) & UArbBigInt::fromString("1", 2)) == UArbBigInt::fromString("0", 2) );
+	REQUIRE( (UArbBigInt::fromString("1", 2) & UArbBigInt::fromString("0", 2)) == UArbBigInt::fromString("0", 2) );
+	REQUIRE( (UArbBigInt::fromString("1", 2) & UArbBigInt::fromString("1", 2)) == UArbBigInt::fromString("1", 2) );
+	
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0000 0001", 2)) == UArbBigInt::fromString("0000 0000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0000 0011", 2)) == UArbBigInt::fromString("0000 0010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0000 0111", 2)) == UArbBigInt::fromString("0000 0010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0000 1111", 2)) == UArbBigInt::fromString("0000 1010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0001 1111", 2)) == UArbBigInt::fromString("0000 1010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0011 1111", 2)) == UArbBigInt::fromString("0010 1010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("0111 1111", 2)) == UArbBigInt::fromString("0010 1010", 2) );
+	REQUIRE( (UArbBigInt::fromString("1010 1010", 2) & UArbBigInt::fromString("1111 1111", 2)) == UArbBigInt::fromString("1010 1010", 2) );
+	
+
+	
+	// 8 Byte (64bit)
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) & (UArbBigInt::fromString("1", 2) <<  0)) == UArbBigInt::fromString("0", 2) ); // decreas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) <<  0) & (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("0", 2) ); // decreas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) & (UArbBigInt::fromString("1", 2) << 15)) == UArbBigInt::fromString("0", 2) ); // decreas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 15) & (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("0", 2) ); // decreas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 15) & (UArbBigInt::fromString("1", 2) << 15)) == UArbBigInt::fromString("                                                        10000000 00000000", 2) ); // decreas word count
+	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) & (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) & UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) & UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) & UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) & UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) & UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) & UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) & UArbBigInt::fromString("111111111 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	REQUIRE( (UArbBigInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) & UArbBigInt::fromString("111111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)) == UArbBigInt::fromString("10101000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	
+	
+}
+
 TEST_CASE( "unsigned infinit big integer addition", "[UABigint]" ) {
 	// 1 Byte (8bit)
 	REQUIRE( (UArbBigInt(  0) + UArbBigInt(  0)).toUint64()	==   0 );
@@ -1359,6 +1441,58 @@ TEST_CASE( "unsigned infinit big integer bitLength", "[UABigint]" ) {
 
 }
 
+TEST_CASE( "unsigned infinit big integer modInverse", "[UABigint]" ) {
+	// wolfram alpha: PowerMod[this, -1, param]
+	REQUIRE_THROWS_AS( UArbBigInt( 1).modInverse(0), std::invalid_argument );
+	REQUIRE( UArbBigInt( 1).modInverse(3) == 1 );
+	REQUIRE( UArbBigInt(13).modInverse(3) == 1 );
+	REQUIRE( UArbBigInt( 2).modInverse(13) == 7 ); // wolfram alpha: PowerMod[2, -1, 13] => 7
+	REQUIRE( UArbBigInt( 7).modInverse(13) == 2 );
+	REQUIRE( UArbBigInt( 5).modInverse(13) == 8 );
+	
+	REQUIRE( UArbBigInt( 1).modInverse(23) ==  1 );
+	REQUIRE( UArbBigInt( 2).modInverse(23) ==  12 );
+	REQUIRE( UArbBigInt(14).modInverse(23) ==  5 );
+	REQUIRE( UArbBigInt(19).modInverse(23) == 17 );
+	REQUIRE( UArbBigInt(21).modInverse(23) == 11 );
+	REQUIRE( UArbBigInt(117).modInverse(23) == 12 );
+	
+	REQUIRE( UArbBigInt(1).modInverse(127) == 1 );
+	REQUIRE( UArbBigInt(2).modInverse(127) == 64 );
+	REQUIRE( UArbBigInt(117).modInverse(127) == 38 );
+	REQUIRE( UArbBigInt(123).modInverse(127) == 95 );
+	REQUIRE( UArbBigInt(88).modInverse(127) == 13 );
+	REQUIRE( UArbBigInt(99).modInverse(127) == 68 );
+	REQUIRE( UArbBigInt(126).modInverse(127) == 126 );
+	REQUIRE( UArbBigInt(255).modInverse(127) == 1 );
+	REQUIRE( UArbBigInt(211).modInverse(127) == 62 );
+	
+	REQUIRE_THROWS( UArbBigInt(1).modInverse(4) == 1 );
+	REQUIRE_THROWS( UArbBigInt(5).modInverse(8) == 5 );
+
+	REQUIRE( UArbBigInt::fromUint64( 1).modInverse(UArbBigInt::fromUint64( 5)).toUint64() ==  1 );
+
+	REQUIRE_THROWS( UArbBigInt::fromUint64( 62369045776285).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 38649570326437 );
+	REQUIRE_THROWS( UArbBigInt::fromUint64( 38649570326437).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 18801147010853 );
+	REQUIRE( UArbBigInt::fromUint64( 62369045776285).modInverse(UArbBigInt::fromUint64( 43567898765431)).toUint64() == 15760287535499 );
+	REQUIRE( UArbBigInt::fromUint64( 38649570326437).modInverse(UArbBigInt::fromUint64( 43567898765431)).toUint64() == 39163431965283 );
+
+	REQUIRE( UArbBigInt::fromString("16017867594215767234084978576693245168373889033733221066690514240642714658687", 10).modInverse(UArbBigInt::fromString("64071470376863068936339914306772980674254926422336709160732384697932204415401", 10)) == UArbBigInt::fromString("84374476378202765996703081706816197849", 10) );
+
+	REQUIRE( UArbBigInt::fromString(" 84374476378202765996703081706816197849", 10).modInverse(UArbBigInt::fromString(" 64071470376863068936339914306772980674254926422336709160732384697932204415401", 10)) == UArbBigInt::fromString(" 16017867594215767234084978576693245168373889033733221066690514240642714658687", 10) );
+
+
+	UArbBigInt one = UArbBigInt(1);
+	//SArbBigInt minusOne = SArbBigInt(1, true);
+	UArbBigInt v = UArbBigInt::fromString(" 12345672345890887765433", 10);
+	UArbBigInt m = UArbBigInt::fromString(" 204690484325368677690653462884286106163", 10);
+
+	// m > 0 & v > 0
+	REQUIRE( (v * v.modInverse(m) ) % m == UArbBigInt(1) % m);
+	
+	REQUIRE_THROWS( UArbBigInt(255).modInverse( 48) );	// not relatively prime
+}
+
 TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 	// wolfram alpha: PowerMod[this, -1, param]
 
@@ -1379,6 +1513,14 @@ TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt(123       ), UArbBigInt( 55)) == UArbBigInt(0) ); // PowerMod[   0, 123,  55]
 	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt( 33       ), UArbBigInt(123)) == UArbBigInt(0) ); // PowerMod[   0,  33, 123]
 
+	// -----
+	REQUIRE( UArbBigInt(  2      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(7) ); // PowerMod[   2,  7,   11]
+	REQUIRE( UArbBigInt(  3      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(9) ); // PowerMod[   3,  7,   11]
+	
+	REQUIRE( UArbBigInt(121      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(0) ); // PowerMod[121, 7, 11]
+	REQUIRE( UArbBigInt(122      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(1) ); // PowerMod[122, 7, 11]
+	REQUIRE( UArbBigInt(123      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(7) ); // PowerMod[123, 7, 11]
+	
 
 	// -----
 	REQUIRE( UArbBigInt::fromString("321", 10).modPow(UArbBigInt::fromString("170316580215634215412390428579751188659", 10), UArbBigInt::fromString("29007737496348564246541369697392157257353622947791601355298952855523410218281", 10)) == UArbBigInt::fromString("17721908342651498136687561664913427653804630235400928582777881790054443435532", 10) ); // PowerMod[321, 170316580215634215412390428579751188659, 29007737496348564246541369697392157257353622947791601355298952855523410218281]
@@ -1400,6 +1542,7 @@ TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 			).toStringDec() == "27437935934933632837176167850088741034260151597862879929180562960786562419072"
 		); // PowerMod[34546737496348564246541369697392157357343622947391601355298952857523410218281, 170316580215634215412390428579751188659, 29007737496348564246541369697392157257353622947791601355298952855523410218281]
 	
+	// even modulus
 	REQUIRE(
 			UArbBigInt::fromString("DDD283D73A398FE7A86987D9E0A37063", 16).modPow( UArbBigInt::fromString("DC9481390F23502D4F3C8D54BB194AA6", 16), UArbBigInt::fromString("EA3D7298B90FCFAE01364041BCB288C", 16)
 			).toStringDec() == "12944751882554430796756496548659233721"

@@ -1326,7 +1326,7 @@ UFixBigInt<S> UFixBigInt<S>::pow(UFixBigInt<S> pow) const {
 
 	//while( !c ) {
 	while( true ) {
-		if( pow.value[0] & 1 ) {
+		if( pow.isOdd() ) {//if( pow.value[0] & 1 ) {
 			//c += result.mul(start);
 			result = result * start;
 		}
