@@ -1451,7 +1451,7 @@ void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const
 	}
 }
 
-void UArbBigInt::montmodpow(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result) {
+void UArbBigInt::montmodpow(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	if (modulus.isOdd()) {
 		montmodpow_odd(base, exponent, modulus, result);
 	} else {
@@ -1622,8 +1622,8 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 				if(U.isOdd()) {
 					U = U + y;
 				}
-				A = A / TWO;
-				U = U / TWO;
+				A = A >> 1; //A / TWO;
+				U = U >> 1; //U / TWO;
 			}
 		}
 		B = B - A;
@@ -1635,8 +1635,8 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 				//	if a<y	 then a←a+y; else a←a−y;
 				// and same for d←d+y, we keep a and d below 4y; I'm asking what if we do not.
 			}
-			B = B / TWO;
-			V = V / TWO;
+			B = B >> 1; //B / TWO;
+			V = V >> 1; //V / TWO;
 		}
 	}
 	//a = a % y; //that's the desired inverse.
@@ -1739,7 +1739,7 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 	return u % m;
 }
 
-void UArbBigInt::montmodpow_odd(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result) {
+void UArbBigInt::montmodpow_odd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
@@ -1797,30 +1797,29 @@ void UArbBigInt::montmodpow_odd(UArbBigInt base, UArbBigInt exponent, UArbBigInt
 	result = montout(z, reciprocal, modulus);
 }
 
-UArbBigInt UArbBigInt::montin(UArbBigInt A, UArbBigInt modulus, uint reducerBits) {
-	UArbBigInt B{A}; // uint64 B = A;
-	B = B << reducerBits; //B <<= 32;
+UArbBigInt UArbBigInt::montin(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits) {
+	UArbBigInt B = A << reducerBits; //B <<= 32;
 	B = B % modulus; //B %= M;
 	return B; //return (uint32)B;
 }
 
-UArbBigInt UArbBigInt::montout(UArbBigInt A, UArbBigInt reciprocal, UArbBigInt modulus) {
+UArbBigInt UArbBigInt::montout(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus) {
 	// K = reciprocal
-	UArbBigInt B{A}; //uint64 B = A;
-	B = B * reciprocal; //B *= K;
+	//UArbBigInt B{A}; //uint64 B = A;
+	UArbBigInt B = A * reciprocal; //B *= K;
 	B = B % modulus; //B %= M;
 	return B; //return (uint32)B;
 }
 
 // Montgomery  multiply: Inputs and output are in Montgomery form and in the range [0, modulus)
-UArbBigInt UArbBigInt::montredc(UArbBigInt A, UArbBigInt B, UArbBigInt modulus, UArbBigInt factor, uint reducerBits, UArbBigInt mask) {
+UArbBigInt UArbBigInt::montredc(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
 	// R = factor
 	// M = modulus
 	
 	// A = x
 	// B = y
 	assert( A < modulus );
-	assert (B < modulus );
+	assert( B < modulus );
 	
 	UArbBigInt product = A * B;
 	UArbBigInt temp = ((product & mask ) * factor) & mask;

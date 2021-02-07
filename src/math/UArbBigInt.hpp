@@ -547,8 +547,8 @@ namespace ppvr {
 			 * https://www.nayuki.io/page/montgomery-reduction-algorithm
 			 * https://www.nayuki.io/res/montgomery-reduction-algorithm/MontgomeryReducer.java
 			 */
-			static void montmodpow(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result);
-			static void montmodpow_odd(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result);
+			static void montmodpow(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void montmodpow_odd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			static void montmodpow_even(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result);
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
@@ -558,9 +558,9 @@ namespace ppvr {
 		public:
 			UArbBigInt modInverse(const UArbBigInt & m) const;
 		private:
-			static UArbBigInt montin(UArbBigInt A, UArbBigInt modulus, uint reducerBits);
-			static UArbBigInt montout(UArbBigInt A, UArbBigInt reciprocal, UArbBigInt modulus);
-			static UArbBigInt montredc(UArbBigInt A, UArbBigInt B, UArbBigInt modulus, UArbBigInt factor, uint reducerBits, UArbBigInt mask);
+			static UArbBigInt montin(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits);
+			static UArbBigInt montout(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus);
+			static UArbBigInt montredc(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
 			
 			/**
 			 * ModPow - Special Case (modulus == 2^p)

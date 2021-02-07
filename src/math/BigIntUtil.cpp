@@ -1,9 +1,12 @@
 
 #include "BigIntUtil.hpp"
 #include <cassert>
+#include <iostream>
 
 
 using namespace ppvr::math;
+
+uint BigIntUtil::addTwoIntsCounter = 0;
 
 // ----- bit utilities -----
 
@@ -40,6 +43,7 @@ int BigIntUtil::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) {
 // ----- addition -----
 
 BIG_INT_WORD_TYPE BigIntUtil::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) {
+	/*
 	BIG_INT_WORD_TYPE temp;
 	if( carry == 0 ) {
 		temp = a + b;
@@ -55,19 +59,141 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_I
 	}
 	*result = temp;
 	return carry;
+	 */
+	
+	uint64_t temp = (uint64_t)a + (uint64_t)b + (uint64_t)carry;
+	*result = temp;
+	return (temp > uint64_t(BIG_INT_WORD_MAX_VALUE));
 }
 
 BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) {
-	assert( index < (targetWordCount - 1) ); // TODO
 	
+	addTwoIntsCounter++;
+	
+	assert( index < (targetWordCount - 1) ); // TODO
 	BIG_INT_WORD_TYPE c;
 	
-	c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
-	c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
+	#ifdef BIG_INT_NOASM
 	
-	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
-		c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
-	}
+		#ifdef BIG_INT_REDUCE_BRANCHING
+			targetArray[index] += wordLow;
+			c = (targetArray[index] < wordLow);
+
+			targetArray[index+1] += c;
+			c = (targetArray[index+1] < c);
+
+			targetArray[index+1] += wordHigh;
+			c = c || (targetArray[index+1] < wordHigh);
+
+			for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+				targetArray[i] += c;
+				c = (targetArray[i] < c);
+			}
+			
+		//	BIG_INT_WORD_TYPE c;
+		//	uint64_t tmp = (uint64_t)targetArray[index] + (uint64_t)wordLow;
+		//	targetArray[index] = tmp;
+		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
+		//
+		//	tmp = (uint64_t)targetArray[index+1] + (uint64_t)wordHigh + (uint64_t)c;
+		//	targetArray[index+1] = tmp;
+		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
+		//
+		//	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+		//		targetArray[i] += c;
+		//		c = (targetArray[i] < c);
+		//	}
+		#else
+			
+			c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
+			c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
+			
+			for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+				c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
+			}
+		#endif
+	#else
+		BIG_INT_WORD_COUNT_TYPE b = targetWordCount;
+		BIG_INT_WORD_TYPE * p1 = targetArray;
+		//uint c;
+
+		#ifndef __GNUC__
+			__asm
+			{
+				push eax
+				push ebx
+				push ecx
+				push edx
+
+				mov ecx, [b]
+				sub ecx, [index]
+
+				mov ebx, [p1]
+				mov edx, [index]
+
+				mov eax, [x1]
+				add [ebx+edx*4], eax
+				inc edx
+				dec ecx
+
+				mov eax, [x2]
+			
+			ttmath_loop:
+				adc [ebx+edx*4], eax
+			jnc ttmath_end
+
+				mov eax, 0
+				inc edx
+				dec ecx
+			jnz ttmath_loop
+
+			ttmath_end:
+				setc al
+				movzx edx, al
+				mov [c], edx
+				
+				pop edx
+				pop ecx
+				pop ebx
+				pop eax
+
+			}
+		#endif
+			
+		// 64bit register: rax
+		// 32bit register: eax
+		// Operation Suffixes[edit]: b = byte (8 bit), s = single (32-bit floating point), w = word (16 bit), l = long (32 bit integer or 64-bit floating point), q = quad (64 bit), t = ten bytes (80-bit floating point).
+		// print register in lldb: print $rbx
+		#ifdef __GNUC__
+			BIG_INT_WORD_COUNT_TYPE dummy=0, dummy2=0;
+
+			__asm__ __volatile__(
+			
+				"subl %%edx, %%ecx 				\n" // Subtract %edx from %ecx and store result into register %ecx
+				
+				"addl %%esi, (%%rbx,%%rdx,4) 	\n" // Add %esi and (%%ebx,%%edx,4) and store result into register  (%%ebx,%%edx,4); address ebi+4*rdb
+				"incl %%edx						\n"
+				"decl %%ecx						\n"
+
+			"1:									\n"
+				"adcl %%eax, (%%rbx,%%rdx,4)	\n"
+			"jnc 2f								\n"
+
+				"mov $0, %%eax					\n"
+				"incl %%edx						\n"
+				"decl %%ecx						\n"
+			"jnz 1b								\n"
+
+			"2:									\n"
+				"setc %%al						\n"
+				"movzx %%al, %%eax				\n"
+
+				: "=a" (c), "=c" (dummy), "=d" (dummy2)
+				: "0" (wordHigh), "1" (b),      "2" (index), "b" (p1), "S" (wordLow)
+				: "cc", "memory" );
+
+		#endif
+	#endif
 	return c;
 }
 

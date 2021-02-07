@@ -21,6 +21,7 @@ namespace ppvr {
 		class BigIntUtil {
 
 		public:
+			static uint addTwoIntsCounter;
 			
 		// ----- bit utilities -----
 			

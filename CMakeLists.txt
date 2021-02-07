@@ -10,6 +10,13 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(HEVolRender)
 
+#if(NOT CMAKE_BUILD_TYPE)
+#  set(CMAKE_BUILD_TYPE Release)
+#endif()
+#set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+#set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+
 IF(UNIX AND NOT APPLE)
 	set(LINUX TRUE)
 ENDIF()
@@ -58,6 +65,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 #set(CMAKE_CXX_EXTENSIONS NO)
 
 set(CMAKE_CXX_FLAGS  "-Werror=return-type ${GCC_COVERAGE_COMPILE_FLAGS}")
+
+if(APPLE)
+	# allow inline ASM
+	set(CMAKE_CXX_FLAGS  "-DRUNTIME_IL2CPP=1")
+ENDIF()
 
 ##########################
 # copy required assets

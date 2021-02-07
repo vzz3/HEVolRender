@@ -93,7 +93,7 @@ int showQtWindow(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-	uint nBits = 2024;
+	uint nBits = 8192;// 2048;
 	std::cout << nBits << " random bits: " << ppvr::math::SArbBigInt::randomNumber(nBits,  ppvr::math::Random::getForLocalThread()).toStringHex() << std::endl << "---" << std::endl;
 	ppvr::math::PerformanceTest::modPow();
 	
