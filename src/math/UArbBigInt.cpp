@@ -935,16 +935,108 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 	result.reserveWords(maxWordCount);
 	std::fill_n(result.value, maxWordCount, 0);
 
-	for(uint aI=aStart ; aI<aSize ; ++aI)
-	{
-		for(uint bI=bStart ; bI<bSize ; ++bI)
-		{
-			BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
-			BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
-			// here will never be a carry
+	if constexpr(true && !BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+		if (bSize == 1) {
+			a.mulInt(b.value[0], result);
+			return;
+		} else if (aSize == 1) {
+			b.mulInt(a.value[0], result);
+			return;
+		}
+		
+		// from JAVA private static int[] multiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {}
+		// https://stackoverflow.com/questions/55778236/explanation-of-biginteger-multiplytolen-function
+		bStart = aStart = 0;
+		uint64_t carry = 0;
+		for (BIG_INT_WORD_COUNT_TYPE j=bStart, k=bStart+aStart; j < bSize; j++, k++) {
+			assert( j < b.wordCapacity );
+			assert( aStart < a.wordCapacity );
+			assert( k < result.wordCapacity );
+			
+			uint64_t product =  (uint64_t)(b.value[     j]) *
+								(uint64_t)(a.value[aStart]) + carry;
+			result.value[k] = (BIG_INT_WORD_TYPE)product;
+			
+			carry = product >> BIG_INT_BITS_PER_WORD;
+		}
+		assert( bSize < result.wordCapacity );
+		result.value[bSize] = (BIG_INT_WORD_TYPE)carry; // result.value[35] = 0x75
+
+		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+			carry = 0;
+			for (BIG_INT_WORD_COUNT_TYPE j=bStart, k=bStart+i; j < bSize; j++, k++) {
+				assert( j < b.wordCapacity );
+				assert( i < a.wordCapacity );
+				assert( k < result.wordCapacity );
+				
+				uint64_t product =  (uint64_t)(     b.value[j]) *					// b.value[5] = 0x66
+									(uint64_t)(     a.value[i]) +					// a.value[1] = 0x09
+									(uint64_t)(result.value[k]) + carry;			// result.value[5] = 0x96		carry = 0x03
+				result.value[k] = (BIG_INT_WORD_TYPE)product;						// product = 0x0430	!!	0x042F = 0x66 * 0x09 + 0x96 + 0x03 => compiler error????
+				
+				carry = product >> BIG_INT_BITS_PER_WORD;
+			}
+			
+			assert( bSize+i < result.wordCapacity );
+			result.value[bSize+i] = (BIG_INT_WORD_TYPE)carry;
+		}
+	} else {
+		// basic school algorithem
+		for(BIG_INT_WORD_COUNT_TYPE aI=aStart ; aI<aSize ; ++aI) {
+			for(BIG_INT_WORD_COUNT_TYPE bI=bStart ; bI<bSize ; ++bI) {
+				BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
+				BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
+				// here will never be a carry
+			}
 		}
 	}
+	
+	// optimize word count
+	BIG_INT_WORD_COUNT_TYPE usedWordIndex;
+	for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
 
+	result.wordSize = usedWordIndex;
+}
+
+void UArbBigInt::mulSchoolBasic(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const {
+	BIG_INT_WORD_COUNT_TYPE aSize  = a.wordSize, 	bSize  = b.wordSize;
+	BIG_INT_WORD_COUNT_TYPE aStart = 0,       		bStart = 0;
+
+	if( a.wordSize > 2 ) {
+		// if the wordCount is smaller than or equal to 2
+		// there is no sense to set aSize (and others) to another values
+
+		for(aSize=a.wordSize ; aSize>0 && a.value[aSize-1]==0 ; --aSize);
+		for(aStart=0 ; aStart<aSize && a.value[aStart]==0 ; ++aStart);
+	}
+	if( b.wordSize > 2 ) {
+		// if the wordCount is smaller than or equal to 2
+		// there is no sense to set bSize (and others) to another values
+
+		for(bSize=b.wordSize ; bSize>0 && b.value[bSize-1]==0 ; --bSize);
+		for(bStart=0 ; bStart<bSize && b.value[bStart]==0 ; ++bStart);
+	}
+
+	if( aSize==0 || bSize==0 ) {
+		result.setZero();
+		return;
+	}
+
+	BIG_INT_WORD_TYPE r2, r1;
+
+	BIG_INT_WORD_COUNT_TYPE maxWordCount = aSize + bSize;
+	result.reserveWords(maxWordCount);
+	std::fill_n(result.value, maxWordCount, 0);
+
+		// basic school algorithem
+		for(BIG_INT_WORD_COUNT_TYPE aI=aStart ; aI<aSize ; ++aI) {
+			for(BIG_INT_WORD_COUNT_TYPE bI=bStart ; bI<bSize ; ++bI) {
+				BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
+				BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, maxWordCount);
+				// here will never be a carry
+			}
+		}
+	
 	// optimize word count
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex;
 	for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
@@ -1368,11 +1460,16 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 	UArbBigInt result(1);
 	uint c = 0;
 
+//	UArbBigInt test;
 	//while( !c ) {
 	while( true ) {
 		if( pow.isOdd() ) {//if( pow.value[0] & 1 ) {
 			//c += result.mul(start);
+//			mulSchoolBasic(result, start, test);
 			result = result * start;
+//			if(test != result) {
+//				std::cout << "ERROR pow1: " << std::endl << "\t" << result << std::endl << "\t" << " != " << std::endl << "\t" << test << std::endl;
+//			}
 		}
 
 		pow.rcr(1);
@@ -1382,7 +1479,18 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 		}
 
 		//c += start.Mul(start);
+//		mulSchoolBasic(start, start, test);
 		start = start * start;
+//		UArbBigInt testS1 = start;
+//		UArbBigInt testS2 = start;
+//		UArbBigInt testS3 = testS1 * testS2;
+//		if(test != start) {
+//			std::cout << "ERROR pow2: " << std::endl << "\t" << start << std::endl << "\t" << " != " << std::endl << "\t" << test << std::endl;
+//			start = test;
+//		} else {
+//			start = testS3;
+//		}
+		
 	}
 
 	//*this = result;
@@ -1448,6 +1556,9 @@ void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const
 		}
 		exponent = exponent >> 1;
 		baseTmp = baseTmp.pow(2) % modulus;
+		// TODO: should be faster
+		//exponent.rcr(1);
+		//baseTmp = (baseTmp * baseTmp) % modulus;
 	}
 }
 
@@ -2004,7 +2115,7 @@ void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBig
 		return;
 	}
 
-	//modPow_naiv(*this, exponent, modulus, result);
+	//modPow_naiv(base, exponent, modulus, result);
 	montmodpow(base, exponent, modulus, result);
 	
 	// faster version from java BigInt ....

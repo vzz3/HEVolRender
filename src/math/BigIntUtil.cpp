@@ -43,7 +43,7 @@ int BigIntUtil::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) {
 // ----- addition -----
 
 BIG_INT_WORD_TYPE BigIntUtil::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) {
-	/*
+	
 	BIG_INT_WORD_TYPE temp;
 	if( carry == 0 ) {
 		temp = a + b;
@@ -59,11 +59,10 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_I
 	}
 	*result = temp;
 	return carry;
-	 */
 	
-	uint64_t temp = (uint64_t)a + (uint64_t)b + (uint64_t)carry;
-	*result = temp;
-	return (temp > uint64_t(BIG_INT_WORD_MAX_VALUE));
+//	uint64_t temp = (uint64_t)a + (uint64_t)b + (uint64_t)carry;
+//	*result = temp;
+//	return (temp > uint64_t(BIG_INT_WORD_MAX_VALUE));
 }
 
 BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) {
@@ -75,43 +74,65 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const
 	
 	#ifdef BIG_INT_NOASM
 	
-		#ifdef BIG_INT_REDUCE_BRANCHING
-			targetArray[index] += wordLow;
-			c = (targetArray[index] < wordLow);
-
-			targetArray[index+1] += c;
-			c = (targetArray[index+1] < c);
-
-			targetArray[index+1] += wordHigh;
-			c = c || (targetArray[index+1] < wordHigh);
-
-			for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
-				targetArray[i] += c;
-				c = (targetArray[i] < c);
-			}
+//		#ifdef BIG_INT_REDUCE_BRANCHING
+//			targetArray[index] += wordLow;
+//			c = (targetArray[index] < wordLow);
+//
+//			targetArray[index+1] += c;
+//			c = (targetArray[index+1] < c);
+//
+//			targetArray[index+1] += wordHigh;
+//			c = c || (targetArray[index+1] < wordHigh);
+//
+//			for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+//				targetArray[i] += c;
+//				c = (targetArray[i] < c);
+//			}
+//
+//		//	BIG_INT_WORD_TYPE c;
+//		//	uint64_t tmp = (uint64_t)targetArray[index] + (uint64_t)wordLow;
+//		//	targetArray[index] = tmp;
+//		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
+//		//
+//		//	tmp = (uint64_t)targetArray[index+1] + (uint64_t)wordHigh + (uint64_t)c;
+//		//	targetArray[index+1] = tmp;
+//		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
+//		//
+//		//	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+//		//		targetArray[i] += c;
+//		//		c = (targetArray[i] < c);
+//		//	}
+//		#else
+	
+//			if constexpr(!BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+//				// bul two words with at most 32 bits is posible in a 64bit register without overflow
+//				uint64_t longWordSrc = (uint64_t)wordLow + ((uint64_t)wordHigh << BIG_INT_BITS_PER_WORD);
+//				uint64_t longWordTarget = (uint64_t)targetArray[index] + ((uint64_t)targetArray[index+1] << BIG_INT_BITS_PER_WORD);
+//				uint64_t longWordSum = longWordSrc + longWordTarget;
+//				c = ( longWordSum < longWordSrc );
+//				targetArray[index] = longWordSum;
+//				targetArray[index+1] = longWordSum >> BIG_INT_BITS_PER_WORD;
+//
+//				for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+//					targetArray[i] += c;
+//					c = (targetArray[i] < c);
+//				}
+//			} else {
+				c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
+				c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
+				
+				#ifndef BIG_INT_REDUCE_BRANCHING
+					for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
+						c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
+					}
+				#else
+					for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount; i++) {
+						c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
+					}
+				#endif
+//			}
 			
-		//	BIG_INT_WORD_TYPE c;
-		//	uint64_t tmp = (uint64_t)targetArray[index] + (uint64_t)wordLow;
-		//	targetArray[index] = tmp;
-		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
-		//
-		//	tmp = (uint64_t)targetArray[index+1] + (uint64_t)wordHigh + (uint64_t)c;
-		//	targetArray[index+1] = tmp;
-		//	c = (tmp > uint64_t(BIG_INT_WORD_MAX_VALUE));
-		//
-		//	for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
-		//		targetArray[i] += c;
-		//		c = (targetArray[i] < c);
-		//	}
-		#else
-			
-			c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
-			c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
-			
-			for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
-				c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
-			}
-		#endif
+		//#endif
 	#else
 		BIG_INT_WORD_COUNT_TYPE b = targetWordCount;
 		BIG_INT_WORD_TYPE * p1 = targetArray;
@@ -281,56 +302,63 @@ BIG_INT_WORD_TYPE BigIntUtil::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT
 // ----- multiplication -----
 
 void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) {
-	/*
-	 expect BIG_INT_WORD_TYPE to be a 64 bits variable:
-	 we don't have a native type which has 128 bits
-	 then we're splitting 'a' and 'b' to 4 parts (high and low halves)
-	 and using 4 multiplications (with additions and carry correctness)
-	 */
-	
-	BIG_INT_WORD_TYPE aLow = BigIntUtil::getLowAsLowBits(a); 		// aLow = a.low;
-	BIG_INT_WORD_TYPE bLow = BigIntUtil::getLowAsLowBits(b); 		// aLow = b.low;
-	BIG_INT_WORD_TYPE aHigh = BigIntUtil::getHighAsLowBits(a); 	// aHigh = a.high;
-	BIG_INT_WORD_TYPE bHigh = BigIntUtil::getHighAsLowBits(b); 	// bHigh = b.high;
-	
-	BIG_INT_WORD_TYPE res_high1, res_high2;
-	BIG_INT_WORD_TYPE res_low1, res_low2;
-	
-	/*
-	 the multiplication is as follows (schoolbook algorithm with O(n^2) ):
-	 
-	 32 bits          32 bits
-	 
-	 +--------------------------------+
-	 |     a.high     |     a.low     |
-	 +--------------------------------+
-	 |     b.high     |     b.low     |
-	 +--------------------------------+--------------------------------+
-	 |            res_high1           |            res_low1            |
-	 +--------------------------------+--------------------------------+
-	 |            res_high2           |            res_low2            |
-	 +--------------------------------+--------------------------------+
-	 
-	 64 bits                          64 bits
-	 */
-	
-	
-	BIG_INT_WORD_TYPE temp;
-	
-	res_low1  = bLow * aLow; 										// res_low1 = b.low * a.low
-	temp 	  = BigIntUtil::getHighAsLowBits(res_low1) + bLow * aHigh;	// temp = res_low1.high + b.low * a.high
-	res_low1  = BigIntUtil::setHighFromLowBits(res_low1, temp); 			// res_low1.high = temp.low
-	res_high1 = BigIntUtil::setLowFromHighBits(res_high1, temp); 			// res_high1.low = temp.high
-	res_high1 = BigIntUtil::getLowAsLowBits(res_high1); 					// res_high1.high = 0
-	
-	res_low2  = BigIntUtil::getHighAsHighBits(res_low2); 					// res_low2.low = 0
-	temp	  = bHigh * aLow; 										// b.high * a.low
-	res_low2  = BigIntUtil::setHighFromLowBits(res_low2, temp); 			// res_low2.high = temp.low
-	
-	res_high2 = bHigh * aHigh + BigIntUtil::getHighAsLowBits(temp); 		// res_high2 = b.high * a.high + temp.high
-	
-	BIG_INT_WORD_TYPE c = BigIntUtil::addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
-	BigIntUtil::addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
+	if constexpr(!BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+		// bul two words with at most 32 bits is posible in a 64bit register without overflow
+		uint64_t result = (uint64_t)a * (uint64_t)b;
+		*resultLow  = (BIG_INT_WORD_TYPE) result;
+		*resultHigh = (BIG_INT_WORD_TYPE)(result >> BIG_INT_BITS_PER_WORD);
+	} else {
+		/*
+		 expect BIG_INT_WORD_TYPE to be a 64 bits variable:
+		 we don't have a native type which has 128 bits
+		 then we're splitting 'a' and 'b' to 4 parts (high and low halves)
+		 and using 4 multiplications (with additions and carry correctness)
+		 */
+		
+		BIG_INT_WORD_TYPE aLow = BigIntUtil::getLowAsLowBits(a); 		// aLow = a.low;
+		BIG_INT_WORD_TYPE bLow = BigIntUtil::getLowAsLowBits(b); 		// aLow = b.low;
+		BIG_INT_WORD_TYPE aHigh = BigIntUtil::getHighAsLowBits(a); 	// aHigh = a.high;
+		BIG_INT_WORD_TYPE bHigh = BigIntUtil::getHighAsLowBits(b); 	// bHigh = b.high;
+		
+		BIG_INT_WORD_TYPE res_high1, res_high2;
+		BIG_INT_WORD_TYPE res_low1, res_low2;
+		
+		/*
+		 the multiplication is as follows (schoolbook algorithm with O(n^2) ):
+		 
+		 32 bits          32 bits
+		 
+		 +--------------------------------+
+		 |     a.high     |     a.low     |
+		 +--------------------------------+
+		 |     b.high     |     b.low     |
+		 +--------------------------------+--------------------------------+
+		 |            res_high1           |            res_low1            |
+		 +--------------------------------+--------------------------------+
+		 |            res_high2           |            res_low2            |
+		 +--------------------------------+--------------------------------+
+		 
+		 64 bits                          64 bits
+		 */
+		
+		
+		BIG_INT_WORD_TYPE temp;
+		
+		res_low1  = bLow * aLow; 										// res_low1 = b.low * a.low
+		temp 	  = BigIntUtil::getHighAsLowBits(res_low1) + bLow * aHigh;	// temp = res_low1.high + b.low * a.high
+		res_low1  = BigIntUtil::setHighFromLowBits(res_low1, temp); 			// res_low1.high = temp.low
+		res_high1 = BigIntUtil::setLowFromHighBits(res_high1, temp); 			// res_high1.low = temp.high
+		res_high1 = BigIntUtil::getLowAsLowBits(res_high1); 					// res_high1.high = 0
+		
+		res_low2  = BigIntUtil::getHighAsHighBits(res_low2); 					// res_low2.low = 0
+		temp	  = bHigh * aLow; 										// b.high * a.low
+		res_low2  = BigIntUtil::setHighFromLowBits(res_low2, temp); 			// res_low2.high = temp.low
+		
+		res_high2 = bHigh * aHigh + BigIntUtil::getHighAsLowBits(temp); 		// res_high2 = b.high * a.high + temp.high
+		
+		BIG_INT_WORD_TYPE c = BigIntUtil::addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
+		BigIntUtil::addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
+	}
 }
 
 // ----- division -----

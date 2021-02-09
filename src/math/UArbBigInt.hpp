@@ -32,7 +32,7 @@ namespace ppvr {
 			//friend class UFixBigInt;
 			
 			friend std::ostream& operator << ( std::ostream& os, const UArbBigInt& value ){
-				os << value.toStringDec();
+				os << value.toStringHex();
 				return os;
 			}
 
@@ -417,6 +417,7 @@ namespace ppvr {
 
 		private:
 			void mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const;
+			void mulSchoolBasic(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const;
 
 		protected:
 			/**

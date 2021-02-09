@@ -37,3 +37,17 @@ modPow() Montgomery 8192bit  ... time required: 30274ms, addTwoIntsCounter: 2408
 ## ASM addTwoInts:
 modPow() Naiv  8192bit       ... time required: 31035ms, addTwoIntsCounter: 1608527035
 modPow() Montgomery 8192bit  ... time required: 44066ms, addTwoIntsCounter: 2406953916
+
+
+## 32bit*32bit=64bit mulTwoWords
+modPow() Naiv  8192bit       ... time required: 17663ms, addTwoIntsCounter: 1608527035
+modPow() Montgomery 8192bit  ... time required: 21656ms, addTwoIntsCounter: 2406953916
+
+
+## 32bit*32bit=64bit mulTwoWords, 32bit+32bit=64bit addTwoInts
+modPow() Naiv  8192bit       ... time required: 17169ms, addTwoIntsCounter: 1608527035
+modPow() Montgomery 8192bit  ... time required: 21611ms, addTwoIntsCounter: 2406953916
+
+## javas multiplyToLen()
+modPow() Naiv  8192bit       ... time required: 11410ms, addTwoIntsCounter:  806370374
+modPow() Montgomery 8192bit  ... time required:  2945ms, addTwoIntsCounter:     213575

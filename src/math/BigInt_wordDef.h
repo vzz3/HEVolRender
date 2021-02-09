@@ -53,5 +53,6 @@
 // Certainty required to meet the spec of probablePrime
 #define BIG_INT_DEFAULT_PRIME_CERTAINTY 100
 
-#define BIG_INT_REDUCE_BRANCHING 1
-//#define BIG_INT_NOASM
+//#define BIG_INT_REDUCE_BRANCHING 1
+#define BIG_INT_NOASM true
+#define BIG_INT_FORCE_SCHOOL false
