@@ -92,10 +92,13 @@ int showQtWindow(int argc, char *argv[]) {
 	return result;
 }
 
-int main(int argc, char *argv[]) {
+int executePerformanceTest(int argc, char *argv[]) {
 	uint nBits = 8192;// 2048;
 	std::cout << nBits << " random bits: " << ppvr::math::SArbBigInt::randomNumber(nBits,  ppvr::math::Random::getForLocalThread()).toStringHex() << std::endl << "---" << std::endl;
 	ppvr::math::PerformanceTest::modPow();
-	
-	// showQtWindow(argc, argv);
+}
+
+int main(int argc, char *argv[]) {
+	//executePerformanceTest(argc, argv);
+	showQtWindow(argc, argv);
 }

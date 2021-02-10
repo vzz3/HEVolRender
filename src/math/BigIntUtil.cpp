@@ -302,12 +302,14 @@ BIG_INT_WORD_TYPE BigIntUtil::subInt(const BIG_INT_WORD_TYPE word, const BIG_INT
 // ----- multiplication -----
 
 void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow) {
-	if constexpr(!BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+	#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+	//if constexpr(!BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
 		// bul two words with at most 32 bits is posible in a 64bit register without overflow
 		uint64_t result = (uint64_t)a * (uint64_t)b;
 		*resultLow  = (BIG_INT_WORD_TYPE) result;
 		*resultHigh = (BIG_INT_WORD_TYPE)(result >> BIG_INT_BITS_PER_WORD);
-	} else {
+	//} else {
+	#else
 		/*
 		 expect BIG_INT_WORD_TYPE to be a 64 bits variable:
 		 we don't have a native type which has 128 bits
@@ -358,7 +360,8 @@ void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 		
 		BIG_INT_WORD_TYPE c = BigIntUtil::addTwoWords( res_low1,  res_low2, 0,  resultLow); // c = this->addTwoWords(res_low1, res_low2, 0, &res_low2)
 		BigIntUtil::addTwoWords(res_high1, res_high2, c, resultHigh); // there is no carry from here
-	}
+	//}
+	#endif
 }
 
 // ----- division -----

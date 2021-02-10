@@ -94,6 +94,10 @@ namespace ppvr {
 				return this->value;
 			}
 			
+			inline BIG_INT_WORD_TYPE* getDataUnsafe() {
+				return this->value;
+			}
+			
 		// ----- constructors -----
 		public:
 			UArbBigInt();
@@ -525,21 +529,28 @@ namespace ppvr {
 			 */
 			UArbBigInt sqrt() const;
 
+		// ----- modInverse / gcd -----
+		private:
+			static UArbBigInt gcd(const UArbBigInt & a, const UArbBigInt & b);
+			UArbBigInt gcd(const UArbBigInt & b) const;
+			
+			//static uint gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b);
+			//static void gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd = nullptr);
+			/**
+			 * Function for a binary extended Euclidean Algorithm that uses only unsigned arithmetic.
+			 * It returns not only the gcd but alls the the Bézout coefficients, u and v, which satisfy: a.*u + b.*v = gcd.
+			 * The Bézout coefficients are useful for solving Diophantine equations.
+			 * @return gcd of b and a.
+
+			 */
+			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v);
+			
+		public:
+			UArbBigInt modInverse(const UArbBigInt & m) const;
 			
 		// ----- modPow -----
 		private:
 			static void modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result);
-
-			/**
-			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 */
-			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
-
-			/**
-			 * Returns a BigInteger whose value is this mod(2**p).
-			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 */
-			//SArbBigInt mod2(int p) const;
 			
 			/**
 			 * Efficient Modular Exponentiation with Montgomery Reduction and the K-Ary method
@@ -548,21 +559,18 @@ namespace ppvr {
 			 * https://www.nayuki.io/page/montgomery-reduction-algorithm
 			 * https://www.nayuki.io/res/montgomery-reduction-algorithm/MontgomeryReducer.java
 			 */
-			static void montmodpow(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
-			static void montmodpow_odd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
-			static void montmodpow_even(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void modPow_montgomery(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
-			static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);
-			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v);
-			//static void gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd = nullptr);
-			//static uint gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b);
-		public:
-			UArbBigInt modInverse(const UArbBigInt & m) const;
+			//static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);
+			
 		private:
-			static UArbBigInt montin(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits);
-			static UArbBigInt montout(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus);
-			static UArbBigInt montredc(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
+			static UArbBigInt montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits);
+			static UArbBigInt montgomeryOut(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus);
+			static UArbBigInt montgomeryMultiply(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
+			static UArbBigInt montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
 			
 			/**
 			 * ModPow - Special Case (modulus == 2^p)
@@ -575,10 +583,6 @@ namespace ppvr {
 			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
 			 */
 			UArbBigInt mod2(uint p) const;
-			
-			static UArbBigInt gcd(const UArbBigInt & a, const UArbBigInt & b);
-			UArbBigInt gcd(const UArbBigInt & b) const;
-			
 			
 		public:
 			/**

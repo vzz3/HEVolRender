@@ -169,6 +169,14 @@ namespace ppvr {
 			}
 			
 		public:
+			inline const BIG_INT_WORD_TYPE* getData() const {
+				return UArbBigInt::getData();
+			}
+			
+			inline BIG_INT_WORD_TYPE* getDataUnsafe() {
+				return UArbBigInt::getDataUnsafe();
+			}
+			
 			inline void fixSignumAfterUnsafeOperation(bool yNegative) {
 				if( this->isMagnitudeZero() ) {
 					this->signum = 0;
@@ -367,17 +375,6 @@ namespace ppvr {
 			SArbBigInt sqrt() const;
 
 
-		// ----- Comparison operators -----
-		public:
-			bool operator< (const SArbBigInt& other) const;
-			bool operator<= (const SArbBigInt& other) const;
-			bool operator> (const SArbBigInt& other) const;
-			bool operator>= (const SArbBigInt& other) const;
-			bool operator== (const SArbBigInt& other) const;
-			bool operator!= (const SArbBigInt& other) const;
-
-
-
 		// ----- modInverse / gcd -----
 		private:
 
@@ -434,6 +431,15 @@ namespace ppvr {
 			 */
 			SArbBigInt modPow(const SArbBigInt &exponent, const SArbBigInt &modulus) const;
 
+		// ----- Comparison operators -----
+		public:
+			bool operator< (const SArbBigInt& other) const;
+			bool operator<= (const SArbBigInt& other) const;
+			bool operator> (const SArbBigInt& other) const;
+			bool operator>= (const SArbBigInt& other) const;
+			bool operator== (const SArbBigInt& other) const;
+			bool operator!= (const SArbBigInt& other) const;
+			
 		};
 	}
 }

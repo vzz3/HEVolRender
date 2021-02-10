@@ -935,7 +935,8 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 	result.reserveWords(maxWordCount);
 	std::fill_n(result.value, maxWordCount, 0);
 
-	if constexpr(true && !BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+	//if constexpr(true && !BIG_INT_FORCE_SCHOOL && BIG_INT_BITS_PER_WORD <= 32) {
+	#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
 		if (bSize == 1) {
 			a.mulInt(b.value[0], result);
 			return;
@@ -980,7 +981,8 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 			assert( bSize+i < result.wordCapacity );
 			result.value[bSize+i] = (BIG_INT_WORD_TYPE)carry;
 		}
-	} else {
+	//} else {
+	#else
 		// basic school algorithem
 		for(BIG_INT_WORD_COUNT_TYPE aI=aStart ; aI<aSize ; ++aI) {
 			for(BIG_INT_WORD_COUNT_TYPE bI=bStart ; bI<bSize ; ++bI) {
@@ -989,7 +991,8 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 				// here will never be a carry
 			}
 		}
-	}
+	//}
+	#endif
 	
 	// optimize word count
 	BIG_INT_WORD_COUNT_TYPE usedWordIndex;
@@ -1460,16 +1463,11 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 	UArbBigInt result(1);
 	uint c = 0;
 
-//	UArbBigInt test;
 	//while( !c ) {
 	while( true ) {
 		if( pow.isOdd() ) {//if( pow.value[0] & 1 ) {
 			//c += result.mul(start);
-//			mulSchoolBasic(result, start, test);
 			result = result * start;
-//			if(test != result) {
-//				std::cout << "ERROR pow1: " << std::endl << "\t" << result << std::endl << "\t" << " != " << std::endl << "\t" << test << std::endl;
-//			}
 		}
 
 		pow.rcr(1);
@@ -1479,18 +1477,7 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 		}
 
 		//c += start.Mul(start);
-//		mulSchoolBasic(start, start, test);
 		start = start * start;
-//		UArbBigInt testS1 = start;
-//		UArbBigInt testS2 = start;
-//		UArbBigInt testS3 = testS1 * testS2;
-//		if(test != start) {
-//			std::cout << "ERROR pow2: " << std::endl << "\t" << start << std::endl << "\t" << " != " << std::endl << "\t" << test << std::endl;
-//			start = test;
-//		} else {
-//			start = testS3;
-//		}
-		
 	}
 
 	//*this = result;
@@ -1536,40 +1523,7 @@ UArbBigInt UArbBigInt::sqrt() const {
 }
 
 
-// ----- modPow -----
-
-void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) {
-	result.setOne();
-	if(modulus.isOne()) {
-		return;
-	}
-
-	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
-
-	// ensure that the base is < modulus
-	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
-	UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
-	
-	while ( !exponent.isZero()) {
-		if (exponent.isOdd()) {
-			result = (result * baseTmp) % modulus;
-		}
-		exponent = exponent >> 1;
-		baseTmp = baseTmp.pow(2) % modulus;
-		// TODO: should be faster
-		//exponent.rcr(1);
-		//baseTmp = (baseTmp * baseTmp) % modulus;
-	}
-}
-
-void UArbBigInt::montmodpow(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-	if (modulus.isOdd()) {
-		montmodpow_odd(base, exponent, modulus, result);
-	} else {
-		montmodpow_even(base, exponent, modulus, result);
-	}
-}
-
+// ----- modInverse / gcd -----
 
 // https://www.di-mgt.com.au/euclidean.html
 UArbBigInt UArbBigInt::gcd(const UArbBigInt & a, const UArbBigInt & b) {
@@ -1582,57 +1536,6 @@ UArbBigInt UArbBigInt::gcd(const UArbBigInt & b) const {
 	return gcd(*this, b);
 }
 
-// From Hacker's Delight
-// https://github.com/hcs0/Hackers-Delight/blob/master/mont64.c.txt
-void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v) {
-	/* C program implementing the extended binary GCD algorithm. C.f.
-	http://www.ucl.ac.uk/~ucahcjm/combopt/ext_gcd_python_programs.pdf. This
-	is a modification of that routine in that we find s and t s.t.
-		gcd(a, b) = s*a - t*b,
-	rather than the same expression except with a + sign.
-	   This routine has been greatly simplified to take advantage of the
-	facts that in the MM use, argument a is a power of 2, and b is odd. Thus
-	there are no common powers of 2 to eliminate in the beginning. The
-	parent routine has two loops. The first drives down argument a until it
-	is 1, modifying u and v in the process. The second loop modifies s and
-	t, but because a = 1 on entry to the second loop, it can be easily seen
-	that the second loop doesn't alter u or v. Hence the result we want is u
-	and v from the end of the first loop, and we can delete the second loop.
-	   The intermediate and final results are always > 0, so there is no
-	trouble with negative quantities. Must have a either 0 or a power of 2
-	<= 2**63. A value of 0 for a is treated as 2**64. b can be any 64-bit
-	value.
-	   Parameter a is half what it "should" be. In other words, this function
-	does not find u and v st. u*a - v*b = 1, but rather u*(2a) - v*b = 1. */
-	
-	u.setOne();
-	v.setZero();
-	UArbBigInt alpha{a};
-	UArbBigInt beta {b};
-	UArbBigInt a1{a};
-	
-	/* The invariant maintained from here on is:
-	   a = u*2*alpha - v*beta. */
-
-	while (!a1.isZero()) {
-		a1.rcr(1); // A >>= 1;
-		v.rcr(1); // v >>= 1;
-
-		if (u.isOdd()) { //if ((u & 1) == 1) {
-			u = ((u ^ beta) >> 1) + (u & beta);
-			v.add(alpha); // v += alpha;
-		} else {
-			// Delete a common factor of 2 in u and v.
-			u.rcr(1); // u >>= 1;
-		}
-		
-		//assert( a == (TWO*alpha*u - beta*v) );
-	}
-
-	//R = u;
-	//K = v;
-	assert( ( TWO*(a)*u - b*v).isOne() );
-}
 /*
 uint UArbBigInt::gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b) {
 	uint c = 0;
@@ -1643,8 +1546,8 @@ uint UArbBigInt::gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UA
 	}
 	return c;
 }
-*/
-/*
+* /
+/ *
 void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd) {
 	// https://github.com/DavidNorman/gcd
 	
@@ -1690,8 +1593,8 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 	u = Sx; //S = Sx
 	v = Tx; //T = Tx
 }
-*/
-/*
+* /
+/ *
 void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut, UArbBigInt* gcd) {
 	// https://www.di-mgt.com.au/euclidean.html
 	// https://cs.stackexchange.com/questions/86779/maximum-value-reached-in-extended-binary-gcd
@@ -1780,6 +1683,7 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 	}
 }
 */
+
 UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut) {
 	const UArbBigInt& a = aIn;
 	const UArbBigInt& b = bIn;
@@ -1933,7 +1837,96 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 	return u % m;
 }
 
-void UArbBigInt::montmodpow_odd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+// ----- modPow -----
+
+void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) {
+	result.setOne();
+	if(modulus.isOne()) {
+		return;
+	}
+
+	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
+
+	// ensure that the base is < modulus
+	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
+	
+	while ( !exponent.isZero()) {
+		if (exponent.isOdd()) {
+			result = (result * baseTmp) % modulus;
+		}
+		//exponent = exponent >> 1;
+		//baseTmp = baseTmp.pow(2) % modulus;
+		// should be faster
+		exponent.rcr(1);
+		baseTmp = (baseTmp * baseTmp) % modulus;
+	}
+}
+
+void UArbBigInt::modPow_montgomery(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	if (modulus.isOdd()) {
+		modPow_montgomeryOdd(base, exponent, modulus, result);
+	} else {
+		modPow_montgomeryEven(base, exponent, modulus, result);
+	}
+}
+
+/*
+// From Hacker's Delight
+// https://github.com/hcs0/Hackers-Delight/blob/master/mont64.c.txt
+void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v) {
+	/ * C program implementing the extended binary GCD algorithm. C.f.
+	http://www.ucl.ac.uk/~ucahcjm/combopt/ext_gcd_python_programs.pdf. This
+	is a modification of that routine in that we find s and t s.t.
+		gcd(a, b) = s*a - t*b,
+	rather than the same expression except with a + sign.
+	   This routine has been greatly simplified to take advantage of the
+	facts that in the MM use, argument a is a power of 2, and b is odd. Thus
+	there are no common powers of 2 to eliminate in the beginning. The
+	parent routine has two loops. The first drives down argument a until it
+	is 1, modifying u and v in the process. The second loop modifies s and
+	t, but because a = 1 on entry to the second loop, it can be easily seen
+	that the second loop doesn't alter u or v. Hence the result we want is u
+	and v from the end of the first loop, and we can delete the second loop.
+	   The intermediate and final results are always > 0, so there is no
+	trouble with negative quantities. Must have a either 0 or a power of 2
+	<= 2**63. A value of 0 for a is treated as 2**64. b can be any 64-bit
+	value.
+	   Parameter a is half what it "should" be. In other words, this function
+	does not find u and v st. u*a - v*b = 1, but rather u*(2a) - v*b = 1.
+	* /
+	
+	u.setOne();
+	v.setZero();
+	UArbBigInt alpha{a};
+	UArbBigInt beta {b};
+	UArbBigInt a1{a};
+	
+	/ * The invariant maintained from here on is:
+	   a = u*2*alpha - v*beta. * /
+
+	while (!a1.isZero()) {
+		a1.rcr(1); // A >>= 1;
+		v.rcr(1); // v >>= 1;
+
+		if (u.isOdd()) { //if ((u & 1) == 1) {
+			u = ((u ^ beta) >> 1) + (u & beta);
+			v.add(alpha); // v += alpha;
+		} else {
+			// Delete a common factor of 2 in u and v.
+			u.rcr(1); // u >>= 1;
+		}
+		
+		//assert( a == (TWO*alpha*u - beta*v) );
+	}
+
+	//R = u;
+	//K = v;
+	assert( ( TWO*(a)*u - b*v).isOne() );
+}
+*/
+
+void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
@@ -1979,25 +1972,114 @@ void UArbBigInt::montmodpow_odd(const UArbBigInt& base, const UArbBigInt& expone
 	factor = (reducer * reciprocal - ONE ) / modulus;
 	UArbBigInt convertedOne = reducer % modulus;
 	 
-	UArbBigInt x = montin(base, modulus, reducerBits);
+	UArbBigInt x = montgomeryIn(base, modulus, reducerBits);
 	UArbBigInt y = exponent;
 	UArbBigInt z = convertedOne;
 	for (size_t i = 0, len = y.bitLength(); i < len; i++) {
 		if (y.testBit(i)) {
-			z = montredc(z, x, modulus, factor, reducerBits, mask);
+			z = montgomeryMultiply(z, x, modulus, factor, reducerBits, mask);
 		}
-		x = montredc(x, x, modulus, factor, reducerBits, mask);
+		x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
 	}
-	result = montout(z, reciprocal, modulus);
+	result = montgomeryOut(z, reciprocal, modulus);
 }
 
-UArbBigInt UArbBigInt::montin(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits) {
+void UArbBigInt::modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	/*
+	 * Even modulus.  Tear it into an "odd part" (m1) and power of two
+	 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
+	 * use Chinese Remainder Theorem to combine results.
+	 */
+	
+	
+	// B = base
+	// X = exponent
+	//
+	// C = p
+	// M = m1 (= modulus)
+	// P = m2
+	
+	//uint32 R, K, I, P;
+	//uint32 X1, X2, Y;
+	//size_t C;
+
+	//C = ntz32(M);
+	//M >>= C;
+	//P = 1lu << C;
+	
+	// Tear modulus apart into odd part (m1) and power of 2 (m2)
+	int p = modulus.findLowestSetBit(); // Max pow of 2 that divides modulus
+	UArbBigInt m1 = modulus >> p;  // modulus/2**p
+	UArbBigInt m2 = UArbBigInt::ONE << p; // 2**p
+
+	// R = reciprocal
+	// K = factor
+	UArbBigInt reciprocal, factor;
+	
+	//montgcd(m2 >> 1, m1, reciprocal, factor);// montgcd(P >> 1, m1, R, K);
+	
+	//UArbBigInt I = m2 - factor;//I = P - K;
+
+	// Calculate new base from m1
+	UArbBigInt base2 = (/*base.signum < 0 ||*/ base >= m1) ? (base % m1) : base;
+	
+	// X1 = a1
+	// X2 = a2
+	UArbBigInt a1, a2;
+	
+	// Caculate (base ** exponent) mod m1.
+	if(m1.isOne()) {
+		a1.setZero();
+	} else {
+		modPow_montgomeryOdd(base2, exponent, m1, a1); // X1 = montmodpow_odd(B, X, M);
+	}
+	// Calculate (this ** exponent) mod m2
+	a2 = base.modPow2(exponent, p); // X2 = modpow2x(B, X, P);
+/*
+	if (X2 < X1)
+	{
+		Y = (X1 - X2);
+		Y &= (P - 1);
+		if (Y != 0)
+		{
+			Y = P - Y;
+		}
+	}
+	else
+	{
+		Y = (X2 - X1);
+		Y &= (P - 1);
+	}
+
+	Y *= I;
+	Y &= (P - 1);
+	X1 += (M * Y);
+	return X1;
+ */
+	// Combine results using Chinese Remainder Theorem
+	UArbBigInt y1 = m2.modInverse(m1);
+	UArbBigInt y2 = m1.modInverse(m2);
+
+	//if (m.mag.length < MAX_MAG_LENGTH / 2) {
+	result = (a1 * m2 * y1 + a2 * m1 * y2) % modulus;
+//	} else {
+//	MutableBigInteger t1 = new MutableBigInteger();
+//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
+//	MutableBigInteger t2 = new MutableBigInteger();
+//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
+//	t1.add(t2);
+//	MutableBigInteger q = new MutableBigInteger();
+//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
+//	}
+}
+
+UArbBigInt UArbBigInt::montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits) {
 	UArbBigInt B = A << reducerBits; //B <<= 32;
 	B = B % modulus; //B %= M;
 	return B; //return (uint32)B;
 }
 
-UArbBigInt UArbBigInt::montout(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus) {
+UArbBigInt UArbBigInt::montgomeryOut(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus) {
 	// K = reciprocal
 	//UArbBigInt B{A}; //uint64 B = A;
 	UArbBigInt B = A * reciprocal; //B *= K;
@@ -2006,7 +2088,7 @@ UArbBigInt UArbBigInt::montout(const UArbBigInt& A, const UArbBigInt& reciprocal
 }
 
 // Montgomery  multiply: Inputs and output are in Montgomery form and in the range [0, modulus)
-UArbBigInt UArbBigInt::montredc(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
+UArbBigInt UArbBigInt::montgomeryMultiply(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
 	// R = factor
 	// M = modulus
 	
@@ -2016,10 +2098,16 @@ UArbBigInt UArbBigInt::montredc(const UArbBigInt& A, const UArbBigInt& B, const 
 	assert( B < modulus );
 	
 	UArbBigInt product = A * B;
+	return montgomeryReduce(product, modulus, factor, reducerBits, mask);
+}
+
+UArbBigInt UArbBigInt::montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
+	
 	UArbBigInt temp = ((product & mask ) * factor) & mask;
 	UArbBigInt reduced = (product + (temp * modulus)) >> reducerBits;
 	UArbBigInt result = (reduced < modulus) ? reduced : reduced - modulus;
 	assert ( result < modulus);
+	
 	return result;
 }
 
@@ -2076,94 +2164,7 @@ UArbBigInt UArbBigInt::mod2(uint p) const {
 	return result;
 }
 
-void UArbBigInt::montmodpow_even(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-	/*
-	 * Even modulus.  Tear it into an "odd part" (m1) and power of two
-	 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
-	 * use Chinese Remainder Theorem to combine results.
-	 */
-	
-	
-	// B = base
-	// X = exponent
-	//
-	// C = p
-	// M = m1 (= modulus)
-	// P = m2
-	
-	//uint32 R, K, I, P;
-	//uint32 X1, X2, Y;
-	//size_t C;
 
-	//C = ntz32(M);
-	//M >>= C;
-	//P = 1lu << C;
-	
-	// Tear modulus apart into odd part (m1) and power of 2 (m2)
-	int p = modulus.findLowestSetBit(); // Max pow of 2 that divides modulus
-	UArbBigInt m1 = modulus >> p;  // modulus/2**p
-	UArbBigInt m2 = UArbBigInt::ONE << p; // 2**p
-
-	// R = reciprocal
-	// K = factor
-	UArbBigInt reciprocal, factor;
-	
-	//montgcd(m2 >> 1, m1, reciprocal, factor);// montgcd(P >> 1, m1, R, K);
-	
-	//UArbBigInt I = m2 - factor;//I = P - K;
-
-	// Calculate new base from m1
-	UArbBigInt base2 = (/*base.signum < 0 ||*/ base >= m1) ? (base % m1) : base;
-	
-	// X1 = a1
-	// X2 = a2
-	UArbBigInt a1, a2;
-	
-	// Caculate (base ** exponent) mod m1.
-	if(m1.isOne()) {
-		a1.setZero();
-	} else {
-		montmodpow_odd(base2, exponent, m1, a1); // X1 = montmodpow_odd(B, X, M);
-	}
-	// Calculate (this ** exponent) mod m2
-	a2 = base.modPow2(exponent, p); // X2 = modpow2x(B, X, P);
-/*
-	if (X2 < X1)
-	{
-		Y = (X1 - X2);
-		Y &= (P - 1);
-		if (Y != 0)
-		{
-			Y = P - Y;
-		}
-	}
-	else
-	{
-		Y = (X2 - X1);
-		Y &= (P - 1);
-	}
-
-	Y *= I;
-	Y &= (P - 1);
-	X1 += (M * Y);
-	return X1;
- */
-	// Combine results using Chinese Remainder Theorem
-	UArbBigInt y1 = m2.modInverse(m1);
-	UArbBigInt y2 = m1.modInverse(m2);
-
-	//if (m.mag.length < MAX_MAG_LENGTH / 2) {
-	result = (a1 * m2 * y1 + a2 * m1 * y2) % modulus;
-//	} else {
-//	MutableBigInteger t1 = new MutableBigInteger();
-//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
-//	MutableBigInteger t2 = new MutableBigInteger();
-//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
-//	t1.add(t2);
-//	MutableBigInteger q = new MutableBigInteger();
-//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
-//	}
-}
 
 void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const {
 	if (modulus.isZero()) {
@@ -2201,70 +2202,11 @@ void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBig
 		return;
 	}
 
-	//modPow_naiv(base, exponent, modulus, result);
-	montmodpow(base, exponent, modulus, result);
-	
-	// faster version from java BigInt ....
-	/*
-	bool invertResult = exponent.signum < 0;
-	SArbBigInt absExponent(exponent); // TODO performance, unessesery copy if exponent is positive
-	if (invertResult) {
-		absExponent.setAbs();
-	}
-
-	//BigInteger base = (this.signum < 0 || this.compareTo(m) >= 0
-	//				   ? this.mod(m) : this);
-	SArbBigInt base = (this->signum < 0 || *this >= m) ? *this % m : *this;
-
-	SArbBigInt result(0);
-	if(m.isOdd()) { // odd modulus
-		result = base.oddModPow(exponent, m);
-	} else {
-		/ *
-		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
-		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
-		 * use Chinese Remainder Theorem to combine results.
-		 * /
-
-		// Tear m apart into odd part (m1) and power of 2 (m2)
-		int p = m.findLowestSetBit();   // Max pow of 2 that divides m
-
-		//BigInteger m1 = m .shiftRight(p);  // m/2**p
-		SArbBigInt m1 = m >> p; // m/2**p
-		//BigInteger m2 = ONE.shiftLeft(p); // 2**p
-		SArbBigInt m2 = SArbBigInt(1) << p; // 2**p
-
-		// Calculate new base from m1
-		//BigInteger base2 = (this.signum < 0 || this.compareTo(m1) >= 0 ? this.mod(m1) : this);
-		SArbBigInt base2 = (this->signum < 0 || *this >= m1) ? *this % m1 : *this;
-
-		// Caculate (base ** exponent) mod m1.
-		//BigInteger a1 = (m1.equals(ONE) ? ZERO : base2.oddModPow(exponent, m1));
-		SArbBigInt a1 = m1.isOne() ? BigInt(0) : base2.oddModPow(exponent, m1);
-
-		// Calculate (this ** exponent) mod m2
-		SArbBigInt a2 = base.modPow2(exponent, p);
-
-		// Combine results using Chinese Remainder Theorem
-		SArbBigInt y1 = m2.modInverse(m1);
-		SArbBigInt y2 = m1.modInverse(m2);
-
-		//if (m.mag.length < MAX_MAG_LENGTH / 2) {
-			// result = a1.multiply(m2).multiply(y1).add(a2.multiply(m1).multiply(y2)).mod(m);
-			result = (a1 * m2 * y1 + a2 * m1 * y2) % m;
-		//} else {
-		//	MutableBigInteger t1 = new MutableBigInteger();
-		//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
-		//	MutableBigInteger t2 = new MutableBigInteger();
-		//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
-		//	t1.add(t2);
-		//	MutableBigInteger q = new MutableBigInteger();
-		//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
-		//}
-	}
-
-	return (invertResult ? result.modInverse(m) : result);
-	 */
+#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
+	modPow_naiv(base, exponent, modulus, result);
+#else
+	modPow_montgomery(base, exponent, modulus, result);
+#endif
 }
 
 UArbBigInt UArbBigInt::modPow(const UArbBigInt &exponent, const UArbBigInt &modulus) const {
