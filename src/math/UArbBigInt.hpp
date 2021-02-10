@@ -32,7 +32,7 @@ namespace ppvr {
 			//friend class UFixBigInt;
 			
 			friend std::ostream& operator << ( std::ostream& os, const UArbBigInt& value ){
-				os << value.toStringHex();
+				os << value.toStringDec();
 				return os;
 			}
 
@@ -550,12 +550,13 @@ namespace ppvr {
 			 */
 			static void montmodpow(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			static void montmodpow_odd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
-			static void montmodpow_even(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result);
+			static void montmodpow_even(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
 			static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);
-			static void gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd = nullptr);
-			static uint gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b);
+			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v);
+			//static void gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd = nullptr);
+			//static uint gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b);
 		public:
 			UArbBigInt modInverse(const UArbBigInt & m) const;
 		private:

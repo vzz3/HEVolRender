@@ -1633,16 +1633,17 @@ void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt&
 	//K = v;
 	assert( ( TWO*(a)*u - b*v).isOne() );
 }
-
+/*
 uint UArbBigInt::gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b) {
 	uint c = 0;
+	// calculated the amount of zeros first
 	while (a.isEven() && b.isEven()) {
 		a.rcr(c);
 		b.rcr(c);
 	}
 	return c;
 }
-
+*/
 /*
 void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd) {
 	// https://github.com/DavidNorman/gcd
@@ -1690,29 +1691,38 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 	v = Tx; //T = Tx
 }
 */
+/*
 void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut, UArbBigInt* gcd) {
 	// https://www.di-mgt.com.au/euclidean.html
 	// https://cs.stackexchange.com/questions/86779/maximum-value-reached-in-extended-binary-gcd
 	
 	UArbBigInt x, y;
-	// Given positive integer inputs x and y, with 0<x<y and y an odd prime
-	if( aIn < bIn ) {
-		x = aIn;
-		y = bIn;
+//	if( aIn < bIn ) {
+//		x = aIn;
+//		y = bIn;
+//	} else {
+//		throw std::invalid_argument("a must be les then b. Posible solution: calculate a = aIn mod bIn ???");
+//	}
+	x = aIn;
+	y = bIn;
+	bool swappedInputVars;
+	uint c = gcdExtended_binaryIterative_removePowersOfTwo(x,y);
+	
+	if( y.isEven() ) {
+		//throw std::invalid_argument("bIn need to be an odd prime");
+		// posible solution:
+		// flip a and b
+		// If and are both even, a first step is to factor them both by the greatest power of possible (which boils down to a cheap bit shift), so that one of them necessarily becomes odd.
+		
+		std::swap(x, y);
+		assert(y.isOdd());
+		swappedInputVars = true;
 	} else {
-		throw std::invalid_argument("a must be les then b. Posible solution: calculate a = aIn mod bIn ???");
+		swappedInputVars = false;
 	}
 	
-	uint c = 0;
-	if( bIn.isEven() ) {
-		throw std::invalid_argument("bIn need to be an odd prime");
-		/* posible solution:
-		 * flip a and b
-		 * If and are both even, a first step is to factor them both by the greatest power of possible (which boils down to a cheap bit shift), so that one of them necessarily becomes odd.
-		 */
-		//uint c = gcdExtended_binaryIterative_removePowersOfTwo(x, y);
-	}
-	
+	// # Begin of the actual extended binary euclidean algorithm that does not rquire signed variables
+	// Given positive integer inputs x and y, with 0<x<y and y an odd prime
 	UArbBigInt A,B,U,V; //d=U, a=V, u=A, v=B
 	if(x.isOdd()) {
 		A = x;
@@ -1751,17 +1761,78 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 		}
 	}
 	//a = a % y; //that's the desired inverse.
-	uOut = V;
+	// End of the extenden binary euclidean algorithm
+	//uOut = V;
 	
 	
 	// at this point Rx == Ry == GCD without the common powers of 2
-	assert( B * TWO.pow(UArbBigInt::fromUint64(c)) == UArbBigInt::gcd(aIn, bIn) ); // GCD = Rx * 2^c
+	assert( B * TWO.pow(UArbBigInt::fromUint64(0)) == UArbBigInt::gcd(aIn, bIn) ); // GCD = Rx * 2^c
 	if( gcd != nullptr) {
-		*gcd = A * TWO.pow(UArbBigInt::fromUint64(c)); // GCD = Rx * 2^c
+		*gcd = B * TWO.pow(UArbBigInt::fromUint64(c)); // GCD = Rx * 2^c
 	}
 	
-	uOut = V; //S = Sx
-	vOut = U; //T = Tx
+	if(swappedInputVars) {
+		uOut = U;
+		vOut = V;
+	} else {
+		uOut = V; //S = Sx
+		vOut = U; //T = Tx
+	}
+}
+*/
+UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut) {
+	const UArbBigInt& a = aIn;
+	const UArbBigInt& b = bIn;
+	
+	// Shifting Euclidean algorithm with unsigned arithmetic:
+	// SEUinv(a,b) -> inverse of a mod bIn, Shifting Euclidean alg, using Unsigned
+	UArbBigInt U, R, V, S, t;
+	uint f;
+	if (a < b) {
+	   U = b; V = a;
+	   R = 0; S = 1;
+	} else {
+	   V = b; U = a;
+	   S = 0; R = 1;
+	}
+	while( V > 1) {
+		f = U.bitLength() - V.bitLength();    // U >= V, f >= 0
+		if(  U < (V << f)) {
+			f = f - 1;
+		}
+		U = U - (V << f);   // always U >= 0
+		t = S;
+		for (uint i=0; i<f; i++) { //for i = 1:f
+			t = t+t;               // #adds <= bits(U)+bits(V)
+			if( t > b) {
+				t = t - b;
+			}
+		}
+		//R = R - t;                // check R < t beforhand
+		while( R < t) {
+			R = R + b; // one of R,S gets large soon
+		}
+		R = R - t;
+		
+		if( U < V) {
+		  t = U; U = V; V = t;   // swap(U,V)
+		  t = R; R = S; S = t;   // swap(R,S)
+		}
+	}
+//	if (V == 0) {
+//		S = 0;
+//	}
+	
+	uOut = S;
+	vOut = R;
+	
+	if( V.isZero() ) {
+		assert( U == UArbBigInt::gcd(aIn, bIn) );
+		return U;
+	} else {
+		assert( V == UArbBigInt::gcd(aIn, bIn) );
+		return V;
+	}
 }
 
 UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
@@ -1778,69 +1849,81 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 	// all the hard work will be done by gcd.
 	UArbBigInt u, v;
 	
-	if(false) {
+//	if(false) {
 		// TODO The montgcd does not produce the gcd, therefore I can not  throw an exception.
 		// Therefore, I added an assert() with a seperate gcd calculation.
-	//	UArbBigInt gcd = this->gcdExtended(*this, m, u, v);
-	//	if(!gcd.isOne()) {
-	//		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
-	//		//std::cerr << msg << std::endl;
-	//		throw NoMultiplicativeInverse(msg);
-	//	}
-		
-		gcdExtended_binary4mont(*this, m, u, v);
-		assert( !(gcd(m).isOne()) );
-		assert( ( TWO*(*this)*u - m*v).isOne() );
-	}
-	
-	if(false) {
-#ifndef NDEBUG
-		// debug build
-		UArbBigInt gcd;
-		gcdExtended_binaryIterative(*this, m, u, v, &gcd);
-		assert( gcd.isOne() );
-#else
-		gcdExtended_binaryIterative(*this, m, u, v);
-#endif
-	}
-	
-	if(true) {
-		gcdExtended_binaryIterative(*this % m, m, u, v);
-	}
-	
-	if(false) {
-		// ExtendedBinaryGCD(classicalgorithm)
-		// Require: Oddmodulusm(m ≥ 3,m mod 2 = 1)andvaluetoinverty(0 ≤ y < m) Ensure: 1/y mod m (if GCD(y, m) = 1), or zero
-		UArbBigInt a = *this % m; // ensure base < modulus;
-		UArbBigInt b = m;
-		u = ONE;
-		v = ZERO;
-		while (!a.isZero()) {
-			if(a.isEven()) {
-				// a is even, so this division is exact.
-				a = a / TWO;
-				u = u / TWO % m;
-			} else {
-				if( a < b) {
-					// Conditional swap to ensure a ≥ b.
-					std::swap(a, b);
-					std::swap(u, v);
-					//std::swap(b, a);
-					//std::swap(v, u);
-				}
-				a = (a-b) / TWO; // a and b are odd,so this division is exact.
-				u = (u-v) / TWO % m;
-			}
-		}
-		if(!b.isOne()) {
-			// return 0 (value y is not invertible) ⊲ b contains GCD(y, m) at this point.
-			
+		UArbBigInt gcd = gcdExtended_binaryIterative(*this, m, u, v);
+		if(!gcd.isOne()) {
 			std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
 			//std::cerr << msg << std::endl;
 			throw NoMultiplicativeInverse(msg);
 		}
-		return v;
-	}
+		
+//	}
+	
+//	if(false) {
+//		// TODO The montgcd does not produce the gcd, therefore I can not  throw an exception.
+//		// Therefore, I added an assert() with a seperate gcd calculation.
+//	//	UArbBigInt gcd = this->gcdExtended(*this, m, u, v);
+//	//	if(!gcd.isOne()) {
+//	//		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+//	//		//std::cerr << msg << std::endl;
+//	//		throw NoMultiplicativeInverse(msg);
+//	//	}
+//
+//		gcdExtended_binary4mont(*this, m, u, v);
+//		assert( !(gcd(m).isOne()) );
+//		assert( ( TWO*(*this)*u - m*v).isOne() );
+//	}
+//
+//	if(false) {
+//#ifndef NDEBUG
+//		// debug build
+//		UArbBigInt gcd;
+//		gcdExtended_binaryIterative(*this, m, u, v, &gcd);
+//		assert( gcd.isOne() );
+//#else
+//		gcdExtended_binaryIterative(*this, m, u, v);
+//#endif
+//	}
+//
+//	if(true) {
+//		gcdExtended_binaryIterative(*this % m, m, u, v);
+//	}
+//
+//	if(false) {
+//		// ExtendedBinaryGCD(classicalgorithm)
+//		// Require: Oddmodulusm(m ≥ 3,m mod 2 = 1)andvaluetoinverty(0 ≤ y < m) Ensure: 1/y mod m (if GCD(y, m) = 1), or zero
+//		UArbBigInt a = *this % m; // ensure base < modulus;
+//		UArbBigInt b = m;
+//		u = ONE;
+//		v = ZERO;
+//		while (!a.isZero()) {
+//			if(a.isEven()) {
+//				// a is even, so this division is exact.
+//				a = a / TWO;
+//				u = u / TWO % m;
+//			} else {
+//				if( a < b) {
+//					// Conditional swap to ensure a ≥ b.
+//					std::swap(a, b);
+//					std::swap(u, v);
+//					//std::swap(b, a);
+//					//std::swap(v, u);
+//				}
+//				a = (a-b) / TWO; // a and b are odd,so this division is exact.
+//				u = (u-v) / TWO % m;
+//			}
+//		}
+//		if(!b.isOne()) {
+//			// return 0 (value y is not invertible) ⊲ b contains GCD(y, m) at this point.
+//
+//			std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+//			//std::cerr << msg << std::endl;
+//			throw NoMultiplicativeInverse(msg);
+//		}
+//		return v;
+//	}
 	
 	
 	
@@ -1993,7 +2076,7 @@ UArbBigInt UArbBigInt::mod2(uint p) const {
 	return result;
 }
 
-void UArbBigInt::montmodpow_even(UArbBigInt base, UArbBigInt exponent, UArbBigInt modulus, UArbBigInt& result) {
+void UArbBigInt::montmodpow_even(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	/*
 	 * Even modulus.  Tear it into an "odd part" (m1) and power of two
 	 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
@@ -2037,8 +2120,11 @@ void UArbBigInt::montmodpow_even(UArbBigInt base, UArbBigInt exponent, UArbBigIn
 	UArbBigInt a1, a2;
 	
 	// Caculate (base ** exponent) mod m1.
-	montmodpow_odd(base, exponent, m1, a1); // X1 = montmodpow_odd(B, X, M);
-	
+	if(m1.isOne()) {
+		a1.setZero();
+	} else {
+		montmodpow_odd(base2, exponent, m1, a1); // X1 = montmodpow_odd(B, X, M);
+	}
 	// Calculate (this ** exponent) mod m2
 	a2 = base.modPow2(exponent, p); // X2 = modpow2x(B, X, P);
 /*

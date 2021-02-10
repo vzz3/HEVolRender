@@ -1573,13 +1573,15 @@ TEST_CASE( "unsigned infinit big integer modInverse", "[UABigint]" ) {
 	REQUIRE( UArbBigInt(255).modInverse(127) == 1 );
 	REQUIRE( UArbBigInt(211).modInverse(127) == 62 );
 	
-	REQUIRE_THROWS( UArbBigInt(1).modInverse(4) == 1 );
-	REQUIRE_THROWS( UArbBigInt(5).modInverse(8) == 5 );
+	REQUIRE( UArbBigInt(3).modInverse(4) == 3 );
+	REQUIRE( UArbBigInt(1).modInverse(4) == 1 );
+	REQUIRE( UArbBigInt(5).modInverse(8) == 5 );
 
 	REQUIRE( UArbBigInt::fromUint64( 1).modInverse(UArbBigInt::fromUint64( 5)).toUint64() ==  1 );
+	REQUIRE( UArbBigInt::fromUint64( 256).modInverse(UArbBigInt::fromUint64( 11)).toUint64() ==  4 );
 
-	REQUIRE_THROWS( UArbBigInt::fromUint64( 62369045776285).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 38649570326437 );
-	REQUIRE_THROWS( UArbBigInt::fromUint64( 38649570326437).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 18801147010853 );
+	REQUIRE( UArbBigInt::fromUint64( 62369045776285).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 38649570326437 );
+	REQUIRE( UArbBigInt::fromUint64( 38649570326437).modInverse(UArbBigInt::fromUint64( 43567898765432)).toUint64() == 18801147010853 );
 	REQUIRE( UArbBigInt::fromUint64( 62369045776285).modInverse(UArbBigInt::fromUint64( 43567898765431)).toUint64() == 15760287535499 );
 	REQUIRE( UArbBigInt::fromUint64( 38649570326437).modInverse(UArbBigInt::fromUint64( 43567898765431)).toUint64() == 39163431965283 );
 
@@ -1597,18 +1599,21 @@ TEST_CASE( "unsigned infinit big integer modInverse", "[UABigint]" ) {
 	REQUIRE( (v * v.modInverse(m) ) % m == UArbBigInt(1) % m);
 	
 	REQUIRE_THROWS( UArbBigInt(255).modInverse( 48) );	// not relatively prime
+	REQUIRE_THROWS( UArbBigInt( 15).modInverse( 25) );	// not relatively prime
+	REQUIRE_THROWS( UArbBigInt(100).modInverse( 16) );	// not relatively prime
+	REQUIRE_THROWS( UArbBigInt(126).modInverse( 90) );	// not relatively prime
 }
 
 TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 	// wolfram alpha: PowerMod[this, -1, param]
 
 	// Trivial cases: exponent = 0
-	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt(  0       ), UArbBigInt(  3)) == UArbBigInt(1) ); // PowerMod[   0,    0,  3]
-	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt(  0       ), UArbBigInt(  1)) == UArbBigInt(0) ); // PowerMod[   0,    0,  1]
-	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt(  3)) == UArbBigInt(1) ); // PowerMod[ 111,    0,  3]
-	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt(  1)) == UArbBigInt(0) ); // PowerMod[ 111,    0,  1]
-	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt( 33)) == UArbBigInt(1) ); // PowerMod[ 111,    0, 33]
-	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt( 21)) == UArbBigInt(1) ); // PowerMod[ 111,    0, 21]
+	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt(  0       ), UArbBigInt(  3)) == UArbBigInt( 1) ); // PowerMod[   0,    0,  3]
+	REQUIRE( UArbBigInt(  0      ).modPow(UArbBigInt(  0       ), UArbBigInt(  1)) == UArbBigInt( 0) ); // PowerMod[   0,    0,  1]
+	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt(  3)) == UArbBigInt( 1) ); // PowerMod[ 111,    0,  3]
+	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt(  1)) == UArbBigInt( 0) ); // PowerMod[ 111,    0,  1]
+	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt( 33)) == UArbBigInt( 1) ); // PowerMod[ 111,    0, 33]
+	REQUIRE( UArbBigInt(111      ).modPow(UArbBigInt(  0       ), UArbBigInt( 21)) == UArbBigInt( 1) ); // PowerMod[ 111,    0, 21]
 
 	// Trivial cases: base = 1
 	REQUIRE( UArbBigInt(  1      ).modPow(UArbBigInt(123       ), UArbBigInt(  1)) == UArbBigInt(0) ); // PowerMod[   1,  123,  1]
@@ -1649,6 +1654,12 @@ TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 		); // PowerMod[34546737496348564246541369697392157357343622947391601355298952857523410218281, 170316580215634215412390428579751188659, 29007737496348564246541369697392157257353622947791601355298952855523410218281]
 	
 	// even modulus
+	REQUIRE( UArbBigInt(124      ).modPow(UArbBigInt(200       ), UArbBigInt(128)) == UArbBigInt( 0) ); // PowerMod[ 124,  200,128] // test case where m1 == 1
+	REQUIRE( UArbBigInt( 15      ).modPow(UArbBigInt(123       ), UArbBigInt(128)) == UArbBigInt(47) ); // PowerMod[  15,  123,128] // test case where m1 == 1
+	REQUIRE(
+			UArbBigInt::fromString("8", 10).modPow( UArbBigInt::fromString("16", 10), UArbBigInt::fromString("12", 10)
+			).toStringDec() == "4"
+		); //PowerMod[8, 26, 12]
 	REQUIRE(
 			UArbBigInt::fromString("DDD283D73A398FE7A86987D9E0A37063", 16).modPow( UArbBigInt::fromString("DC9481390F23502D4F3C8D54BB194AA6", 16), UArbBigInt::fromString("EA3D7298B90FCFAE01364041BCB288C", 16)
 			).toStringDec() == "12944751882554430796756496548659233721"
