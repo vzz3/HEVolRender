@@ -254,6 +254,7 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const
 
 BIG_INT_WORD_TYPE BigIntUtil::addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) {
 	assert( index < targetWordCount );
+	// see javas BigInteger::addOne() for an alternative implementation
 	
 	BIG_INT_WORD_TYPE c;
 	c = BigIntUtil::addTwoWords(targetArray[index], word, 0, &targetArray[index]);
@@ -533,4 +534,49 @@ void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT
 	u = BigIntUtil::setHighFromLowBits(u, sub_res_high); // u.high = sub_res_high.low
 	u = BigIntUtil::setLowFromHighBits(u, sub_res_low); // u.low = sub_res_low.high
 	u3 = BigIntUtil::getLowAsLowBits(sub_res_low); // u3 = sub_res_low.low;
+}
+
+
+// ----- multiplicative inverse -----
+
+uint32_t BigIntUtil::inverseMod32(uint32_t val) {
+	assert((val & 1) == 1);
+	
+	/*
+	 * Find the negative multiplicative inverse of x (x must be odd!) modulo 2^32.
+	 *
+	 * This just performs Newton's iteration until it gets the
+	 * inverse.  The initial estimate is always correct to 3 bits, and
+	 * sometimes 4.  The number of valid bits doubles each iteration.
+	 * (To prove it, assume x * y == 1 (mod 2^n), and introduce a variable
+	 * for the error mod 2^2n.  x * y == 1 + k*2^n (mod 2^2n) and follow
+	 * the iteration through.)
+	 */
+	//while ((z = x*y) != 1)
+	//		y *= 2 - z;
+	//return -y;
+	
+	
+	// Newton's iteration!
+	int t = val;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	assert(t * val == 1);
+	return t;
+}
+
+
+uint64_t BigIntUtil::inverseMod64(uint64_t val) {
+	assert((val & 1) == 1);
+	// Newton's iteration!
+	long t = val;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	assert(t * val == 1);
+	return t;
 }

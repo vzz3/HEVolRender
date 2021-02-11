@@ -22,6 +22,12 @@ const UArbBigInt UArbBigInt::ONE(1);
 const UArbBigInt UArbBigInt::TWO(2);
 const UArbBigInt UArbBigInt::TEN(10);
 
+#if _BIG_INT_WORD_LENGTH_PRESET_ >= 16
+	const BIG_INT_WORD_TYPE UArbBigInt::bnExpModThreshTable[] = {7, 25, 81, 241, 673, 1793, BIG_INT_WORD_MAX_VALUE}; // Sentinel
+#else
+	const BIG_INT_WORD_TYPE UArbBigInt::bnExpModThreshTable[] = {7, 25, 81, 241, BIG_INT_WORD_MAX_VALUE}; // Sentinel
+#endif
+
 UArbBigInt UArbBigInt::fromUint64(const uint64_t& uint64Val) {
 	UArbBigInt res(0);
 	UArbBigInt::fromUint64(uint64Val, res);
@@ -1871,119 +1877,6 @@ void UArbBigInt::modPow_montgomery(const UArbBigInt& base, const UArbBigInt& exp
 	}
 }
 
-/*
-// From Hacker's Delight
-// https://github.com/hcs0/Hackers-Delight/blob/master/mont64.c.txt
-void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v) {
-	/ * C program implementing the extended binary GCD algorithm. C.f.
-	http://www.ucl.ac.uk/~ucahcjm/combopt/ext_gcd_python_programs.pdf. This
-	is a modification of that routine in that we find s and t s.t.
-		gcd(a, b) = s*a - t*b,
-	rather than the same expression except with a + sign.
-	   This routine has been greatly simplified to take advantage of the
-	facts that in the MM use, argument a is a power of 2, and b is odd. Thus
-	there are no common powers of 2 to eliminate in the beginning. The
-	parent routine has two loops. The first drives down argument a until it
-	is 1, modifying u and v in the process. The second loop modifies s and
-	t, but because a = 1 on entry to the second loop, it can be easily seen
-	that the second loop doesn't alter u or v. Hence the result we want is u
-	and v from the end of the first loop, and we can delete the second loop.
-	   The intermediate and final results are always > 0, so there is no
-	trouble with negative quantities. Must have a either 0 or a power of 2
-	<= 2**63. A value of 0 for a is treated as 2**64. b can be any 64-bit
-	value.
-	   Parameter a is half what it "should" be. In other words, this function
-	does not find u and v st. u*a - v*b = 1, but rather u*(2a) - v*b = 1.
-	* /
-	
-	u.setOne();
-	v.setZero();
-	UArbBigInt alpha{a};
-	UArbBigInt beta {b};
-	UArbBigInt a1{a};
-	
-	/ * The invariant maintained from here on is:
-	   a = u*2*alpha - v*beta. * /
-
-	while (!a1.isZero()) {
-		a1.rcr(1); // A >>= 1;
-		v.rcr(1); // v >>= 1;
-
-		if (u.isOdd()) { //if ((u & 1) == 1) {
-			u = ((u ^ beta) >> 1) + (u & beta);
-			v.add(alpha); // v += alpha;
-		} else {
-			// Delete a common factor of 2 in u and v.
-			u.rcr(1); // u >>= 1;
-		}
-		
-		//assert( a == (TWO*alpha*u - beta*v) );
-	}
-
-	//R = u;
-	//K = v;
-	assert( ( TWO*(a)*u - b*v).isOne() );
-}
-*/
-
-void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-	assert( modulus.isOdd() );
-	assert( base < modulus );
-	
-	// Reducer:
-	uint reducerBits = (modulus.bitLength() / 8 + 1) * 8;  // This is a multiple of 8 // Equal to log2(reducer)
-	UArbBigInt reducer = UArbBigInt::ONE << reducerBits;  // This is a power of 256 // Is a power of 2
-	UArbBigInt mask = reducer - UArbBigInt::ONE; // Because x mod reducer = x & (reducer - 1)
-	assert( reducer > modulus );
-	assert( reducer.gcd(modulus).isOne() );
-	
-	
-	UArbBigInt D, reciprocal, factor;
-
-	/*
-	// Other computed numbers:
-	// R = reciprocal = reducer.modInverse(modulus);
-	// K = factor = reducer.multiply(reciprocal).subtract(BigInteger.ONE).divide(modulus);
-	gcdExtended_binary4mont(reducer, modulus, reciprocal, factor); // montgcd(1lu << 31, modulus, R, K);
-	
-	/ * TEST: * / std::cout << TWO << "*" << reducer << "*" << reciprocal << " + " << modulus << "*" << factor << " = " << (TWO*reducer*reciprocal + modulus*factor) << std::endl;
-	assert( (TWO*reducer*reciprocal - modulus*factor).isOne() );
-	
-	base = base % modulus; //base %= modulus; // TODO probably not neccesery because already chacked
-	base = montin(base, modulus, reducerBits);
-	if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
-		D = base;
-	} else {
-		D = montin(UArbBigInt::ONE, modulus, reducerBits);
-	}
-	
-
-	while (!(exponent = exponent >> 1).isZero()) { //while ((exponent >>= 1) != 0) {
-		base = montredc(base, base, modulus, factor, reducerBits, mask);
-		if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
-			D = montredc(D, base, modulus, factor, reducerBits, mask);
-		}
-	}
-	 result = montout(D, reciprocal, modulus);
-	 */
-	
-	// Other computed numbers:
-	reciprocal = reducer.modInverse(modulus);
-	factor = (reducer * reciprocal - ONE ) / modulus;
-	UArbBigInt convertedOne = reducer % modulus;
-	 
-	UArbBigInt x = montgomeryIn(base, modulus, reducerBits);
-	UArbBigInt y = exponent;
-	UArbBigInt z = convertedOne;
-	for (size_t i = 0, len = y.bitLength(); i < len; i++) {
-		if (y.testBit(i)) {
-			z = montgomeryMultiply(z, x, modulus, factor, reducerBits, mask);
-		}
-		x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
-	}
-	result = montgomeryOut(z, reciprocal, modulus);
-}
-
 void UArbBigInt::modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	/*
 	 * Even modulus.  Tear it into an "odd part" (m1) and power of two
@@ -2071,6 +1964,130 @@ void UArbBigInt::modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt&
 //	MutableBigInteger q = new MutableBigInteger();
 //	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
 //	}
+}
+
+/*
+// From Hacker's Delight
+// https://github.com/hcs0/Hackers-Delight/blob/master/mont64.c.txt
+void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v) {
+	/ * C program implementing the extended binary GCD algorithm. C.f.
+	http://www.ucl.ac.uk/~ucahcjm/combopt/ext_gcd_python_programs.pdf. This
+	is a modification of that routine in that we find s and t s.t.
+		gcd(a, b) = s*a - t*b,
+	rather than the same expression except with a + sign.
+	   This routine has been greatly simplified to take advantage of the
+	facts that in the MM use, argument a is a power of 2, and b is odd. Thus
+	there are no common powers of 2 to eliminate in the beginning. The
+	parent routine has two loops. The first drives down argument a until it
+	is 1, modifying u and v in the process. The second loop modifies s and
+	t, but because a = 1 on entry to the second loop, it can be easily seen
+	that the second loop doesn't alter u or v. Hence the result we want is u
+	and v from the end of the first loop, and we can delete the second loop.
+	   The intermediate and final results are always > 0, so there is no
+	trouble with negative quantities. Must have a either 0 or a power of 2
+	<= 2**63. A value of 0 for a is treated as 2**64. b can be any 64-bit
+	value.
+	   Parameter a is half what it "should" be. In other words, this function
+	does not find u and v st. u*a - v*b = 1, but rather u*(2a) - v*b = 1.
+	* /
+	
+	u.setOne();
+	v.setZero();
+	UArbBigInt alpha{a};
+	UArbBigInt beta {b};
+	UArbBigInt a1{a};
+	
+	/ * The invariant maintained from here on is:
+	   a = u*2*alpha - v*beta. * /
+
+	while (!a1.isZero()) {
+		a1.rcr(1); // A >>= 1;
+		v.rcr(1); // v >>= 1;
+
+		if (u.isOdd()) { //if ((u & 1) == 1) {
+			u = ((u ^ beta) >> 1) + (u & beta);
+			v.add(alpha); // v += alpha;
+		} else {
+			// Delete a common factor of 2 in u and v.
+			u.rcr(1); // u >>= 1;
+		}
+		
+		//assert( a == (TWO*alpha*u - beta*v) );
+	}
+
+	//R = u;
+	//K = v;
+	assert( ( TWO*(a)*u - b*v).isOne() );
+}
+*/
+
+void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	
+	
+	
+#ifdef BIG_INT_NO_MONTGOMERY_WINDOW || _BIG_INT_WORD_LENGTH_PRESET_ > 32
+	modPow_montgomeryOdd_basic(base, exponent, modulus, result);
+#else
+	modPow_montgomeryOdd_window(base, exponent, modulus, result);
+#endif
+}
+
+void UArbBigInt::modPow_montgomeryOdd_basic(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	// Reducer:
+	uint reducerBits = (modulus.bitLength() / 8 + 1) * 8;  // This is a multiple of 8 // Equal to log2(reducer)
+	UArbBigInt reducer = UArbBigInt::ONE << reducerBits;  // This is a power of 256 // Is a power of 2
+	UArbBigInt mask = reducer - UArbBigInt::ONE; // Because x mod reducer = x & (reducer - 1)
+	assert( reducer > modulus );
+	assert( reducer.gcd(modulus).isOne() );
+	
+	
+	UArbBigInt D, reciprocal, factor;
+
+	/*
+	// Other computed numbers:
+	// R = reciprocal = reducer.modInverse(modulus);
+	// K = factor = reducer.multiply(reciprocal).subtract(BigInteger.ONE).divide(modulus);
+	gcdExtended_binary4mont(reducer, modulus, reciprocal, factor); // montgcd(1lu << 31, modulus, R, K);
+	
+	/ * TEST: * / std::cout << TWO << "*" << reducer << "*" << reciprocal << " + " << modulus << "*" << factor << " = " << (TWO*reducer*reciprocal + modulus*factor) << std::endl;
+	assert( (TWO*reducer*reciprocal - modulus*factor).isOne() );
+	
+	base = base % modulus; //base %= modulus; // TODO probably not neccesery because already chacked
+	base = montin(base, modulus, reducerBits);
+	if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
+		D = base;
+	} else {
+		D = montin(UArbBigInt::ONE, modulus, reducerBits);
+	}
+	
+
+	while (!(exponent = exponent >> 1).isZero()) { //while ((exponent >>= 1) != 0) {
+		base = montredc(base, base, modulus, factor, reducerBits, mask);
+		if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
+			D = montredc(D, base, modulus, factor, reducerBits, mask);
+		}
+	}
+	 result = montout(D, reciprocal, modulus);
+	 */
+	
+	// Other computed numbers:
+	reciprocal = reducer.modInverse(modulus);
+	factor = (reducer * reciprocal - ONE ) / modulus;
+	UArbBigInt convertedOne = reducer % modulus;
+	 
+	UArbBigInt x = montgomeryIn(base, modulus, reducerBits);
+	UArbBigInt y = exponent;
+	UArbBigInt z = convertedOne;
+	for (size_t i = 0, len = y.bitLength(); i < len; i++) {
+		if (y.testBit(i)) {
+			z = montgomeryMultiply(z, x, modulus, factor, reducerBits, mask);
+		}
+		x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
+	}
+	result = montgomeryOut(z, reciprocal, modulus);
 }
 
 UArbBigInt UArbBigInt::montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits) {
@@ -2164,7 +2181,347 @@ UArbBigInt UArbBigInt::mod2(uint p) const {
 	return result;
 }
 
+// ---
 
+void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	assert(BIG_INT_BITS_PER_WORD <= 32);
+	/*
+	 * The algorithm is adapted from Javas BigInteger class.
+	 *
+	 * The algorithm is adapted from Colin Plumb's C library.
+	 *
+	 * The window algorithm:
+	 * The idea is to keep a running product of b1 = n^(high-order bits of exp)
+	 * and then keep appending exponent bits to it.  The following patterns
+	 * apply to a 3-bit window (k = 3):
+	 * To append   0: square
+	 * To append   1: square, multiply by n^1
+	 * To append  10: square, multiply by n^1, square
+	 * To append  11: square, square, multiply by n^3
+	 * To append 100: square, multiply by n^1, square, square
+	 * To append 101: square, square, square, multiply by n^5
+	 * To append 110: square, square, multiply by n^3, square
+	 * To append 111: square, square, square, multiply by n^7
+	 *
+	 * Since each pattern involves only one multiply, the longer the pattern
+	 * the better, except that a 0 (no multiplies) can be appended directly.
+	 * We precompute a table of odd powers of n, up to 2^k, and can then
+	 * multiply k bits of exponent at a time.  Actually, assuming random
+	 * exponents, there is on average one zero bit between needs to
+	 * multiply (1/2 of the time there's none, 1/4 of the time there's 1,
+	 * 1/8 of the time, there's 2, 1/32 of the time, there's 3, etc.), so
+	 * you have to do one multiply per k+1 bits of exponent.
+	 *
+	 * The loop walks down the exponent, squaring the result buffer as
+	 * it goes.  There is a wbits+1 bit lookahead buffer, buf, that is
+	 * filled with the upcoming exponent bits.  (What is read after the
+	 * end of the exponent is unimportant, but it is filled with zero here.)
+	 * When the most-significant bit of this buffer becomes set, i.e.
+	 * (buf & tblmask) != 0, we have to decide what pattern to multiply
+	 * by, and when to do it.  We decide, remember to do it in future
+	 * after a suitable number of squarings have passed (e.g. a pattern
+	 * of "100" in the buffer requires that we multiply by n^1 immediately;
+	 * a pattern of "110" calls for multiplying by n^3 after one more
+	 * squaring), clear the buffer, and continue.
+	 *
+	 * When we start, there is one more optimization: the result buffer
+	 * is implcitly one, so squaring it or multiplying by it can be
+	 * optimized away.  Further, if we start with a pattern like "100"
+	 * in the lookahead window, rather than placing n into the buffer
+	 * and then starting to square it, we have already computed n^2
+	 * to compute the odd-powers table, so we can place that into
+	 * the buffer and save a squaring.
+	 *
+	 * This means that if you have a k-bit window, to compute n^z,
+	 * where z is the high k bits of the exponent, 1/2 of the time
+	 * it requires no squarings.  1/4 of the time, it requires 1
+	 * squaring, ... 1/2^(k-1) of the time, it reqires k-2 squarings.
+	 * And the remaining 1/2^(k-1) of the time, the top k bits are a
+	 * 1 followed by k-1 0 bits, so it again only requires k-2
+	 * squarings, not k-1.  The average of these is 1.  Add that
+	 * to the one squaring we have to do to compute the table,
+	 * and you'll see that a k-bit window saves k-2 squarings
+	 * as well as reducing the multiplies.  (It actually doesn't
+	 * hurt in the case k = 1, either.)
+	 */
+	// Special case for exponent of one
+	//if (exponent.isOne()) {
+	//	return base;
+	//}
+
+	// Special case for base of zero
+	//if (signum == 0)
+	//	return ZERO;
+
+	UArbBigInt base{baseIn}; //int[] base =  mag.clone();
+	const UArbBigInt *exp = &exponent;	//int[] exp = exponent.mag;
+	UArbBigInt mod{modulus}; //int[] mod = modulus.mag;
+	BIG_INT_WORD_COUNT_TYPE modLen = modulus.getWordSize(); //int modLen = mod.length;
+
+	// Make modLen even. It is conventional to use a cryptographic
+	// modulus that is 512, 768, 1024, or 2048 bits, so this code
+	// will not normally be executed. However, it is necessary for
+	// the correct functioning of the HotSpot intrinsics.
+	if ((modLen & 1) != 0) {
+		//int[] x = new int[modLen + 1];
+		//System.arraycopy(mod, 0, x, 1, modLen);
+		//mod = x;
+		mod.reserveWordsAndInitUnused(modLen + 1, 0);
+		modLen++;
+	}
+
+	// Select an appropriate window size
+	uint wbits = 0;
+	uint ebits = exponent.bitLength(); //bitLength(exp, exp.length);
+	// if exponent is 65537 (0x10001), use minimum window size
+	//if ((ebits != 17) || (exp[0] != 65537)) {
+		while (ebits > bnExpModThreshTable[wbits]) {
+			wbits++;
+		}
+	//}
+
+	// Calculate appropriate table size
+	uint tblmask = 1 << wbits;
+
+	// Allocate table for precomputed odd powers of base in Montgomery form
+	UArbBigInt* table = new UArbBigInt[tblmask];//int[][] table = new int[tblmask][];
+	for (int i=0; i < tblmask; i++) {
+		table[i].reserveWordsAndInitUnused(modLen, 0); //table[i] = new int[modLen];
+	}
+	
+	// Compute the modular inverse of the least significant 64-bit
+	// digit of the modulus
+	uint64_t n0 = (uint64_t)mod.value[0] + ((uint64_t)mod.value[1] << BIG_INT_BITS_PER_WORD); //(mod[modLen-1] & LONG_MASK) + ((mod[modLen-2] & LONG_MASK) << 32);
+	uint64_t inv = BigIntUtil::inverseMod64(n0); //long inv = -MutableBigInteger.inverseMod64(n0);
+
+	// Convert base to Montgomery form
+	/* Move base up "mlen" words into a */
+	UArbBigInt a{0, 2*modLen}; a.initUnusedWords(); std::copy_n(&baseIn.value[0], baseIn.wordSize, &a.value[modLen]); a.trimWordSize(2*modLen); //UArbBigInt a{baseIn}; a.rcl(modLen * BIG_INT_BITS_PER_WORD, 0, true); //int[] a = leftShift(base, base.length, modLen << 5);
+
+	UArbBigInt 	q{}, //MutableBigInteger q = new MutableBigInteger(),
+				a2{a}, //a2 = new MutableBigInteger(a),
+				b2{modulus}; //b2 = new MutableBigInteger(mod);
+	//b2.normalize(); // MutableBigInteger.divide() assumes that its
+					// divisor is in normal form.
+
+	UArbBigInt r;
+	a2.div(b2, q, r); //MutableBigInteger r= a2.divide(b2, q);
+	table[0] = r; //table[0] = r.toIntArray();
+
+	// Pad table[0] with leading zeros so its length is at least modLen
+	//if (table[0].length < modLen) {
+	//   int offset = modLen - table[0].length;
+	//   int[] t2 = new int[modLen];
+	//   System.arraycopy(table[0], 0, t2, offset, table[0].length);
+	//   table[0] = t2;
+	//}
+
+	// Set b to the square of the base
+	UArbBigInt b{0, modLen}; montgomerySquare(table[0], mod, modLen, inv, b); //int[] b = montgomerySquare(table[0], mod, modLen, inv, null);
+
+	// Set t to high half of b /* Use high half of b to initialize the table */
+	UArbBigInt t{0, modLen}; t.initUnusedWords(); std::copy_n(&b.value[modLen/2], modLen/2, &t.value[0]); t.trimWordSize(modLen/2); //int[] t = Arrays.copyOf(b, modLen);
+
+	// Fill in the table with odd powers of the base
+	for (size_t i=1; i < tblmask; i++) { //for (int i=1; i < tblmask; i++) {
+		montgomeryMultiply(t, table[i-1], mod, modLen, inv, table[i]); //table[i] = montgomeryMultiply(t, table[i-1], mod, modLen, inv, null);
+	}
+
+	// Pre load the window that slides over the exponent
+	uint bitpos = 1 << ((ebits-1) & (BIG_INT_BITS_PER_WORD-1)); //int bitpos = 1 << ((ebits-1) & (32-1));
+
+	uint buf = 0; //int buf = 0;
+	uint elen = exp->getWordSize(); //int elen = exp.length;
+	uint eIndex = 0; //int eIndex = 0;
+	for (uint i = 0; i <= wbits; i++) { //for (int i = 0; i <= wbits; i++) {
+		buf = (buf << 1) | (((exp[eIndex] & bitpos) != 0)?1:0);
+		bitpos >>= 1; //bitpos >>>= 1;
+		if (bitpos == 0) {
+			eIndex++;
+			bitpos = 1 << (BIG_INT_BITS_PER_WORD-1); //bitpos = 1 << (32-1);
+			elen--;
+		}
+	}
+
+	int multpos = ebits;
+
+	// The first iteration, which is hoisted out of the main loop
+	ebits--;
+	bool isone = true; //boolean isone = true;
+
+	multpos = ebits - wbits;
+	while ((buf & 1) == 0) {
+		buf >>= 1; //buf >>>= 1;
+		multpos++;
+	}
+
+	UArbBigInt mult{table[buf >> 1], modLen}; //int[] mult = table[buf >>> 1];  // TODO reference?
+
+	buf = 0;
+	if (multpos == ebits) { //if (multpos == ebits)
+		isone = false;
+	}
+
+	// The main loop
+	while (true) {
+		ebits--;
+		// Advance the window
+		buf <<= 1;
+
+		if (elen != 0) {
+			buf |= ((exp[eIndex] & bitpos) != 0) ? 1 : 0;
+			bitpos >>= 1; //bitpos >>>= 1;
+			if (bitpos == 0) {
+				eIndex++;
+				bitpos = 1 << (BIG_INT_BITS_PER_WORD-1); //bitpos = 1 << (32-1);
+				elen--;
+			}
+		}
+
+		// Examine the window for pending multiplies
+		if ((buf & tblmask) != 0) {
+			multpos = ebits - wbits;
+			while ((buf & 1) == 0) {
+				buf >>= 1; //buf >>>= 1;
+				multpos++;
+			}
+			mult = table[buf >> 1]; //mult = table[buf >>> 1]; // TODO reference?
+			buf = 0;
+		}
+
+		// Perform multiply
+		if (ebits == multpos) {
+			if (isone) {
+				b = mult; //b = mult.clone();
+				isone = false;
+			} else {
+				t = b;
+				montgomeryMultiply(t, mult, mod, modLen, inv, a); //a = montgomeryMultiply(t, mult, mod, modLen, inv, a);
+				t = a; a = b; b = t;
+			}
+		}
+
+		// Check if done
+		if (ebits == 0) { //if (ebits == 0)
+			break;
+		}
+
+		// Square the input
+		if (!isone) {
+			t = b;
+			montgomerySquare(t, mod, modLen, inv, a); //a = montgomerySquare(t, mod, modLen, inv, a);
+			t = a; a = b; b = t;
+		}
+	}
+
+	// Convert result out of Montgomery form and return
+	UArbBigInt t2{0, (2*modLen)}; //int[] t2 = new int[2*modLen];
+	t2.initUnusedWords(); std::copy_n(&b.value[modLen-1], modLen, &t.value[0]); t2.trimWordSize(modLen); //System.arraycopy(b, 0, t2, modLen, modLen);
+
+	montReduce(t2, mod, modLen, (int)inv); //b = montReduce(t2, mod, modLen, (int)inv);
+
+	//t2 = Arrays.copyOf(b, modLen);
+
+	result = t2; //result = new BigInteger(1, t2);
+	
+	// cleanup
+	//delete[] base;
+	//delete[] mod;
+	delete[] table;
+}
+
+void UArbBigInt::montReduce(UArbBigInt& n, const UArbBigInt& mod, BIG_INT_WORD_COUNT_TYPE mlen, BIG_INT_WORD_COUNT_TYPE inv) {
+	//Adapted from Colin Plumb's C library.
+	int c=0;
+	int len = mlen;
+	int offset=0;
+
+	do {
+		BIG_INT_WORD_TYPE nEnd = n.value[offset]; //int nEnd = n[n.length-1-offset];
+		MagnitudeView nMag{n.value, n.wordCapacity};
+		BIG_INT_WORD_TYPE carry = mulAdd(nMag, MagnitudeView(mod.value, mod.wordCapacity), offset, mlen, inv * nEnd); // int carry = mulAdd(n, mod, offset, mlen, inv * nEnd);
+		c = BigIntUtil::addInt(carry, offset, n.value, mlen); //c += addOne(n, offset, mlen, carry);
+		offset++;
+	} while (--len > 0);
+
+	while (c > 0) {
+		c = n.sub(mod); //c += subN(n, mod, mlen);
+	}
+	
+	while (n >= mod) { //while (intArrayCmpToLen(n, mod, mlen) >= 0) {
+		n.sub(mod); //subN(n, mod, mlen);
+	}
+	
+	return n;
+}
+
+void UArbBigInt::montgomeryMultiply(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product) {
+	product.reserveWords(a.wordCapacity * 2); // TODO: wordCapacity
+	implMontgomeryMultiplyChecks(a, b, n, len, product);
+	
+	a.mul(b, product); //product = multiplyToLen(a, len, b, len, product);
+	montReduce(product, n, len, (BIG_INT_WORD_COUNT_TYPE)inv); //return montReduce(product, n, len, (int)inv);
+}
+void UArbBigInt::montgomerySquare(const UArbBigInt& a, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product) {
+	product.reserveWords(a.wordCapacity * 2); // TODO: wordCapacity
+	implMontgomeryMultiplyChecks(a, a, n, len, product);
+	
+	a.mul(a, product); //product = squareToLen(a, len, product);
+	montReduce(product, n, len, (BIG_INT_WORD_COUNT_TYPE)inv); //return montReduce(product, n, len, (int)inv);
+}
+
+void UArbBigInt::implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, UArbBigInt& product) {
+	if (len % 2 != 0) {
+		throw std::invalid_argument("input array length must be even: " + std::to_string(len));
+	}
+
+	if (len < 1) {
+		throw std::invalid_argument("invalid input length: " + std::to_string(len));
+	}
+
+	if (len > a.wordCapacity ||
+		len > b.wordCapacity ||
+		len > n.wordCapacity ||
+		(/*product != null &&*/ len > product.wordCapacity)) {
+		throw std::invalid_argument("input array length out of bound: " + std::to_string(len));
+	}
+}
+
+BIG_INT_WORD_TYPE UArbBigInt::mulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
+	implMulAddCheck(out, in, offset, len, k);
+	return implMulAdd(out, in, offset, len, k);
+}
+
+void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
+	if (len > in.wordCapacity()) {
+		throw std::invalid_argument("input length is out of bound: " + std::to_string(len) + " > " + std::to_string(in.wordCapacity()));
+	}
+	if (offset < 0) {
+		throw std::invalid_argument("input offset is invalid: " + std::to_string(offset));
+	}
+	if (offset > (out.wordCapacity() - 1)) {
+		throw std::invalid_argument("input offset is out of bound: " + std::to_string(offset) + " > " + std::to_string(out.wordCapacity() - 1));
+	}
+	if (len > (out.wordCapacity() - offset)) {
+		throw std::invalid_argument("input len is out of bound: " + std::to_string(len) + " > " + std::to_string(out.wordCapacity() - offset));
+	}
+}
+
+BIG_INT_WORD_TYPE UArbBigInt::implMulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
+	uint64_t kLong = k;//long kLong = k & LONG_MASK;
+	uint64_t carry = 0;
+
+	offset = out.wordCapacity() - offset - 1;
+	for (int j=len-1; j >= 0; j--) {
+		uint64_t product = 	(uint64_t)in[j] * kLong +
+						(uint64_t)out[offset] + carry;
+		out[offset--] = (BIG_INT_WORD_TYPE)product;
+		carry = product >> BIG_INT_BITS_PER_WORD;
+	}
+	return (int)carry;
+}
+
+// ---
 
 void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const {
 	if (modulus.isZero()) {

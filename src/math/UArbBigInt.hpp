@@ -4,6 +4,7 @@
 #include "BigInt_wordDef.h"
 
 #include "Random.hpp"
+#include "MagnitudeView.hpp"
 //#include "UFixBigInt.hpp"
 
 
@@ -40,7 +41,11 @@ namespace ppvr {
 			static const UArbBigInt ONE;
 			static const UArbBigInt TWO;
 			static const UArbBigInt TEN;
-
+			
+		private:
+			static const BIG_INT_WORD_TYPE bnExpModThreshTable[]; // Sentinel
+			
+		public:
 			static UArbBigInt fromUint64(const uint64_t& uint64Val);
 		protected:
 			static UArbBigInt& fromUint64(const uint64_t& uint64Val, UArbBigInt &target );
@@ -560,8 +565,10 @@ namespace ppvr {
 			 * https://www.nayuki.io/res/montgomery-reduction-algorithm/MontgomeryReducer.java
 			 */
 			static void modPow_montgomery(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
-			static void modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			static void modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			static void modPow_montgomeryOdd_basic(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
 			//static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);
@@ -583,6 +590,32 @@ namespace ppvr {
 			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
 			 */
 			UArbBigInt mod2(uint p) const;
+			
+			static void modPow_montgomeryOdd_window(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			
+			/**
+			 * Montgomery reduce n, modulo mod.  This reduces modulo mod and divides
+			 * by 2^(32*mlen). 
+			 */
+			static void montReduce(UArbBigInt& n, const UArbBigInt& mod, BIG_INT_WORD_COUNT_TYPE mlen, BIG_INT_WORD_COUNT_TYPE inv);
+			static void montgomeryMultiply(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product);
+			static void montgomerySquare(const UArbBigInt& a, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product);
+			static void implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, UArbBigInt& product);
+			
+			/**
+			 * Multiply an array by one word k and add to result, return the carry
+			 */
+			static BIG_INT_WORD_TYPE mulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
+			
+			/**
+			 * Parameters validation.
+			 */
+			static void implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
+			
+			/**
+			 * Java Runtime may use intrinsic for this method.
+			 */
+			static BIG_INT_WORD_TYPE implMulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
 			
 		public:
 			/**

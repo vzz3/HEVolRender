@@ -315,6 +315,19 @@ namespace ppvr {
 			static BIG_INT_WORD_TYPE divTwoWordsKnuth_unnormalize(BIG_INT_WORD_TYPE u, const uint d);
 			static BIG_INT_WORD_TYPE divTwoWordsKnuth_calculate(const BIG_INT_WORD_TYPE u, const BIG_INT_WORD_TYPE u3, const BIG_INT_WORD_TYPE v);
 			static void divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT_WORD_TYPE &u3, BIG_INT_WORD_TYPE &q, const BIG_INT_WORD_TYPE v);
+			
+		// ----- multiplicative inverse -----
+		public:
+			
+			/**
+			 * Returns the multiplicative inverse of val mod 2^32.  Assumes val is odd.
+			 */
+			static uint32_t inverseMod32(uint32_t val);
+			
+			/**
+			 * Returns the multiplicative inverse of val mod 2^64.  Assumes val is odd.
+			 */
+			static uint64_t inverseMod64(uint64_t val);
 		};
 	}
 }

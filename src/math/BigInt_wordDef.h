@@ -1,9 +1,9 @@
 #pragma once
 
 #include <climits>
-#include <sys/types.h>
+#include <cstdint>
 
-#define _BIG_INT_WORD_LENGTH_PRESET_ 32
+#define _BIG_INT_WORD_LENGTH_PRESET_ 8
 
 #define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
 //#include "BigInt_wordDev8bit.h"
@@ -61,3 +61,4 @@
 #define BIG_INT_NOASM 1
 //#define BIG_INT_FORCE_SCHOOL 1
 //#define BIG_INT_NO_MONTGOMERY_REDUCTION 1
+//#define BIG_INT_NO_MONTGOMERY_WINDOW 1
