@@ -1518,20 +1518,18 @@ void UArbBigInt::square(const UArbBigInt& a, UArbBigInt& result) {
 		//assert( offset < len );
 		
 		BIG_INT_WORD_TYPE t = a.value[i];
-		MagnitudeView resultMag{result.value, resultLen};
-		t = implMulAdd(resultMag, offset, MagnitudeView(a.value, len), i+1, lenx, t); //t = mulAdd(z, x, offset, i-1, t);
-		BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen);//offset+lenx+1); //lbnAdd1_32(BIGLITTLE(prodx-lenx,prodx+lenx), lenx+1, t); //BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen-i); //addOne(result.value, offset-1, i, t);
+		t = BigIntUtil::mulAdd(result.value, offset, a.value, i+1, lenx, t); //t = mulAdd(z, x, offset, i-1, t);
+		BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen); //lbnAdd1_32(BIGLITTLE(prodx-lenx,prodx+lenx), lenx+1, t); //addOne(result.value, offset-1, i, t);
 		assert(cTest == 0);
 	}
 
-	// The member wordSize of result need to be correct befor we can use any member function.
+	// Shift the result back up
+	result.wordSize = resultLen;
+	result.rcl(1, 0, false); //primitiveLeftShift(z, zlen, 1);
 	result.trimWordSize(resultLen);
 	
-	// Shift back up and set low bit
-	result.rcl(1, 0, true); //primitiveLeftShift(z, zlen, 1);
+	// And set the low bit appropriately
 	result.value[0] |= a.value[0] & 1; //result.value[resultLen-1] |= a.value[len-1] & 1;
-
-	//return z;
 #else
 	a.mul(a, result);
 #endif
@@ -2117,10 +2115,10 @@ void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt&
 */
 
 void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-#ifdef BIG_INT_NO_MONTGOMERY_WINDOW || _BIG_INT_WORD_LENGTH_PRESET_ > 32
-	modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
-#else
+#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
 	modPow_montgomeryOdd_window(base, exponent, modulus, result);
+#else
+	modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
 #endif
 }
 
@@ -2566,6 +2564,7 @@ void UArbBigInt::montgomeryMultiply(const UArbBigInt& a, const UArbBigInt& b, co
 	a.mul(b, product); //product = multiplyToLen(a, len, b, len, product);
 	montReduce(product, n, len, (BIG_INT_WORD_COUNT_TYPE)inv); //return montReduce(product, n, len, (int)inv);
 }
+
 void UArbBigInt::montgomerySquare(const UArbBigInt& a, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product) {
 	product.reserveWords(a.wordCapacity * 2); // TODO: wordCapacity
 	implMontgomeryMultiplyChecks(a, a, n, len, product);
@@ -2593,7 +2592,8 @@ void UArbBigInt::implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBig
 
 BIG_INT_WORD_TYPE UArbBigInt::mulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
 	implMulAddCheck(out, in, offset, len, k);
-	return implMulAdd(out, -1, in, offset, len, k);
+	throw std::invalid_argument("UArbBigInt::mulAdd not implemented");
+	return -1;//BigIntUtil::MulAdd(out.value(), -1, in, offset, len, k);
 }
 
 void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
@@ -2609,55 +2609,6 @@ void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& 
 	if (len > (out.wordCapacity() - offset)) {
 		throw std::invalid_argument("input len is out of bound: " + std::to_string(len) + " > " + std::to_string(out.wordCapacity() - offset));
 	}
-}
-
-BIG_INT_WORD_TYPE UArbBigInt::implMulAdd(MagnitudeView& out, BIG_INT_WORD_COUNT_TYPE indexOut, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE indexIn, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
-	/*
-	 * lbnMulAdd1_32: Multiply an n-word input by a 1-word input and add the
-	 * low n words of the product to the destination.  *Returns the n+1st word
-	 * of the product.*  (That turns out to be more convenient than adding
-	 * it into the destination and dealing with a possible unit carry out
-	 * of *that*.)  This uses either the mul32_ppmma and mul32_ppmmaa macros,
-	 * or C multiplication with the BNWORD64 type.
-	 *
-	 * If you're going to write assembly primitives, this is the one to
-	 * start with.  It is by far the most commonly called function.
-	 *
-	 * see lbn32.c lbnMulAdd1_32(BNWORD32 *out, BNWORD32 const *in, unsigned len, BNWORD32 k), line 583
-	 */
-	
-	assert(len > 0);
-	
-	uint64_t kLong = k;
-	uint64_t carry = (uint64_t)in[indexIn] * kLong + (uint64_t)out[indexOut];
-	out[indexOut] = (BIG_INT_WORD_TYPE)carry;
-	indexOut++;
-	indexIn++;
-
-	//while (--len) {
-	for (BIG_INT_WORD_COUNT_TYPE i = 1; i<len; i++) {
-		carry = (uint64_t)in[indexIn] * kLong +
-				(BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD) + out[indexOut];
-		out[indexOut] = (BIG_INT_WORD_TYPE)carry;
-		indexOut++;
-		indexIn++;
-	}
-
-	return (BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD);
-	
-	
-	
-	
-	/*
-	//offset = out.wordCapacity() - offset - 1;
-	for (BIG_INT_WORD_COUNT_TYPE j = 0; j < len; j++) { //for (int j=len-1; j >= 0; j--) {
-		uint64_t product =  (uint64_t)in[j] * kLong +
-							(uint64_t)out[offset] + carry;
-		out[offset++] = (BIG_INT_WORD_TYPE)product; //out[offset--] = (BIG_INT_WORD_TYPE)product;
-		carry = product >> BIG_INT_BITS_PER_WORD;
-	}
-	return (BIG_INT_WORD_TYPE)carry;
-	*/
 }
 
 // ---

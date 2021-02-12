@@ -620,11 +620,6 @@ namespace ppvr {
 			 */
 			static void implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
 			
-			/**
-			 * Java Runtime may use intrinsic for this method.
-			 */
-			static BIG_INT_WORD_TYPE implMulAdd(MagnitudeView& out, BIG_INT_WORD_COUNT_TYPE indexOut, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE indexIn, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
-			
 		public:
 			/**
 			 * Returns a BigInteger whose value is

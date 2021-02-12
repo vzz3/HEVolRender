@@ -282,6 +282,13 @@ namespace ppvr {
 			 */
 			static void mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE* resultHigh, BIG_INT_WORD_TYPE* resultLow);
 			
+			/**
+			 * Multiply an n-word input (in) by a 1-word (k) input and add the
+			 * low n words of the product to the destination (out).  *Returns the n+1st word
+			 * of the product.*
+			 */
+			static BIG_INT_WORD_TYPE mulAdd(BIG_INT_WORD_TYPE* out, BIG_INT_WORD_COUNT_TYPE indexOut, const BIG_INT_WORD_TYPE* in, BIG_INT_WORD_COUNT_TYPE indexIn, const BIG_INT_WORD_COUNT_TYPE len, const BIG_INT_WORD_TYPE k);
+			
 		// ----- division -----
 			// -- divTwoWords
 			
