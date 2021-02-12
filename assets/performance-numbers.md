@@ -58,3 +58,7 @@ modPow() Montgomery 8192bit  ... time required: 21611ms, addTwoIntsCounter: 2406
 ## javas multiplyToLen()
 modPow() Naiv  8192bit       ... time required: 11410ms, addTwoIntsCounter:  806370374
 modPow() Montgomery 8192bit  ... time required:  2945ms, addTwoIntsCounter:     213575
+
+## javas multiplyToLen(), square()
+modPow() Naiv  8192bit       ... time required: 11232ms, addTwoIntsCounter:  802177095
+modPow() Montgomery 8192bit  ... time required:  2692ms, addTwoIntsCounter:     213063

@@ -543,7 +543,7 @@ BIG_INT_WORD_TYPE UArbBigInt::rcl(const uint bits, const BIG_INT_WORD_TYPE c, co
 	uint restBits = bits;
 	if(resize) {
 		// calculate required word size
-		BIG_INT_WORD_TYPE curLasWordIndex = this->wordSize - 1;
+		BIG_INT_WORD_COUNT_TYPE curLasWordIndex = this->wordSize - 1;
 		uint newTotalBits = (curLasWordIndex) * BIG_INT_BITS_PER_WORD // currently total bits used
 			+ BigIntUtil::findHighestSetBitInWord(this->value[curLasWordIndex]) + 1 // bits used in the current word (if findLeadingSetBitInWord() returns -1 the "this->wordSize" is already wrong!)
 			+ bits;
@@ -1448,6 +1448,95 @@ UArbBigInt UArbBigInt::operator% (const UArbBigInt& other) const {
 
 // ----- pow(), sqrt() -----
 
+void UArbBigInt::square(const UArbBigInt& a, UArbBigInt& result) {
+	//assert(BIG_INT_BITS_PER_WORD <= 32);
+#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+	/*
+	 * The algorithm used here is adapted from Colin Plumb's C library.
+	 * see lbn32.c lbnSquare_32(BNWORD32 *prod, BNWORD32 const *num, unsigned len), line 1069
+	 *
+	 *
+	 * Technique: Consider the partial products in the multiplication
+	 * of "abcde" by itself:
+	 *
+	 *               a  b  c  d  e
+	 *            *  a  b  c  d  e
+	 *          ==================
+	 *              ae be ce de ee
+	 *           ad bd cd dd de
+	 *        ac bc cc cd ce
+	 *     ab bb bc bd be
+	 *  aa ab ac ad ae
+	 *
+	 * Note that everything above the main diagonal:
+	 *              ae be ce de = (abcd) * e
+	 *           ad bd cd       = (abc) * d
+	 *        ac bc             = (ab) * c
+	 *     ab                   = (a) * b
+	 *
+	 * is a copy of everything below the main diagonal:
+	 *                       de
+	 *                 cd ce
+	 *           bc bd be
+	 *     ab ac ad ae
+	 *
+	 * Thus, the sum is 2 * (off the diagonal) + diagonal.
+	 *
+	 * This is accumulated beginning with the diagonal (which
+	 * consist of the squares of the digits of the input), which is then
+	 * divided by two, the off-diagonal added, and multiplied by two
+	 * again.  The low bit is simply a copy of the low bit of the
+	 * input, so it doesn't need special care.
+	 *
+	 */
+
+	BIG_INT_WORD_COUNT_TYPE len = a.wordSize;
+	BIG_INT_WORD_COUNT_TYPE resultLen = a.wordSize * 2;
+	result.setZero(); result.reserveWords(resultLen); result.initUnusedWords();
+	
+	// Store the squares, right shifted one bit (i.e., divided by 2)
+	BIG_INT_WORD_TYPE lastProductLowWord = 0;
+	for (int j=len-1, i=resultLen-1; j >= 0; j--) {
+		assert( j >= 0 );
+		assert( i-1 >= 0 );
+		assert( j < len );
+		assert( i < resultLen );
+		
+		uint64_t piece = (uint64_t)(a.value[j]);
+		uint64_t product = piece * piece;
+		result.value[i--] = (lastProductLowWord << (BIG_INT_BITS_PER_WORD-1)) | (BIG_INT_WORD_TYPE)(product >> (BIG_INT_BITS_PER_WORD+1)); //z[i++] = (lastProductLowWord << 31) | (int)(product >>> 33);
+		result.value[i--] = (BIG_INT_WORD_TYPE)(product >> 1);
+		lastProductLowWord = (BIG_INT_WORD_TYPE)product;
+	}
+
+	// Add in off-diagonal sums
+	for (BIG_INT_WORD_COUNT_TYPE i=0, offset=1; i < len-1; i++, offset+=2) {
+		BIG_INT_WORD_COUNT_TYPE lenx = len - i - 1;
+		assert( i >= 0 );
+		assert( i < len );
+		//assert( offset >= 0 );
+		//assert( offset < len );
+		
+		BIG_INT_WORD_TYPE t = a.value[i];
+		MagnitudeView resultMag{result.value, resultLen};
+		t = implMulAdd(resultMag, offset, MagnitudeView(a.value, len), i+1, lenx, t); //t = mulAdd(z, x, offset, i-1, t);
+		BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen);//offset+lenx+1); //lbnAdd1_32(BIGLITTLE(prodx-lenx,prodx+lenx), lenx+1, t); //BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen-i); //addOne(result.value, offset-1, i, t);
+		assert(cTest == 0);
+	}
+
+	// The member wordSize of result need to be correct befor we can use any member function.
+	result.trimWordSize(resultLen);
+	
+	// Shift back up and set low bit
+	result.rcl(1, 0, true); //primitiveLeftShift(z, zlen, 1);
+	result.value[0] |= a.value[0] & 1; //result.value[resultLen-1] |= a.value[len-1] & 1;
+
+	//return z;
+#else
+	a.mul(a, result);
+#endif
+}
+
 UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 	//if( IsNan() )
 	//	return 1;
@@ -1468,6 +1557,8 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 	UArbBigInt start(*this);
 	UArbBigInt result(1);
 	uint c = 0;
+	
+	UArbBigInt squereRes{0};
 
 	//while( !c ) {
 	while( true ) {
@@ -1483,7 +1574,8 @@ UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
 		}
 
 		//c += start.Mul(start);
-		start = start * start;
+		square(start, squereRes);
+		start = squereRes;
 	}
 
 	//*this = result;
@@ -1857,6 +1949,8 @@ void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const
 	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 	UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
 	
+	UArbBigInt squereRes{0, modulus.wordSize*2};
+	
 	while ( !exponent.isZero()) {
 		if (exponent.isOdd()) {
 			result = (result * baseTmp) % modulus;
@@ -1865,7 +1959,8 @@ void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const
 		//baseTmp = baseTmp.pow(2) % modulus;
 		// should be faster
 		exponent.rcr(1);
-		baseTmp = (baseTmp * baseTmp) % modulus;
+		square(baseTmp, squereRes);
+		baseTmp = squereRes % modulus;
 	}
 }
 
@@ -2022,17 +2117,14 @@ void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt&
 */
 
 void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-	
-	
-	
 #ifdef BIG_INT_NO_MONTGOMERY_WINDOW || _BIG_INT_WORD_LENGTH_PRESET_ > 32
-	modPow_montgomeryOdd_basic(base, exponent, modulus, result);
+	modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
 #else
 	modPow_montgomeryOdd_window(base, exponent, modulus, result);
 #endif
 }
 
-void UArbBigInt::modPow_montgomeryOdd_basic(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+void UArbBigInt::modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
@@ -2085,7 +2177,8 @@ void UArbBigInt::modPow_montgomeryOdd_basic(const UArbBigInt& base, const UArbBi
 		if (y.testBit(i)) {
 			z = montgomeryMultiply(z, x, modulus, factor, reducerBits, mask);
 		}
-		x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
+		//x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
+		x = montgomerySquare(x, modulus, factor, reducerBits, mask);
 	}
 	result = montgomeryOut(z, reciprocal, modulus);
 }
@@ -2118,6 +2211,16 @@ UArbBigInt UArbBigInt::montgomeryMultiply(const UArbBigInt& A, const UArbBigInt&
 	return montgomeryReduce(product, modulus, factor, reducerBits, mask);
 }
 
+UArbBigInt UArbBigInt::montgomerySquare(const UArbBigInt& A, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
+	
+	assert( A < modulus );
+	
+	UArbBigInt squereRes;
+	square(A, squereRes);
+	
+	return montgomeryReduce(squereRes, modulus, factor, reducerBits, mask);
+}
+
 UArbBigInt UArbBigInt::montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
 	
 	UArbBigInt temp = ((product & mask ) * factor) & mask;
@@ -2142,6 +2245,8 @@ UArbBigInt UArbBigInt::modPow2(UArbBigInt exponent, uint p) const {
 	if (this->isOdd()) {
 		limit = ((p-1) < limit) ? (p-1) : limit;
 	}
+	
+	UArbBigInt squareResult;
 
 	while (expOffset < limit) {
 		if (exponent.testBit(expOffset)) {
@@ -2149,9 +2254,8 @@ UArbBigInt UArbBigInt::modPow2(UArbBigInt exponent, uint p) const {
 		}
 		expOffset++;
 		if (expOffset < limit) {
-			// TODO the javas big int class for faster option
-			//baseToPow2 = baseToPow2.square().mod2(p);
-			baseToPow2 = (baseToPow2 * baseToPow2).mod2(p);
+			square(baseToPow2, squareResult);
+			baseToPow2 = squareResult.mod2(p);
 		}
 	}
 
@@ -2489,7 +2593,7 @@ void UArbBigInt::implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBig
 
 BIG_INT_WORD_TYPE UArbBigInt::mulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
 	implMulAddCheck(out, in, offset, len, k);
-	return implMulAdd(out, in, offset, len, k);
+	return implMulAdd(out, -1, in, offset, len, k);
 }
 
 void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
@@ -2507,18 +2611,53 @@ void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& 
 	}
 }
 
-BIG_INT_WORD_TYPE UArbBigInt::implMulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
-	uint64_t kLong = k;//long kLong = k & LONG_MASK;
-	uint64_t carry = 0;
+BIG_INT_WORD_TYPE UArbBigInt::implMulAdd(MagnitudeView& out, BIG_INT_WORD_COUNT_TYPE indexOut, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE indexIn, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k) {
+	/*
+	 * lbnMulAdd1_32: Multiply an n-word input by a 1-word input and add the
+	 * low n words of the product to the destination.  *Returns the n+1st word
+	 * of the product.*  (That turns out to be more convenient than adding
+	 * it into the destination and dealing with a possible unit carry out
+	 * of *that*.)  This uses either the mul32_ppmma and mul32_ppmmaa macros,
+	 * or C multiplication with the BNWORD64 type.
+	 *
+	 * If you're going to write assembly primitives, this is the one to
+	 * start with.  It is by far the most commonly called function.
+	 *
+	 * see lbn32.c lbnMulAdd1_32(BNWORD32 *out, BNWORD32 const *in, unsigned len, BNWORD32 k), line 583
+	 */
+	
+	assert(len > 0);
+	
+	uint64_t kLong = k;
+	uint64_t carry = (uint64_t)in[indexIn] * kLong + (uint64_t)out[indexOut];
+	out[indexOut] = (BIG_INT_WORD_TYPE)carry;
+	indexOut++;
+	indexIn++;
 
-	offset = out.wordCapacity() - offset - 1;
-	for (int j=len-1; j >= 0; j--) {
-		uint64_t product = 	(uint64_t)in[j] * kLong +
-						(uint64_t)out[offset] + carry;
-		out[offset--] = (BIG_INT_WORD_TYPE)product;
+	//while (--len) {
+	for (BIG_INT_WORD_COUNT_TYPE i = 1; i<len; i++) {
+		carry = (uint64_t)in[indexIn] * kLong +
+				(BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD) + out[indexOut];
+		out[indexOut] = (BIG_INT_WORD_TYPE)carry;
+		indexOut++;
+		indexIn++;
+	}
+
+	return (BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD);
+	
+	
+	
+	
+	/*
+	//offset = out.wordCapacity() - offset - 1;
+	for (BIG_INT_WORD_COUNT_TYPE j = 0; j < len; j++) { //for (int j=len-1; j >= 0; j--) {
+		uint64_t product =  (uint64_t)in[j] * kLong +
+							(uint64_t)out[offset] + carry;
+		out[offset++] = (BIG_INT_WORD_TYPE)product; //out[offset--] = (BIG_INT_WORD_TYPE)product;
 		carry = product >> BIG_INT_BITS_PER_WORD;
 	}
-	return (int)carry;
+	return (BIG_INT_WORD_TYPE)carry;
+	*/
 }
 
 // ---

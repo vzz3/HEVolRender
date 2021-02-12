@@ -519,6 +519,10 @@ namespace ppvr {
 			UArbBigInt operator% (const UArbBigInt& other) const;
 
 		// ----- pow(), sqrt() -----
+		private:
+			
+			static void square(const UArbBigInt& a, UArbBigInt& result);
+			
 		public:
 
 			/**
@@ -567,7 +571,10 @@ namespace ppvr {
 			static void modPow_montgomery(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			static void modPow_montgomeryEven(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			static void modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
-			static void modPow_montgomeryOdd_basic(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			/**
+			 * Iterates the exponent from right to left, i.e. the least significant bit to the most significant.
+			 */
+			static void modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
@@ -577,6 +584,7 @@ namespace ppvr {
 			static UArbBigInt montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits);
 			static UArbBigInt montgomeryOut(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus);
 			static UArbBigInt montgomeryMultiply(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
+			static UArbBigInt montgomerySquare(const UArbBigInt& A, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
 			static UArbBigInt montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
 			
 			/**
@@ -615,7 +623,7 @@ namespace ppvr {
 			/**
 			 * Java Runtime may use intrinsic for this method.
 			 */
-			static BIG_INT_WORD_TYPE implMulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
+			static BIG_INT_WORD_TYPE implMulAdd(MagnitudeView& out, BIG_INT_WORD_COUNT_TYPE indexOut, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE indexIn, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
 			
 		public:
 			/**

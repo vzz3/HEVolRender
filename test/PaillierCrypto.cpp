@@ -20,10 +20,10 @@ TEST_CASE( "paillier create key", "[paillierCrypto]" ) {
 	#if !USE_FIX_WIDTH_INTEGER || PAILLIER_MODULUS_BIT_LENGTH >= 512
 		REQUIRE( SecureKey::create(512).publicKey.modulus.bitLength() == 512 );
 	#endif
-	#if !USE_FIX_WIDTH_INTEGER || PAILLIER_MODULUS_BIT_LENGTH >= 1024
+	#if (!USE_FIX_WIDTH_INTEGER || PAILLIER_MODULUS_BIT_LENGTH >= 1024) && _BIG_INT_WORD_LENGTH_PRESET_ > 8
 		REQUIRE( SecureKey::create(1024).publicKey.modulus.bitLength() == 1024 );
 	#endif
-	#if !USE_FIX_WIDTH_INTEGER || PAILLIER_MODULUS_BIT_LENGTH >= 2048
+	#if (!USE_FIX_WIDTH_INTEGER || PAILLIER_MODULUS_BIT_LENGTH >= 2048) && _BIG_INT_WORD_LENGTH_PRESET_ > 8
 		REQUIRE( SecureKey::create(2048).publicKey.modulus.bitLength() == 2048 );
 	#endif
 }

@@ -3,7 +3,12 @@
 #include <climits>
 #include <cstdint>
 
-#define _BIG_INT_WORD_LENGTH_PRESET_ 8
+/*
+ * The Magnitude (value) of the BigInt Classes stores the Words as little-endian.
+ * Therefore the least-significant word is stored at the smallest address (the word with index 0).
+ */
+
+#define _BIG_INT_WORD_LENGTH_PRESET_ 32
 
 #define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
 //#include "BigInt_wordDev8bit.h"
@@ -57,8 +62,9 @@
 // Certainty required to meet the spec of probablePrime
 #define BIG_INT_DEFAULT_PRIME_CERTAINTY 100
 
+// --- Optimizations ---
 //#define BIG_INT_REDUCE_BRANCHING 1
 #define BIG_INT_NOASM 1
 //#define BIG_INT_FORCE_SCHOOL 1
 //#define BIG_INT_NO_MONTGOMERY_REDUCTION 1
-//#define BIG_INT_NO_MONTGOMERY_WINDOW 1
+#define BIG_INT_NO_MONTGOMERY_WINDOW 1

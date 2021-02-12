@@ -99,6 +99,12 @@ int executePerformanceTest(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-	//executePerformanceTest(argc, argv);
-	showQtWindow(argc, argv);
+	//int test = 10;
+	//while(--test) {
+	//	std::cout << test << std::endl;
+	//}
+	//return 0;
+	
+	executePerformanceTest(argc, argv);
+	//showQtWindow(argc, argv);
 }

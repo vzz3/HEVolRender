@@ -1365,7 +1365,22 @@ TEST_CASE( "unsigned infinit big integer pow", "[UABigint]" ) {
 	REQUIRE( UArbBigInt(  2).pow(UArbBigInt(  6)).toUint64() ==  64 );
 	REQUIRE( UArbBigInt(  2).pow(UArbBigInt(  7)).toUint64() == 128 );
 
+	REQUIRE( UArbBigInt( 16).pow(UArbBigInt(  2)).toUint64() ==  256 );
+	REQUIRE( UArbBigInt( 36).pow(UArbBigInt(  2)).toUint64() == 1296 );
 
+	
+	//  test quare() method
+	REQUIRE( UArbBigInt::fromUint64(       255).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(                65025) ); // ((1 << 8) - 1)^2
+	REQUIRE( UArbBigInt::fromUint64(       256).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(                65536) ); // (1 << 8)^2
+	REQUIRE( UArbBigInt::fromUint64(       257).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(                66049) ); // ((1 << 8) + 1)^2
+	REQUIRE( UArbBigInt::fromUint64(     65535).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(           4294836225) ); // ((1 << 16) - 1)^2
+	REQUIRE( UArbBigInt::fromUint64(     65536).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(           4294967296) ); // (1 << 16)^2
+	REQUIRE( UArbBigInt::fromUint64(     65537).pow(UArbBigInt(  2)) ==  UArbBigInt::fromUint64(           4295098369) ); // ((1 << 16) + 1)^2
+	REQUIRE( UArbBigInt::fromUint64(4294967295).pow(UArbBigInt(  2)) ==  UArbBigInt::fromString("18446744065119617025", 10) ); // ((1 << 32) - 1)^2
+	REQUIRE( UArbBigInt::fromUint64(4294967296).pow(UArbBigInt(  2)) ==  UArbBigInt::fromString("18446744073709551616", 10) ); // (1 << 32)^2
+	REQUIRE( UArbBigInt::fromUint64(4294967297).pow(UArbBigInt(  2)) ==  UArbBigInt::fromString("18446744082299486209", 10) ); // ((1 << 32) + 1)^2
+	
+	
 	REQUIRE( UArbBigInt::fromString("1234523643567098765433100593754267268387411043985640123642389767832457568567546743234", 10).pow(UArbBigInt(0)).toUint64() ==   1 );
 	REQUIRE( UArbBigInt::fromString("1234523643567098765433100593754267268387411043985640123642389767832457568567546743234", 10).pow(UArbBigInt(1)) == UArbBigInt::fromString("1234523643567098765433100593754267268387411043985640123642389767832457568567546743234", 10) );
 	REQUIRE( UArbBigInt::fromString("1234523643567098765433100593754267268387411043985640123642389767832457568567546743234", 10).pow(UArbBigInt(2)) ==   UArbBigInt::fromString("1524048626526185117008148645329708998795770321794318911442256140455458946053172210513801777413097237329246447244122385285308414454789711324787960475901495579519924778756", 10) );
