@@ -39,7 +39,7 @@ BigInt MontgomeryReducer<BigInt>::convertOut(const BigInt& encodedValue) const {
 }
 
 template <typename BigInt>
-BigInt MontgomeryReducer<BigInt>::multiply(const BigInt& encodedA, const BigInt& encodedB) {
+BigInt MontgomeryReducer<BigInt>::multiply(const BigInt& encodedA, const BigInt& encodedB) const {
 	assert( encodedA < this->modulus );
 	assert( encodedB < this->modulus );
 	
@@ -48,7 +48,7 @@ BigInt MontgomeryReducer<BigInt>::multiply(const BigInt& encodedA, const BigInt&
 }
 
 template <typename BigInt>
-BigInt MontgomeryReducer<BigInt>::square(const BigInt& encodedA) {
+BigInt MontgomeryReducer<BigInt>::square(const BigInt& encodedA) const {
 	assert( encodedA < this->modulus );
 	BigInt squereRes = encodedA.square();
 	return reduce(squereRes);

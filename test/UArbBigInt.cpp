@@ -1647,7 +1647,39 @@ TEST_CASE( "unsigned infinit big integer modPow", "[UABigint]" ) {
 	REQUIRE( UArbBigInt(122      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(1) ); // PowerMod[122, 7, 11]
 	REQUIRE( UArbBigInt(123      ).modPow(UArbBigInt(  7       ), UArbBigInt( 11)) == UArbBigInt(7) ); // PowerMod[123, 7, 11]
 	
+	// test k=16
+	// 4 bit exponent
+	REQUIRE( UArbBigInt(169      ).modPow(UArbBigInt(  9       ), UArbBigInt( 11)) == UArbBigInt(3) ); // PowerMod[169, 9,  11]
+	REQUIRE( UArbBigInt(117      ).modPow(UArbBigInt( 13       ), UArbBigInt( 17)) == UArbBigInt(2) ); // PowerMod[117, 13, 17]
+	// 8 bit exponent
+	REQUIRE( UArbBigInt(213      ).modPow(UArbBigInt(128       ), UArbBigInt( 19)) == UArbBigInt(16) ); // PowerMod[213, 128,  19]
+	REQUIRE( UArbBigInt(213      ).modPow(UArbBigInt(141       ), UArbBigInt( 19)) == UArbBigInt(11) ); // PowerMod[213, 141,  19]
+	REQUIRE( UArbBigInt(213      ).modPow(UArbBigInt(149       ), UArbBigInt( 13)) == UArbBigInt(5) ); // PowerMod[213, 149,  13]
 
+	// 5 bit exponent
+	REQUIRE( UArbBigInt(169      ).modPow(UArbBigInt( 21       ), UArbBigInt( 11)) == UArbBigInt(4) ); // PowerMod[169, 21,  11]
+	REQUIRE( UArbBigInt(117      ).modPow(UArbBigInt( 29       ), UArbBigInt( 17)) == UArbBigInt(2) ); // PowerMod[117, 29, 17]
+	
+	// 9 bit exponent
+	REQUIRE( UArbBigInt::fromUint64(169).modPow(UArbBigInt::fromUint64(256), UArbBigInt::fromUint64( 77)) == UArbBigInt::fromUint64(15) ); // PowerMod[169, 256,  77]
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(289), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64( 3) ); // PowerMod[117, 289,  19]
+	REQUIRE( UArbBigInt::fromUint64(213).modPow(UArbBigInt::fromUint64(323), UArbBigInt::fromUint64( 13)) == UArbBigInt::fromUint64( 8) ); // PowerMod[213, 323,  13]
+	REQUIRE( UArbBigInt::fromUint64(169).modPow(UArbBigInt::fromUint64(357), UArbBigInt::fromUint64( 89)) == UArbBigInt::fromUint64(47) ); // PowerMod[169, 357,  89]
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(391), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64(14) ); // PowerMod[117, 391,  19]
+	REQUIRE( UArbBigInt::fromUint64(213).modPow(UArbBigInt::fromUint64(425), UArbBigInt::fromUint64( 13)) == UArbBigInt::fromUint64( 5) ); // PowerMod[213, 425,  13]
+	REQUIRE( UArbBigInt::fromUint64(169).modPow(UArbBigInt::fromUint64(459), UArbBigInt::fromUint64( 77)) == UArbBigInt::fromUint64(36) ); // PowerMod[169, 459,  77]
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(493), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64( 2) ); // PowerMod[117, 493,  19]
+	REQUIRE( UArbBigInt::fromUint64(213).modPow(UArbBigInt::fromUint64(271), UArbBigInt::fromUint64( 13)) == UArbBigInt::fromUint64( 8) ); // PowerMod[213, 271,  13]
+	
+	// 10 bit exponent
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(1005), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64(12) ); // PowerMod[117, 1005,  19]
+	// 11 bit exponent
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(1773), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64(18) ); // PowerMod[117, 1773,  19]
+	// 12 bit exponent
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(2797), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64( 2) ); // PowerMod[117, 2797,  19]
+	// 13 bit exponent
+	REQUIRE( UArbBigInt::fromUint64(117).modPow(UArbBigInt::fromUint64(5613), UArbBigInt::fromUint64( 19)) == UArbBigInt::fromUint64(12) ); // PowerMod[117, 5613,  19]
+	
 	// -----
 	REQUIRE( UArbBigInt::fromString("321", 10).modPow(UArbBigInt::fromString("170316580215634215412390428579751188659", 10), UArbBigInt::fromString("29007737496348564246541369697392157257353622947791601355298952855523410218281", 10)) == UArbBigInt::fromString("17721908342651498136687561664913427653804630235400928582777881790054443435532", 10) ); // PowerMod[321, 170316580215634215412390428579751188659, 29007737496348564246541369697392157257353622947791601355298952855523410218281]
 

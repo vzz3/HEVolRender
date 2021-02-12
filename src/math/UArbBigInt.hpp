@@ -579,6 +579,16 @@ namespace ppvr {
 			 */
 			static void modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			
+			/**
+			 * Iterates the exponent from left  to right, i.e. the most significant bit to the least significant.
+			 */
+			static void modPow_montgomeryOdd_mostToLeastSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			
+			/**
+			 * Left-To-Right K-ary Modular Exponentiation
+			 */
+			static void modPow_montgomeryOdd_kAry(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
+			
 			
 			//static uint32_t CeilLog2(UArbBigInt V);
 			//static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);

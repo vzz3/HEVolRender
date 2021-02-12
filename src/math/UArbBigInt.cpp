@@ -2125,7 +2125,9 @@ void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& 
 #if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
 	modPow_montgomeryOdd_window(base, exponent, modulus, result);
 #else
-	modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
+	//modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
+	//modPow_montgomeryOdd_mostToLeastSig(base, exponent, modulus, result);
+	modPow_montgomeryOdd_kAry(base, exponent, modulus, result);
 #endif
 }
 
@@ -2133,18 +2135,90 @@ void UArbBigInt::modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, con
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
-	MontgomeryReducer<UArbBigInt> mmReducer{modulus};
+	const MontgomeryReducer<UArbBigInt> mmReducer{modulus};
 	
-	UArbBigInt x = mmReducer.convertIn(base);
-	UArbBigInt y = exponent;
-	UArbBigInt z = mmReducer.getConvertedOne();
-	for (size_t i = 0, len = y.bitLength(); i < len; i++) {
-		if (y.testBit(i)) {
-			z = mmReducer.multiply(z, x);
+	UArbBigInt b = mmReducer.convertIn(base); // S
+	const UArbBigInt e = exponent; // E
+	UArbBigInt res = mmReducer.getConvertedOne(); // A
+	for (size_t i = 0, len = e.bitLength(); i < len; i++) {
+		if (e.testBit(i)) {
+			res = mmReducer.multiply(res, b);
 		}
-		x = mmReducer.square(x);
+		b = mmReducer.square(b);
 	}
-	result = mmReducer.convertOut(z);
+	result = mmReducer.convertOut(res);
+}
+
+void UArbBigInt::modPow_montgomeryOdd_mostToLeastSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	const MontgomeryReducer<UArbBigInt> mmReducer{modulus};
+	
+	const UArbBigInt b = mmReducer.convertIn(base);
+	const UArbBigInt e = exponent;
+	UArbBigInt res = mmReducer.getConvertedOne(); // A
+	for (int i = e.bitLength() - 1; i >= 0; i--) {
+		res = mmReducer.square(res);
+		
+		if (e.testBit(i)) {
+			res = mmReducer.multiply(res, b);
+		}
+		
+	}
+	result = mmReducer.convertOut(res);
+}
+
+void UArbBigInt::modPow_montgomeryOdd_kAry(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	constexpr int k = 6;
+	constexpr int tableSize = (1<<k) - 1; // 2^k - 1;
+	assert( k <= BIG_INT_BITS_PER_WORD);
+	UArbBigInt table[tableSize];
+	
+	const MontgomeryReducer<UArbBigInt> mmReducer{modulus};
+	const UArbBigInt b = mmReducer.convertIn(base);
+	
+	// pre calculculate the multiplicators for 2^k bit patterns of the exponent.
+	table[0] = b;
+	for (int i = 1; i < tableSize; i++) {
+		table[i] = mmReducer.multiply(table[i-1], b);
+	}
+	
+	// iterate over the k*x most significant bit of the exponent (k bits per iteration)
+	UArbBigInt e = exponent;
+	UArbBigInt res = mmReducer.getConvertedOne(); // A
+	for (int i = e.bitLength() - 1; i >= (k-1); i -= k) {
+		// get the k most significant bit and store it in t
+		UArbBigInt t1 = e >> (i-(k-1));
+		BIG_INT_WORD_TYPE t = t1.getData()[0] & tableSize; // t <= 2^k-1 // e.getData()[0] = the least segnificant word of e
+		
+		for (int j = 0; j < k; j++) {
+			res = mmReducer.square(res);
+		}
+		
+		if ( t != 0) {
+			res = mmReducer.multiply(res, table[t-1]);
+		}
+	}
+	
+	// iterate over the remaining least significant bit of the exponent which was not a multiple of k (one bit per iteration)
+	int remainingBitsOfExp = e.bitLength() % k;
+	if(remainingBitsOfExp > 0) {
+		BIG_INT_WORD_TYPE remainingBitsOfExpMask = (1 << remainingBitsOfExp) - 1;
+		e.boolAnd(UArbBigInt{remainingBitsOfExpMask});
+		
+		for (int i = remainingBitsOfExp - 1; i >= 0; i--) {
+			res = mmReducer.square(res);
+			
+			if (e.testBit(i)) {
+				res = mmReducer.multiply(res, b);
+			}
+		}
+	}
+	result = mmReducer.convertOut(res);
 }
 
 UArbBigInt UArbBigInt::modPow2(UArbBigInt exponent, uint p) const {

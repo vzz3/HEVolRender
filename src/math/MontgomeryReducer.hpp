@@ -46,8 +46,8 @@ namespace ppvr {
 			BigInt convertIn(const BigInt& plainValue) const;
 			BigInt convertOut(const BigInt& encodedValue) const;
 			
-			BigInt multiply(const BigInt& encodedA, const BigInt& encodedB);
-			BigInt square(const BigInt& encodedA);
+			BigInt multiply(const BigInt& encodedA, const BigInt& encodedB) const;
+			BigInt square(const BigInt& encodedA) const;
 			
 			BigInt reduce(const BigInt& encodedProduct) const;
 			
