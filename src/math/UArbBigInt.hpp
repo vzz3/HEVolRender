@@ -5,7 +5,7 @@
 
 #include "Random.hpp"
 #include "MagnitudeView.hpp"
-//#include "UFixBigInt.hpp"
+#include "MontgomeryReducer.hpp"
 
 
 /*
@@ -524,6 +524,7 @@ namespace ppvr {
 			static void square(const UArbBigInt& a, UArbBigInt& result);
 			
 		public:
+			UArbBigInt square() const;
 
 			/**
 			 * power this = this ^ pow
@@ -541,8 +542,10 @@ namespace ppvr {
 		// ----- modInverse / gcd -----
 		private:
 			static UArbBigInt gcd(const UArbBigInt & a, const UArbBigInt & b);
+		public:
 			UArbBigInt gcd(const UArbBigInt & b) const;
 			
+		private:
 			//static uint gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b);
 			//static void gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v, UArbBigInt* gcd = nullptr);
 			/**
@@ -581,12 +584,6 @@ namespace ppvr {
 			//static void gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt& u, UArbBigInt& v);
 			
 		private:
-			static UArbBigInt montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits);
-			static UArbBigInt montgomeryOut(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus);
-			static UArbBigInt montgomeryMultiply(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
-			static UArbBigInt montgomerySquare(const UArbBigInt& A, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
-			static UArbBigInt montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask);
-			
 			/**
 			 * ModPow - Special Case (modulus == 2^p)
 			 * this = base

@@ -1428,6 +1428,7 @@ UArbBigInt UArbBigInt::operator% (const UArbBigInt& other) const {
 	this->div(other, result, reminder);
 	return reminder;
 }
+
 /*
 UArbBigInt UArbBigInt::operator/ (const UArbBigInt& other) const {
 	UArbBigInt result(*this); // copy this to new UArbBigInt
@@ -1533,6 +1534,12 @@ void UArbBigInt::square(const UArbBigInt& a, UArbBigInt& result) {
 #else
 	a.mul(a, result);
 #endif
+}
+
+UArbBigInt UArbBigInt::square() const {
+	UArbBigInt result = UArbBigInt(0, this->wordSize*2);
+	square(*this, result);
+	return result;
 }
 
 UArbBigInt UArbBigInt::pow(UArbBigInt pow) const {
@@ -2126,107 +2133,18 @@ void UArbBigInt::modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, con
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
-	// Reducer:
-	uint reducerBits = (modulus.bitLength() / 8 + 1) * 8;  // This is a multiple of 8 // Equal to log2(reducer)
-	UArbBigInt reducer = UArbBigInt::ONE << reducerBits;  // This is a power of 256 // Is a power of 2
-	UArbBigInt mask = reducer - UArbBigInt::ONE; // Because x mod reducer = x & (reducer - 1)
-	assert( reducer > modulus );
-	assert( reducer.gcd(modulus).isOne() );
+	MontgomeryReducer<UArbBigInt> mmReducer{modulus};
 	
-	
-	UArbBigInt D, reciprocal, factor;
-
-	/*
-	// Other computed numbers:
-	// R = reciprocal = reducer.modInverse(modulus);
-	// K = factor = reducer.multiply(reciprocal).subtract(BigInteger.ONE).divide(modulus);
-	gcdExtended_binary4mont(reducer, modulus, reciprocal, factor); // montgcd(1lu << 31, modulus, R, K);
-	
-	/ * TEST: * / std::cout << TWO << "*" << reducer << "*" << reciprocal << " + " << modulus << "*" << factor << " = " << (TWO*reducer*reciprocal + modulus*factor) << std::endl;
-	assert( (TWO*reducer*reciprocal - modulus*factor).isOne() );
-	
-	base = base % modulus; //base %= modulus; // TODO probably not neccesery because already chacked
-	base = montin(base, modulus, reducerBits);
-	if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
-		D = base;
-	} else {
-		D = montin(UArbBigInt::ONE, modulus, reducerBits);
-	}
-	
-
-	while (!(exponent = exponent >> 1).isZero()) { //while ((exponent >>= 1) != 0) {
-		base = montredc(base, base, modulus, factor, reducerBits, mask);
-		if (exponent.isOdd()) { //if ((exponent & 1) == 1) {
-			D = montredc(D, base, modulus, factor, reducerBits, mask);
-		}
-	}
-	 result = montout(D, reciprocal, modulus);
-	 */
-	
-	// Other computed numbers:
-	reciprocal = reducer.modInverse(modulus);
-	factor = (reducer * reciprocal - ONE ) / modulus;
-	UArbBigInt convertedOne = reducer % modulus;
-	 
-	UArbBigInt x = montgomeryIn(base, modulus, reducerBits);
+	UArbBigInt x = mmReducer.convertIn(base);
 	UArbBigInt y = exponent;
-	UArbBigInt z = convertedOne;
+	UArbBigInt z = mmReducer.getConvertedOne();
 	for (size_t i = 0, len = y.bitLength(); i < len; i++) {
 		if (y.testBit(i)) {
-			z = montgomeryMultiply(z, x, modulus, factor, reducerBits, mask);
+			z = mmReducer.multiply(z, x);
 		}
-		//x = montgomeryMultiply(x, x, modulus, factor, reducerBits, mask);
-		x = montgomerySquare(x, modulus, factor, reducerBits, mask);
+		x = mmReducer.square(x);
 	}
-	result = montgomeryOut(z, reciprocal, modulus);
-}
-
-UArbBigInt UArbBigInt::montgomeryIn(const UArbBigInt& A, const UArbBigInt& modulus, const uint reducerBits) {
-	UArbBigInt B = A << reducerBits; //B <<= 32;
-	B = B % modulus; //B %= M;
-	return B; //return (uint32)B;
-}
-
-UArbBigInt UArbBigInt::montgomeryOut(const UArbBigInt& A, const UArbBigInt& reciprocal, const UArbBigInt& modulus) {
-	// K = reciprocal
-	//UArbBigInt B{A}; //uint64 B = A;
-	UArbBigInt B = A * reciprocal; //B *= K;
-	B = B % modulus; //B %= M;
-	return B; //return (uint32)B;
-}
-
-// Montgomery  multiply: Inputs and output are in Montgomery form and in the range [0, modulus)
-UArbBigInt UArbBigInt::montgomeryMultiply(const UArbBigInt& A, const UArbBigInt& B, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
-	// R = factor
-	// M = modulus
-	
-	// A = x
-	// B = y
-	assert( A < modulus );
-	assert( B < modulus );
-	
-	UArbBigInt product = A * B;
-	return montgomeryReduce(product, modulus, factor, reducerBits, mask);
-}
-
-UArbBigInt UArbBigInt::montgomerySquare(const UArbBigInt& A, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
-	
-	assert( A < modulus );
-	
-	UArbBigInt squereRes;
-	square(A, squereRes);
-	
-	return montgomeryReduce(squereRes, modulus, factor, reducerBits, mask);
-}
-
-UArbBigInt UArbBigInt::montgomeryReduce(const UArbBigInt& product, const UArbBigInt& modulus, const UArbBigInt& factor, const uint reducerBits, const UArbBigInt& mask) {
-	
-	UArbBigInt temp = ((product & mask ) * factor) & mask;
-	UArbBigInt reduced = (product + (temp * modulus)) >> reducerBits;
-	UArbBigInt result = (reduced < modulus) ? reduced : reduced - modulus;
-	assert ( result < modulus);
-	
-	return result;
+	result = mmReducer.convertOut(z);
 }
 
 UArbBigInt UArbBigInt::modPow2(UArbBigInt exponent, uint p) const {
