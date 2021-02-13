@@ -17,6 +17,10 @@ namespace utils {
 }
 */
 
+#include <unordered_map>
+#include <Qt>
+#include <QMutex>
+
 // https://burtleburtle.net/bob/rand/isaacafa.html
 // https://github.com/edgeofmagic/ISAAC-engine/blob/master/isaac.h
 // https://github.com/sjinks/cpp_isaac64/blob/master/isaac64_engine.h
@@ -30,8 +34,9 @@ namespace ppvr {
 		class Random {
 		
 		public:
-			static Random* fixMe;
-			static Random& getForLocalThread(); // something like this could be very helpfule for a multi threaded program
+			static QMutex PerThreadMapMutex;
+			static std::unordered_map<Qt::HANDLE, Random*> PerThreadMap;
+			static Random* getForLocalThread(); // something like this could be very helpfule for a multi threaded program
 		
 		// ----- constructors -----
 		public:

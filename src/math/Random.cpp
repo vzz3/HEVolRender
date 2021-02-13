@@ -1,15 +1,23 @@
 
 #include "Random.hpp"
 
+#include <QThread>
+
 using namespace ppvr::math;
 
-Random* Random::fixMe = nullptr;
+//Random* Random::fixMe = nullptr;
+QMutex Random::PerThreadMapMutex{};
+std::unordered_map<Qt::HANDLE, Random*> Random::PerThreadMap{};
 
-Random& Random::getForLocalThread() {
-	if(Random::fixMe == nullptr) {
-		fixMe = new Random();
+Random* Random::getForLocalThread() {
+	Qt::HANDLE threadId = QThread::currentThreadId();
+	PerThreadMapMutex.lock();
+	if (PerThreadMap.find(threadId) == PerThreadMap.end()) {
+		PerThreadMap.insert({threadId,  new Random{}});
 	}
-	return *fixMe;
+	Random* res = PerThreadMap[threadId];
+	PerThreadMapMutex.unlock();
+	return res;
 }
 
 Random::Random():

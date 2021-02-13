@@ -40,8 +40,8 @@ PaillierInt PublicKey::obfuscate(const PaillierInt & ciphertext) const {
 }
 
 PaillierInt PublicKey::getNewRandomNumber() const {
-	Random& rnd = Random::getForLocalThread();
-	return PaillierInt::randomNumber(modulus, rnd);
+	Random* rnd = Random::getForLocalThread();
+	return PaillierInt::randomNumber(modulus, *rnd);
 }
 
 PaillierInt PublicKey::add(const PaillierInt & ciphertext1, const PaillierInt & ciphertext2) const {

@@ -47,10 +47,10 @@ void PerformanceTest::fromString() {
 
 void PerformanceTest::createPrime() {
 	// RandomNumber Test
-	math::Random& rnd = Random::getForLocalThread();
+	math::Random* rnd = Random::getForLocalThread();
 	for(int i = 0; i<100; i++) {
 		//std::cout << ppvr::math::BigInt::randomNumber(65).toStringHex() << " \n";
-		std::cout << "probablePrime: " << math::SArbBigInt::probablePrime(1024, rnd).toStringDec() << " \n";
+		std::cout << "probablePrime: " << math::SArbBigInt::probablePrime(1024, *rnd).toStringDec() << " \n";
 	}
 }
 

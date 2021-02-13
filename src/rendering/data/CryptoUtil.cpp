@@ -4,13 +4,27 @@
 using namespace ppvr::paillier::crypto;
 using namespace ppvr::rendering::data;
 
+#include <QThreadPool>
+
 void CryptoUtil::encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& ySrc, Volume<PaillierInt>& yDst) {
 	yDst.resize(ySrc.width(), ySrc.height(), ySrc.depth());
-	size_t n = ySrc.length();
-	for (size_t i=0; i<n; i++) {
-		PaillierInt pVoxel = PaillierInt::fromInt64(ySrc.get(i));
-		yDst.set(i, yPublicKey.encrypt(pVoxel));
-		//yDst.set(i, yPublicKey.encryptWithoutObfuscation(pVoxel));
+	
+	if(true) {
+		const uint w = ySrc.width();
+		
+		QThreadPool tPool;
+		for(uint x = 0; x < w; x++) {
+			VolumeRowEncTask* rowEncTask = new VolumeRowEncTask(&yPublicKey, &ySrc, &yDst, x);
+			tPool.start(rowEncTask);
+		}
+		tPool.waitForDone();
+	} else {
+		size_t n = ySrc.length();
+		for (size_t i=0; i<n; i++) {
+			PaillierInt pVoxel = PaillierInt::fromInt64(ySrc.get(i));
+			yDst.set(i, yPublicKey.encrypt(pVoxel));
+			//yDst.set(i, yPublicKey.encryptWithoutObfuscation(pVoxel));
+		}
 	}
 }
 
