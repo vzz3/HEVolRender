@@ -2173,7 +2173,7 @@ void UArbBigInt::modPow_montgomeryOdd_kAry(const UArbBigInt& base, const UArbBig
 	assert( modulus.isOdd() );
 	assert( base < modulus );
 	
-	constexpr int k = 6;
+	constexpr int k = 6; // 512bit => k=4; 2048bit => k=6
 	constexpr int tableSize = (1<<k) - 1; // 2^k - 1;
 	assert( k <= BIG_INT_BITS_PER_WORD);
 	UArbBigInt table[tableSize];
@@ -2546,7 +2546,7 @@ void UArbBigInt::montReduce(UArbBigInt& n, const UArbBigInt& mod, BIG_INT_WORD_C
 		n.sub(mod); //subN(n, mod, mlen);
 	}
 	
-	return n;
+	//return n;
 }
 
 void UArbBigInt::montgomeryMultiply(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product) {

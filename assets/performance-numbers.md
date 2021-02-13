@@ -23,6 +23,14 @@ Begin Task create volume ... time required: 4ms
 Begin Task encrypt volume ... time required: 1600172ms
 Begin Task draw on GPU ... time required: 5780ms
 
+### Encryption test with Left-To-Right K-ary and Montgomery reduction in SArbBigInt.
+Arbitrary length BigInteger Class was used! not the the fixed length as usual for GPU rendering.
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+Key: P=D74FCD6A985A45562419EF113692276D, Q=A7C2506BEEAD7B3418D345D32050ADC3, M=8D187D1DEB749C53B3B02BF83B13E1EF65F1143E2D744B31F870EE6E4808B107, M^2=4DC3FC2AA820D5809546360827AFC1492DB293CD3FF790121168127ACDCB203A5762C3AF9CCBD31989C24A0B01993949265C11B4B986FAB89B0609E37ADAAE31
+Begin Task create volume ... time required: 6ms
+Begin Task encrypt volume ... time required: 1491403ms
+Begin Task draw on GPU ... time required: 3655ms
+
 
 # modPow
 modPow() Naiv 2048bit        ... time required:  7479ms, addTwoIntsCounter: 24776765

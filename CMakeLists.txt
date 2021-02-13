@@ -10,12 +10,14 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(HEVolRender)
 
-#if(NOT CMAKE_BUILD_TYPE)
-#  set(CMAKE_BUILD_TYPE Release)
-#endif()
-#set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
-#set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=westmere")
+# print supported instructions for march: $ echo | clang -E - -march=native -###
 
 IF(UNIX AND NOT APPLE)
 	set(LINUX TRUE)
@@ -68,7 +70,7 @@ set(CMAKE_CXX_FLAGS  "-Werror=return-type ${GCC_COVERAGE_COMPILE_FLAGS}")
 
 if(APPLE)
 	# allow inline ASM
-	set(CMAKE_CXX_FLAGS  "-DRUNTIME_IL2CPP=1")
+	#set(CMAKE_CXX_FLAGS  "-DRUNTIME_IL2CPP=1")
 ENDIF()
 
 ##########################
