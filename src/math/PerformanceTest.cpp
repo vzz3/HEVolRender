@@ -55,7 +55,8 @@ void PerformanceTest::createPrime() {
 }
 
 void PerformanceTest::modPow() {
-	typedef SArbBigInt BigInt;
+	//typedef SArbBigInt BigInt;
+	typedef SFixBigInt<BIG_INT_REQUIRED_WORDS(2024)> BigInt;
 	
 	/*
 	// 128 bit

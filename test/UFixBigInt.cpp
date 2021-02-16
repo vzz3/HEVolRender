@@ -1706,6 +1706,9 @@ TEST_CASE( "unsigned fixed big integer pow", "[UFBigint]" ) {
 
 	// 128 bit -> 32768 bit
 	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromUint64(256)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(32640)>::fromString("0", 16), FixBigIntOverflow ); // not posible without overflow
+	
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(65)>::fromString("1 00000000", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(65)>::fromUint64(2)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(65)>::fromString("1 00000000 00000000", 16) );
+	REQUIRE_THROWS_AS( UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("1 00000000", 16).pow(UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromUint64(2)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(64)>::fromString("1 00000000 00000000", 16), FixBigIntOverflow ); // square not posible without overflow (aSize * 2 >= S)
 }
 
 TEST_CASE( "unsigned fixed big integer sqrt", "[UFBigint]" ) {

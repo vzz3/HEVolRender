@@ -365,40 +365,40 @@ void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 	#endif
 }
 
-BIG_INT_WORD_TYPE BigIntUtil::mulAdd(BIG_INT_WORD_TYPE* out, BIG_INT_WORD_COUNT_TYPE indexOut, const BIG_INT_WORD_TYPE* in, BIG_INT_WORD_COUNT_TYPE indexIn, const BIG_INT_WORD_COUNT_TYPE len, const BIG_INT_WORD_TYPE k) {
-	/*
-	 * The algorithm used here is adapted from Colin Plumb's C library.
-	 * see lbn32.c lbnMulAdd1_32(BNWORD32 *out, BNWORD32 const *in, unsigned len, BNWORD32 k), line 583
-	 *
-	 * lbnMulAdd1_32: Multiply an n-word input by a 1-word input and add the
-	 * low n words of the product to the destination.  *Returns the n+1st word
-	 * of the product.*  (That turns out to be more convenient than adding
-	 * it into the destination and dealing with a possible unit carry out
-	 * of *that*.)  This uses either the mul32_ppmma and mul32_ppmmaa macros,
-	 * or C multiplication with the BNWORD64 type.
-	 *
-	 * If you're going to write assembly primitives, this is the one to
-	 * start with.  It is by far the most commonly called function.
-	 *
-	 */
-	
-	assert(len > 0);
-	
-	uint64_t kLong = k;
-	uint64_t carry = 0;
-	
-	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<len; i++) {
-		carry = (uint64_t)in[indexIn] * kLong +
-				(uint64_t)out[indexOut] + carry;
-		out[indexOut] = (BIG_INT_WORD_TYPE)carry;
-		carry = (BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD);
-		indexOut++;
-		indexIn++;
-		
-	}
-
-	return (BIG_INT_WORD_TYPE)carry;
-}
+//BIG_INT_WORD_TYPE BigIntUtil::mulAdd(BIG_INT_WORD_TYPE* out, BIG_INT_WORD_COUNT_TYPE indexOut, const BIG_INT_WORD_TYPE* in, BIG_INT_WORD_COUNT_TYPE indexIn, const BIG_INT_WORD_COUNT_TYPE len, const BIG_INT_WORD_TYPE k) {
+//	/*
+//	 * The algorithm used here is adapted from Colin Plumb's C library.
+//	 * see lbn32.c lbnMulAdd1_32(BNWORD32 *out, BNWORD32 const *in, unsigned len, BNWORD32 k), line 583
+//	 *
+//	 * lbnMulAdd1_32: Multiply an n-word input by a 1-word input and add the
+//	 * low n words of the product to the destination.  *Returns the n+1st word
+//	 * of the product.*  (That turns out to be more convenient than adding
+//	 * it into the destination and dealing with a possible unit carry out
+//	 * of *that*.)  This uses either the mul32_ppmma and mul32_ppmmaa macros,
+//	 * or C multiplication with the BNWORD64 type.
+//	 *
+//	 * If you're going to write assembly primitives, this is the one to
+//	 * start with.  It is by far the most commonly called function.
+//	 *
+//	 */
+//	
+//	assert(len > 0);
+//	
+//	uint64_t kLong = k;
+//	uint64_t carry = 0;
+//	
+//	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<len; i++) {
+//		carry = (uint64_t)in[indexIn] * kLong +
+//				(uint64_t)out[indexOut] + carry;
+//		out[indexOut] = (BIG_INT_WORD_TYPE)carry;
+//		carry = (BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD);
+//		indexOut++;
+//		indexIn++;
+//		
+//	}
+//
+//	return (BIG_INT_WORD_TYPE)carry;
+//}
 
 // ----- division -----
 

@@ -935,8 +935,6 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 		return;
 	}
 
-	BIG_INT_WORD_TYPE r2, r1;
-
 	BIG_INT_WORD_COUNT_TYPE maxWordCount = aSize + bSize;
 	result.reserveWords(maxWordCount);
 	std::fill_n(result.value, maxWordCount, 0);
@@ -954,42 +952,55 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 		// from JAVA private static int[] multiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {}
 		// https://stackoverflow.com/questions/55778236/explanation-of-biginteger-multiplytolen-function
 		bStart = aStart = 0;
+		
+		// Multiply first word
+		/*
 		uint64_t carry = 0;
 		for (BIG_INT_WORD_COUNT_TYPE j=bStart, k=bStart+aStart; j < bSize; j++, k++) {
 			assert( j < b.wordCapacity );
 			assert( aStart < a.wordCapacity );
 			assert( k < result.wordCapacity );
-			
+
 			uint64_t product =  (uint64_t)(b.value[     j]) *
 								(uint64_t)(a.value[aStart]) + carry;
 			result.value[k] = (BIG_INT_WORD_TYPE)product;
-			
+
 			carry = product >> BIG_INT_BITS_PER_WORD;
 		}
 		assert( bSize < result.wordCapacity );
-		result.value[bSize] = (BIG_INT_WORD_TYPE)carry; // result.value[35] = 0x75
-
+		result.value[bSize] = (BIG_INT_WORD_TYPE)carry;
+		*/
+		// The last block is algorthmicaly equal to the following two lines. The loop is executed by the method BigIntUtil::mulAdd()
+		BIG_INT_WORD_TYPE carry = BigIntUtil::mulAdd(result.value, 0, b.value, bStart, bSize, a.value[0]);
+		result.value[bSize] = carry;
+	
+		// Add in subsequent words, storing the most significant word, which is new each time.
 		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+			/*
 			carry = 0;
 			for (BIG_INT_WORD_COUNT_TYPE j=bStart, k=bStart+i; j < bSize; j++, k++) {
 				assert( j < b.wordCapacity );
 				assert( i < a.wordCapacity );
 				assert( k < result.wordCapacity );
 				
-				uint64_t product =  (uint64_t)(     b.value[j]) *					// b.value[5] = 0x66
-									(uint64_t)(     a.value[i]) +					// a.value[1] = 0x09
-									(uint64_t)(result.value[k]) + carry;			// result.value[5] = 0x96		carry = 0x03
-				result.value[k] = (BIG_INT_WORD_TYPE)product;						// product = 0x0430	!!	0x042F = 0x66 * 0x09 + 0x96 + 0x03 => compiler error????
+				uint64_t product =  (uint64_t)(     b.value[j]) *
+									(uint64_t)(     a.value[i]) +
+									(uint64_t)(result.value[k]) + carry;
+				result.value[k] = (BIG_INT_WORD_TYPE)product;
 				
 				carry = product >> BIG_INT_BITS_PER_WORD;
 			}
-			
 			assert( bSize+i < result.wordCapacity );
 			result.value[bSize+i] = (BIG_INT_WORD_TYPE)carry;
+			*/
+			// The last block is algorthmicaly equal to the following two lines. The loop is executed by the method BigIntUtil::mulAdd()
+			carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, bSize, a.value[i]);
+			result.value[bSize+i] = carry;
 		}
 	//} else {
 	#else
 		// basic school algorithem
+		BIG_INT_WORD_TYPE r2, r1;
 		for(BIG_INT_WORD_COUNT_TYPE aI=aStart ; aI<aSize ; ++aI) {
 			for(BIG_INT_WORD_COUNT_TYPE bI=bStart ; bI<bSize ; ++bI) {
 				BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
@@ -1526,7 +1537,8 @@ void UArbBigInt::square(const UArbBigInt& a, UArbBigInt& result) {
 
 	// Shift the result back up
 	result.wordSize = resultLen;
-	result.rcl(1, 0, false); //primitiveLeftShift(z, zlen, 1);
+	BIG_INT_WORD_TYPE carry = result.rcl(1, 0, false); //primitiveLeftShift(z, zlen, 1);
+	assert( carry == 0 );
 	result.trimWordSize(resultLen);
 	
 	// And set the low bit appropriately

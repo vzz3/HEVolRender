@@ -885,34 +885,63 @@ void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UF
 		throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
 	}
 	
-	BIG_INT_WORD_TYPE r2, r1, carry = 0;
-	
-	for(uint aI=aStart ; aI<aSize ; ++aI) {
-		//for(uint bI=bStart ; bI<bSize ; ++bI) {
-		for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
-			BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
-			carry += BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
-			
-		}
-	}
-	
-	if(carry > 0) {
-		throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (loop)"));
-	}
-	
-	// multiply with last word if required
-	if( (aSize + bSize - 1) == S ) {
-		BigIntUtil::mulTwoWords(a.value[aSize-1], b.value[bSize-1], &r2, &r1);
-		carry = r2;
-		if(carry > 0) {
-			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r2)"));
+	#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+		if (bSize == 1) {
+			a.mulInt(b.value[0], result);
+			return;
+		} else if (aSize == 1) {
+			b.mulInt(a.value[0], result);
+			return;
 		}
 		
-		carry = BigIntUtil::addInt(r1, S-1, result.value, S);
-		if(carry > 0) {
-			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r1)"));
+		bStart = aStart = 0;
+		
+		// Multiply first word
+		BIG_INT_WORD_TYPE carry = BigIntUtil::mulAdd(result.value, 0, b.value, bStart, bSize, a.value[0]);
+		result.value[bSize] = carry;
+		
+		// Add in subsequent words, storing the most significant word, which is new each time.
+		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+			assert( bSize-1+i < S);
+			carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, bSize, a.value[i]);
+			
+			if( bSize+i < S) {
+				result.value[bSize+i] = carry;
+			} else if( carry > 0) {
+				throw FixBigIntOverflow(std::string("mulSchool not posible without overflow"));
+			}
 		}
-	}
+		
+	#else
+		// basic school algorithem
+		BIG_INT_WORD_TYPE r2, r1, carry = 0;
+		for(uint aI=aStart ; aI<aSize ; ++aI) {
+			//for(uint bI=bStart ; bI<bSize ; ++bI) {
+			for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
+				BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
+				carry += BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
+				
+			}
+		}
+		
+		if(carry > 0) {
+			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (loop)"));
+		}
+		
+		// multiply with last word if required
+		if( (aSize + bSize - 1) == S ) {
+			BigIntUtil::mulTwoWords(a.value[aSize-1], b.value[bSize-1], &r2, &r1);
+			carry = r2;
+			if(carry > 0) {
+				throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r2)"));
+			}
+			
+			carry = BigIntUtil::addInt(r1, S-1, result.value, S);
+			if(carry > 0) {
+				throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (r1)"));
+			}
+		}
+	#endif
 	
 	// optimize word count
 	//BIG_INT_WORD_COUNT_TYPE usedWordIndex;
@@ -1333,10 +1362,97 @@ UFixBigInt<S> UFixBigInt<S>::operator% (const UFixBigInt<S>& other) const {
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::square(const UFixBigInt<S>& a, UFixBigInt<S>& result) {
+#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+	/*
+	 * The algorithm used here is adapted from Colin Plumb's C library.
+	 * see lbn32.c lbnSquare_32(BNWORD32 *prod, BNWORD32 const *num, unsigned len), line 1069
+	 *
+	 *
+	 * Technique: Consider the partial products in the multiplication
+	 * of "abcde" by itself:
+	 *
+	 *               a  b  c  d  e
+	 *            *  a  b  c  d  e
+	 *          ==================
+	 *              ae be ce de ee
+	 *           ad bd cd dd de
+	 *        ac bc cc cd ce
+	 *     ab bb bc bd be
+	 *  aa ab ac ad ae
+	 *
+	 * Note that everything above the main diagonal:
+	 *              ae be ce de = (abcd) * e
+	 *           ad bd cd       = (abc) * d
+	 *        ac bc             = (ab) * c
+	 *     ab                   = (a) * b
+	 *
+	 * is a copy of everything below the main diagonal:
+	 *                       de
+	 *                 cd ce
+	 *           bc bd be
+	 *     ab ac ad ae
+	 *
+	 * Thus, the sum is 2 * (off the diagonal) + diagonal.
+	 *
+	 * This is accumulated beginning with the diagonal (which
+	 * consist of the squares of the digits of the input), which is then
+	 * divided by two, the off-diagonal added, and multiplied by two
+	 * again.  The low bit is simply a copy of the low bit of the
+	 * input, so it doesn't need special care.
+	 *
+	 */
+
+	BIG_INT_WORD_COUNT_TYPE len = a.getWordSize();
+	BIG_INT_WORD_COUNT_TYPE resultLen = len * 2;
+	result.setZero();
+	
+	if((resultLen - 1) > S) {
+		throw FixBigIntOverflow(std::string("square not posible without overflow (aSize * 2 >= S)"));
+	}
+	
+	// Store the squares, right shifted one bit (i.e., divided by 2)
+	BIG_INT_WORD_TYPE lastProductLowWord = 0;
+	for (int j=len-1, i=resultLen-1; j >= 0; j--) {
+		assert( j >= 0 );
+		assert( i-1 >= 0 );
+		assert( j < len );
+		assert( i < resultLen );
+		
+		uint64_t piece = (uint64_t)(a.value[j]);
+		uint64_t product = piece * piece;
+		result.value[i--] = (lastProductLowWord << (BIG_INT_BITS_PER_WORD-1)) | (BIG_INT_WORD_TYPE)(product >> (BIG_INT_BITS_PER_WORD+1)); //z[i++] = (lastProductLowWord << 31) | (int)(product >>> 33);
+		result.value[i--] = (BIG_INT_WORD_TYPE)(product >> 1);
+		lastProductLowWord = (BIG_INT_WORD_TYPE)product;
+	}
+
+	// Add in off-diagonal sums
+	for (BIG_INT_WORD_COUNT_TYPE i=0, offset=1; i < len-1; i++, offset+=2) {
+		BIG_INT_WORD_COUNT_TYPE lenx = len - i - 1;
+		assert( i >= 0 );
+		assert( i < len );
+		//assert( offset >= 0 );
+		//assert( offset < len );
+		
+		BIG_INT_WORD_TYPE t = a.value[i];
+		t = BigIntUtil::mulAdd(result.value, offset, a.value, i+1, lenx, t); //t = mulAdd(z, x, offset, i-1, t);
+		BIG_INT_WORD_TYPE cTest = BigIntUtil::addInt(t, offset+lenx, result.value, resultLen); //lbnAdd1_32(BIGLITTLE(prodx-lenx,prodx+lenx), lenx+1, t); //addOne(result.value, offset-1, i, t);
+		assert(cTest == 0);
+	}
+
+	// Shift the result back up
+	BIG_INT_WORD_TYPE carry = result.rcl(1, 0); //primitiveLeftShift(z, zlen, 1);
+	//if(carry > 0) {
+	//	throw FixBigIntOverflow(std::string("square not posible without overflow (shift left)"));
+	//}
+	assert( carry == 0 );
+	
+	// And set the low bit appropriately
+	result.value[0] |= a.value[0] & 1; //result.value[resultLen-1] |= a.value[len-1] & 1;
+#else
 	a.mul(a, result);
+#endif
 }
 	
-
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::square() const {
 	UFixBigInt<S> result = UFixBigInt<S>{0};
@@ -1365,6 +1481,8 @@ UFixBigInt<S> UFixBigInt<S>::pow(UFixBigInt<S> pow) const {
 	UFixBigInt<S> start(*this);
 	UFixBigInt<S> result(1);
 	uint c = 0;
+	
+	UFixBigInt<S> squereRes{0};
 
 	//while( !c ) {
 	while( true ) {
@@ -1380,7 +1498,8 @@ UFixBigInt<S> UFixBigInt<S>::pow(UFixBigInt<S> pow) const {
 		}
 
 		//c += start.Mul(start);
-		start = start * start;
+		square(start, squereRes);
+		start = squereRes;
 	}
 
 	//*this = result;
