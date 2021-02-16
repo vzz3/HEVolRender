@@ -1640,6 +1640,7 @@ UArbBigInt UArbBigInt::gcd(const UArbBigInt & b) const {
 	return gcd(*this, b);
 }
 
+
 /*
 uint UArbBigInt::gcdExtended_binaryIterative_removePowersOfTwo(UArbBigInt& a, UArbBigInt& b) {
 	uint c = 0;
@@ -1788,7 +1789,7 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 }
 */
 
-UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut) {
+UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut/*, UArbBigInt& vOut*/) {
 	
 	// Shifting Euclidean algorithm with unsigned arithmetic:
 	// SEUinv(a,b) -> inverse of a mod bIn, Shifting Euclidean alg, using Unsigned
@@ -1830,7 +1831,7 @@ UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const 
 //	}
 	
 	uOut = s;
-	vOut = r;
+	//vOut = r;
 	
 	if( v.isZero() ) {
 		assert( u == UArbBigInt::gcd(aIn, bIn) );
@@ -1853,12 +1854,10 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 	}
 
 	// all the hard work will be done by gcd.
-	UArbBigInt u, v;
+	UArbBigInt u/*, v*/;
 	
 //	if(false) {
-		// TODO The montgcd does not produce the gcd, therefore I can not  throw an exception.
-		// Therefore, I added an assert() with a seperate gcd calculation.
-		UArbBigInt gcd = gcdExtended_binaryIterative(*this, m, u, v);
+		UArbBigInt gcd = gcdExtended_binaryIterative(*this, m, u/*, v*/);
 		if(!gcd.isOne()) {
 			std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
 			//std::cerr << msg << std::endl;
@@ -2114,13 +2113,13 @@ void UArbBigInt::gcdExtended_binary4mont(UArbBigInt a, UArbBigInt b, UArbBigInt&
 */
 
 void UArbBigInt::modPow_montgomeryOdd(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
-#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
-	modPow_montgomeryOdd_window(base, exponent, modulus, result);
-#else
+//#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+//	modPow_montgomeryOdd_window(base, exponent, modulus, result);
+//#else
 	//modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
 	//modPow_montgomeryOdd_mostToLeastSig(base, exponent, modulus, result);
 	modPow_montgomeryOdd_kAry(base, exponent, modulus, result);
-#endif
+//#endif
 }
 
 void UArbBigInt::modPow_montgomeryOdd_leastToMostSig(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
@@ -2405,7 +2404,7 @@ void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UAr
 	// Set b to the square of the base
 	UArbBigInt b{0, modLen}; montgomerySquare(table[0], mod, modLen, inv, b); //int[] b = montgomerySquare(table[0], mod, modLen, inv, null);
 
-	// Set t to high half of b /* Use high half of b to initialize the table
+	// Set t to high half of b // Use high half of b to initialize the table
 	UArbBigInt t{0, modLen}; t.initUnusedWords(); std::copy_n(&b.value[modLen/2], modLen/2, &t.value[0]); t.trimWordSize(modLen/2); //int[] t = Arrays.copyOf(b, modLen);
 
 	// Fill in the table with odd powers of the base
@@ -2569,7 +2568,7 @@ void UArbBigInt::implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBig
 	if (len > a.wordCapacity ||
 		len > b.wordCapacity ||
 		len > n.wordCapacity ||
-		(/*product != null && * / len > product.wordCapacity)) {
+		(/ * product != null && * / len > product.wordCapacity)) {
 		throw std::invalid_argument("input array length out of bound: " + std::to_string(len));
 	}
 }
@@ -2649,8 +2648,8 @@ void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBig
 }
 
 UArbBigInt UArbBigInt::modPow(const UArbBigInt &exponent, const UArbBigInt &modulus) const {
-	UArbBigInt result(0, modulus.getWordSize());
-	UArbBigInt tmpExponent(exponent);
+	UArbBigInt result{1, modulus.getWordSize()};
+	UArbBigInt tmpExponent{exponent};
 	this->modPow(tmpExponent, modulus, result);
 	return result;
 }

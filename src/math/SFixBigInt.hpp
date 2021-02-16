@@ -382,16 +382,6 @@ namespace ppvr {
 			SFixBigInt<S> sqrt() const;
 
 
-		// ----- Comparison operators -----
-		public:
-			bool operator< (const SFixBigInt<S>& other) const;
-			bool operator<= (const SFixBigInt<S>& other) const;
-			bool operator> (const SFixBigInt<S>& other) const;
-			bool operator>= (const SFixBigInt<S>& other) const;
-			bool operator== (const SFixBigInt<S>& other) const;
-			bool operator!= (const SFixBigInt<S>& other) const;
-
-
 
 		// ----- modInverse / gcd -----
 		private:
@@ -429,20 +419,10 @@ namespace ppvr {
 
 
 		// ----- modPow -----
-		private:
-			SFixBigInt<S> modPow_naiv(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const;
 
-			/**
-			 * Returns a BigInteger whose value is (this ** exponent) mod (2**p)
-			 */
-			//SArbBigInt modPow2(SArbBigInt exponent, int p) const;
-
-			/**
-			 * Returns a BigInteger whose value is this mod(2**p).
-			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
-			 */
-			//SArbBigInt mod2(int p) const;
-
+		protected:
+			void modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus, SFixBigInt<FBI_WC_Sm2>& result) const;
+			
 		public:
 			/**
 			 * Returns a BigInteger whose value is
@@ -457,7 +437,17 @@ namespace ppvr {
 			 *         prime</i> to {@code m}.
 			 * @see    #modInverse
 			 */
-			SFixBigInt<S> modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &m) const;
+			SFixBigInt<S> modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const;
+		
+		// ----- Comparison operators -----
+		public:
+			bool operator< (const SFixBigInt<S>& other) const;
+			bool operator<= (const SFixBigInt<S>& other) const;
+			bool operator> (const SFixBigInt<S>& other) const;
+			bool operator>= (const SFixBigInt<S>& other) const;
+			bool operator== (const SFixBigInt<S>& other) const;
+			bool operator!= (const SFixBigInt<S>& other) const;
+		
 		};
 	}
 }

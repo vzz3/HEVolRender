@@ -8,7 +8,7 @@
  * Therefore the least-significant word is stored at the smallest address (the word with index 0).
  */
 
-#define _BIG_INT_WORD_LENGTH_PRESET_ 8
+#define _BIG_INT_WORD_LENGTH_PRESET_ 32
 
 #define BIG_INT_WORD_COUNT_TYPE uint_fast32_t
 //#include "BigInt_wordDev8bit.h"

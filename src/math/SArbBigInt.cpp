@@ -825,6 +825,17 @@ SArbBigInt SArbBigInt::sqrt() const {
 
 // ----- modInverse / gcd -----
 
+SArbBigInt SArbBigInt::gcd(const SArbBigInt & a, const SArbBigInt & b) {
+	if (a.isZero()) {
+		return b;
+	}
+	return gcd(b % a, a);
+}
+
+SArbBigInt SArbBigInt::gcd(const SArbBigInt & b) const {
+	return gcd(*this, b);
+}
+
 SArbBigInt SArbBigInt::gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const {
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
 	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
@@ -929,12 +940,6 @@ SArbBigInt SArbBigInt::gcdExtended_internIterative(const SArbBigInt &a, const SA
 	return a1;
 }
 
-SArbBigInt SArbBigInt::gcd(const SArbBigInt & a, const SArbBigInt & b) const {
-	if (a.isZero()) {
-		return b;
-	}
-	return gcd(b % a, a);
-}
 
 SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
 	if (m.isZero()) {
@@ -979,7 +984,7 @@ void SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &modulus, S
 	//		base = 0
 	
 	// Trivial cases: base = -1 && (exponent % 2 = 0)
-	if ( (this->isOne() && this->signum < 0) && exponent.isEven()) {
+	if ( (this->isMagnitudeOne() && this->signum < 0) && exponent.isEven()) {
 		if(modulus.isOne()) {
 			result.setZero();
 		} else {
@@ -1002,13 +1007,12 @@ void SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &modulus, S
 	
 	if(invertResult) {
 		result = result.modInverse(modulus);
-	};
-	
+	}
 }
 
 SArbBigInt SArbBigInt::modPow(const SArbBigInt &exponent, const SArbBigInt &modulus) const {
-	SArbBigInt result(0, modulus.getWordSize());
-	SArbBigInt tmpExponent(exponent);
+	SArbBigInt result{1, modulus.getWordSize()};
+	SArbBigInt tmpExponent{exponent};
 	this->modPow(tmpExponent, modulus, result);
 	return result;
 }

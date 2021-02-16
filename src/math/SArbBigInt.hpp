@@ -377,7 +377,17 @@ namespace ppvr {
 
 		// ----- modInverse / gcd -----
 		private:
+			/**
+			 * Basic Euclidean Algorithm
+			 * returns the gcd of a and b
+			 */
+			static SArbBigInt gcd(const SArbBigInt & a, const SArbBigInt & b);
 
+		public:
+			SArbBigInt gcd(const SArbBigInt & b) const;
+			
+		
+			
 			/**
 			 * Function for extended Euclidean Algorithm
 			 * return gcd of b and a.
@@ -388,14 +398,10 @@ namespace ppvr {
 			 */
 			SArbBigInt gcdExtended(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
 
+		private:
 			SArbBigInt gcdExtended_internRecursive(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
 			SArbBigInt gcdExtended_internIterative(const SArbBigInt &a, const SArbBigInt &b, SArbBigInt &u, SArbBigInt &v) const;
 
-			/**
-			 * Basic Euclidean Algorithm
-			 * returns the gcd of a and b
-			 */
-			SArbBigInt gcd(const SArbBigInt & a, const SArbBigInt & b) const;
 
 		public:
 			/**

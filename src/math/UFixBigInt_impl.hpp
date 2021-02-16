@@ -1443,7 +1443,7 @@ UFixBigInt<S> UFixBigInt<S>::gcd(const UFixBigInt<S> & b) const {
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-UFixBigInt<S> UFixBigInt<S>::gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& uOut, UFixBigInt<S>& vOut) {
+UFixBigInt<S> UFixBigInt<S>::gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& uOut/*, UFixBigInt<S>& vOut*/) {
 	
 	// Shifting Euclidean algorithm with unsigned arithmetic:
 	// SEUinv(a,b) -> inverse of a mod bIn, Shifting Euclidean alg, using Unsigned
@@ -1486,7 +1486,7 @@ UFixBigInt<S> UFixBigInt<S>::gcdExtended_binaryIterative(const UFixBigInt<S>& aI
 //	}
 	
 	uOut = s;
-	vOut = r;
+	//vOut = r;
 	
 	if( v.isZero() ) {
 		assert( u == UFixBigInt<S>::gcd(aIn, bIn) );
@@ -1510,9 +1510,9 @@ UFixBigInt<S> UFixBigInt<S>::modInverse(const UFixBigInt<S> & m) const {
 	}
 
 	// all the hard work will be done by gcd.
-	UFixBigInt<S> u, v;
+	UFixBigInt<S> u/*, v*/;
 	
-	UFixBigInt<S> gcd = gcdExtended_binaryIterative(*this, m, u, v);
+	UFixBigInt<S> gcd = gcdExtended_binaryIterative(*this, m, u/*, v*/);
 	if(!gcd.isOne()) {
 		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
 		//std::cerr << msg << std::endl;
@@ -1544,6 +1544,218 @@ void UFixBigInt<S>::modPow_naiv(UFixBigInt<FBI_WC_Sm2>& base, UFixBigInt<S> &exp
 		 base = squereRes % modulus;
 	 }
  }
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomery(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	if (modulus.isOdd()) {
+		modPow_montgomeryOdd(base, exponent, modulus, result);
+	} else {
+		modPow_montgomeryEven(base, exponent, modulus, result);
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	/*
+	 * Even modulus.  Tear it into an "odd part" (m1) and power of two
+	 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
+	 * use Chinese Remainder Theorem to combine results.
+	 */
+	
+	// Tear modulus apart into odd part (m1) and power of 2 (m2)
+	int p = modulus.findLowestSetBit(); // Max pow of 2 that divides modulus
+	UFixBigInt<S> m1 = modulus >> p;  // modulus/2**p
+	UFixBigInt<S> m2 = UFixBigInt<S>{1} << p; // 2**p
+
+	UFixBigInt<S> reciprocal, factor;
+
+	// Calculate new base from m1
+	UFixBigInt<S> base2 = (/*base.signum < 0 ||*/ base >= m1) ? (base % m1) : base;
+	
+	UFixBigInt<FBI_WC_Sm2> a1, a2;
+	
+	// Caculate (base ** exponent) mod m1.
+	if(m1.isOne()) {
+		a1.setZero();
+	} else {
+		modPow_montgomeryOdd(base2, exponent, m1, a1); // X1 = montmodpow_odd(B, X, M);
+	}
+	// Calculate (this ** exponent) mod m2
+	a2 = base.modPow2(exponent, p); // X2 = modpow2x(B, X, P);
+
+	// Combine results using Chinese Remainder Theorem
+	UFixBigInt<S> y1 = m2.modInverse(m1);
+	UFixBigInt<S> y2 = m1.modInverse(m2);
+
+	//if (m.mag.length < MAX_MAG_LENGTH / 2) {
+	result = (a1 * m2 * y1 + a2 * m1 * y2) % modulus;
+//	} else {
+//	MutableBigInteger t1 = new MutableBigInteger();
+//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
+//	MutableBigInteger t2 = new MutableBigInteger();
+//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
+//	t1.add(t2);
+//	MutableBigInteger q = new MutableBigInteger();
+//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
+//	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomeryOdd(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+//#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+//	modPow_montgomeryOdd_window(base, exponent, modulus, result);
+//#else
+	//modPow_montgomeryOdd_leastToMostSig(base, exponent, modulus, result);
+	//modPow_montgomeryOdd_mostToLeastSig(base, exponent, modulus, result);
+	modPow_montgomeryOdd_kAry(base, exponent, modulus, result);
+//#endif
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomeryOdd_leastToMostSig(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	const MontgomeryReducer<UFixBigInt<FBI_WC_MM>> mmReducer{modulus};
+	
+	UFixBigInt<FBI_WC_MM> b = mmReducer.convertIn(base); // S
+	const UFixBigInt<S> e = exponent; // E
+	UFixBigInt<FBI_WC_MM> res = mmReducer.getConvertedOne(); // A
+	for (size_t i = 0, len = e.bitLength(); i < len; i++) {
+		if (e.testBit(i)) {
+			res = mmReducer.multiply(res, b);
+		}
+		b = mmReducer.square(b);
+	}
+	result = mmReducer.convertOut(res);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomeryOdd_mostToLeastSig(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	const MontgomeryReducer<UFixBigInt<FBI_WC_MM>> mmReducer{modulus};
+	
+	const UFixBigInt<FBI_WC_MM> b = mmReducer.convertIn(base);
+	const UFixBigInt<S> e = exponent;
+	UFixBigInt<FBI_WC_MM> res = mmReducer.getConvertedOne(); // A
+	for (int i = e.bitLength() - 1; i >= 0; i--) {
+		res = mmReducer.square(res);
+		
+		if (e.testBit(i)) {
+			res = mmReducer.multiply(res, b);
+		}
+		
+	}
+	result = mmReducer.convertOut(res);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_montgomeryOdd_kAry(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	assert( modulus.isOdd() );
+	assert( base < modulus );
+	
+	constexpr int k = 6; // 512bit => k=4; 2048bit => k=6
+	constexpr int tableSize = (1<<k) - 1; // 2^k - 1;
+	assert( k <= BIG_INT_BITS_PER_WORD);
+	UFixBigInt<FBI_WC_MM> table[tableSize];
+	
+	const MontgomeryReducer<UFixBigInt<FBI_WC_MM>> mmReducer{modulus};
+	const UFixBigInt<FBI_WC_MM> b = mmReducer.convertIn(base);
+	
+	// pre calculculate the multiplicators for 2^k bit patterns of the exponent.
+	table[0] = b;
+	for (int i = 1; i < tableSize; i++) {
+		table[i] = mmReducer.multiply(table[i-1], b);
+	}
+	
+	// iterate over the k*x most significant bit of the exponent (k bits per iteration)
+	UFixBigInt<S> e = exponent;
+	UFixBigInt<FBI_WC_MM> res = mmReducer.getConvertedOne(); // A
+	for (int i = e.bitLength() - 1; i >= (k-1); i -= k) {
+		// get the k most significant bit and store it in t
+		UFixBigInt<S> t1 = e >> (i-(k-1));
+		BIG_INT_WORD_TYPE t = t1.getData()[0] & tableSize; // t <= 2^k-1 // e.getData()[0] = the least segnificant word of e
+		
+		for (int j = 0; j < k; j++) {
+			res = mmReducer.square(res);
+		}
+		
+		if ( t != 0) {
+			res = mmReducer.multiply(res, table[t-1]);
+		}
+	}
+	
+	// iterate over the remaining least significant bit of the exponent which was not a multiple of k (one bit per iteration)
+	int remainingBitsOfExp = e.bitLength() % k;
+	if(remainingBitsOfExp > 0) {
+		BIG_INT_WORD_TYPE remainingBitsOfExpMask = (1 << remainingBitsOfExp) - 1;
+		e.boolAnd(UFixBigInt<S>{remainingBitsOfExpMask});
+		
+		for (int i = remainingBitsOfExp - 1; i >= 0; i--) {
+			res = mmReducer.square(res);
+			
+			if (e.testBit(i)) {
+				res = mmReducer.multiply(res, b);
+			}
+		}
+	}
+	result = mmReducer.convertOut(res);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::modPow2(UFixBigInt<S> exponent, uint p) const {
+	/*
+	 * Perform exponentiation using repeated squaring trick, chopping off
+	 * high order bits as indicated by modulus.
+	 */
+	UFixBigInt<FBI_WC_Sm2> result = UFixBigInt<S>{1};
+	UFixBigInt<FBI_WC_Sm2> baseToPow2 = this->mod2(p);
+	int expOffset = 0;
+
+	int limit = exponent.bitLength();
+
+	if (this->isOdd()) {
+		limit = ((p-1) < limit) ? (p-1) : limit;
+	}
+	
+	UFixBigInt<FBI_WC_Sm2> squareResult;
+
+	while (expOffset < limit) {
+		if (exponent.testBit(expOffset)) {
+			result = (result * baseToPow2).mod2(p);
+		}
+		expOffset++;
+		if (expOffset < limit) {
+			UFixBigInt<FBI_WC_Sm2>::square(baseToPow2, squareResult);
+			baseToPow2 = squareResult.mod2(p);
+		}
+	}
+
+	assert(result.getWordSize() <= S);
+	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::mod2(uint p) const {
+	if (this->bitLength() <= p) {
+		return *this;
+	}
+	
+	UFixBigInt<S> result{0};
+
+	// Copy remaining ints of mag
+	BIG_INT_WORD_COUNT_TYPE numWords = BIG_INT_BIT_TO_SIZE(p); // (p + (BIG_INT_BITS_PER_WORD-1)) >> 5;
+	std::copy_n(&(this->value[0]), numWords, &(result.value[0])); //System.arraycopy(this.mag, (this.mag.length - numInts), mag, 0, numInts);
+
+	// Mask out any excess bits
+	BIG_INT_WORD_COUNT_TYPE mostSignificantWordIndex = numWords-1;
+	int excessBits = (numWords << 5) - p;
+	result.value[mostSignificantWordIndex] &= (BIG_INT_WORD_TYPE{1} << (BIG_INT_BITS_PER_WORD-excessBits)) - 1;
+
+	return result;
+}
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result) const {
@@ -1590,17 +1802,17 @@ void UFixBigInt<S>::modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus
 		return;
 	}
 
-//#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
+#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
 	modPow_naiv(base, exponent, modulus, result);
-//#else
-//	modPow_montgomery(base, exponent, modulus, result);
-//#endif
+#else
+	modPow_montgomery(base, exponent, modulus, result);
+#endif
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::modPow(const UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus) const {
 	UFixBigInt<FBI_WC_Sm2> result{1};
-	UFixBigInt<S> tmpExponent(exponent);
+	UFixBigInt<S> tmpExponent{exponent};
 	this->modPow(tmpExponent, modulus, result);
 	return result;
 }

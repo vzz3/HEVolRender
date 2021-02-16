@@ -12,9 +12,17 @@
 #ifdef FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 	#define FBI_WC_Sp1 (S+1)
 	#define FBI_WC_Sm2 (S*2)
+	
+	/**
+	 * For the Mongommery reduction we need at least 9 additional bit
+	 * (see the line "this->reducer = one << reducerBits;" in the constructor of the MontgomeryReducer class.
+	 * Therfore, we add an additional word if S*2 does not provide at least 9 more bits.
+	 */
+	#define FBI_WC_MM  ( ((S*2*BIG_INT_BITS_PER_WORD) > (S*BIG_INT_BITS_PER_WORD+9)) ? (S*2) : (S*2+1) )
 #else
 	#define FBI_WC_Sp1 (S)
 	#define FBI_WC_Sm2 (S)
+	#define FBI_WC_MM  (S)
 #endif
 
 /*
@@ -527,7 +535,7 @@ namespace ppvr {
 			 * The Bézout coefficients are useful for solving Diophantine equations.
 			 * @return gcd of b and a.
 			 */
-			static UFixBigInt<S> gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& u, UFixBigInt<S>& v);
+			static UFixBigInt<S> gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& u/*, UFixBigInt<S>& v*/);
 			
 		public:
 			UFixBigInt<S> modInverse(const UFixBigInt<S> & m) const;
@@ -536,7 +544,45 @@ namespace ppvr {
 		private:
 			static void modPow_naiv(UFixBigInt<FBI_WC_Sm2>& base, UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result);
 			
-		public:
+			/**
+			 * Efficient Modular Exponentiation with Montgomery Reduction and the K-Ary method
+			 * based on the example implementation : https://www.codeproject.com/Tips/791253/ModPow
+			 *
+			 * https://www.nayuki.io/page/montgomery-reduction-algorithm
+			 * https://www.nayuki.io/res/montgomery-reduction-algorithm/MontgomeryReducer.java
+			 */
+			static void modPow_montgomery(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			static void modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			static void modPow_montgomeryOdd(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			/**
+			 * Iterates the exponent from right to left, i.e. the least significant bit to the most significant.
+			 */
+			static void modPow_montgomeryOdd_leastToMostSig(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			
+			/**
+			 * Iterates the exponent from left  to right, i.e. the most significant bit to the least significant.
+			 */
+			static void modPow_montgomeryOdd_mostToLeastSig(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			
+			/**
+			 * Left-To-Right K-ary Modular Exponentiation
+			 */
+			static void modPow_montgomeryOdd_kAry(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			
+		private:
+			/**
+			 * ModPow - Special Case (modulus == 2^p)
+			 * this = base
+			 * @return this^exponent % 2^p
+			 */
+			UFixBigInt<S> modPow2(UFixBigInt<S> exponent, uint p) const ;
+			/**
+			 * Returns a BigInteger whose value is this mod(2^p).
+			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
+			 */
+			UFixBigInt<S> mod2(uint p) const;
+			
+		protected:
 			/**
 			 * Returns a BigInteger whose value is
 			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
@@ -552,6 +598,7 @@ namespace ppvr {
 			 */
 			void modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result) const;
 			
+		public:
 			/**
 			 * Returns a BigInteger whose value is
 			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this

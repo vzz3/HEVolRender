@@ -676,110 +676,25 @@ SFixBigInt<S> SFixBigInt<S>::modInverse(const SFixBigInt<S> & m) const {
 /* ---------- modPow ---------- */
 
 template<BIG_INT_WORD_COUNT_TYPE S>
-SFixBigInt<S> SFixBigInt<S>::modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &m) const {
-	if (m.signum <= 0) {
+void SFixBigInt<S>::modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus, SFixBigInt<FBI_WC_Sm2>& result) const {
+	if (modulus.signum <= 0) {
 		//throw new ArithmeticException("BigInteger: modulus not positive");
 		std::string msg = "ERROR SFixBigInt: modulus not positive!";
 		//std::cerr << msg << std::endl;
 		throw std::invalid_argument(msg);
 	}
-
-	// Trivial cases: exponent = 0
-	if (exponent.isZero()) {
-		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
-	}
-
-	// Trivial cases: base = 1
-	if (this->isOne()) {
-		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
-	}
-
-	// Trivial cases: base = 0
-	if (this->isZero() &&  exponent.signum >= 0) {
-		return SFixBigInt<S>(0);
-	}
-
+	
 	// Trivial cases: base = -1 && (exponent % 2 = 0)
-	if (*this == SFixBigInt<S>(1, true) && exponent.isEven()) {
-		return (m.isOne() ? SFixBigInt<S>(0) : SFixBigInt<S>(1));
+	if ( (this->isMagnitudeOne() && this->signum < 0) && exponent.isEven()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
 	}
-
-
-	return this->modPow_naiv(exponent, m);
-
-	// faster version from java BigInt ....
-	/*
-	bool invertResult = exponent.signum < 0;
-	SArbBigInt absExponent(exponent); // TODO performance, unessesery copy if exponent is positive
-	if (invertResult) {
-		absExponent.setAbs();
-	}
-
-	//BigInteger base = (this.signum < 0 || this.compareTo(m) >= 0
-	//				   ? this.mod(m) : this);
-	SArbBigInt base = (this->signum < 0 || *this >= m) ? *this % m : *this;
-
-	SArbBigInt result(0);
-	if(m.isOdd()) { // odd modulus
-		result = base.oddModPow(exponent, m);
-	} else {
-		/ *
-		 * Even modulus.  Tear it into an "odd part" (m1) and power of two
-		 * (m2), exponentiate mod m1, manually exponentiate mod m2, and
-		 * use Chinese Remainder Theorem to combine results.
-		 * /
-
-		// Tear m apart into odd part (m1) and power of 2 (m2)
-		int p = m.findLowestSetBit();   // Max pow of 2 that divides m
-
-		//BigInteger m1 = m .shiftRight(p);  // m/2**p
-		SArbBigInt m1 = m >> p; // m/2**p
-		//BigInteger m2 = ONE.shiftLeft(p); // 2**p
-		SArbBigInt m2 = SArbBigInt(1) << p; // 2**p
-
-		// Calculate new base from m1
-		//BigInteger base2 = (this.signum < 0 || this.compareTo(m1) >= 0 ? this.mod(m1) : this);
-		SArbBigInt base2 = (this->signum < 0 || *this >= m1) ? *this % m1 : *this;
-
-		// Caculate (base ** exponent) mod m1.
-		//BigInteger a1 = (m1.equals(ONE) ? ZERO : base2.oddModPow(exponent, m1));
-		SArbBigInt a1 = m1.isOne() ? BigInt(0) : base2.oddModPow(exponent, m1);
-
-		// Calculate (this ** exponent) mod m2
-		SArbBigInt a2 = base.modPow2(exponent, p);
-
-		// Combine results using Chinese Remainder Theorem
-		SArbBigInt y1 = m2.modInverse(m1);
-		SArbBigInt y2 = m1.modInverse(m2);
-
-		//if (m.mag.length < MAX_MAG_LENGTH / 2) {
-			// result = a1.multiply(m2).multiply(y1).add(a2.multiply(m1).multiply(y2)).mod(m);
-			result = (a1 * m2 * y1 + a2 * m1 * y2) % m;
-		//} else {
-		//	MutableBigInteger t1 = new MutableBigInteger();
-		//	new MutableBigInteger(a1.multiply(m2)).multiply(new MutableBigInteger(y1), t1);
-		//	MutableBigInteger t2 = new MutableBigInteger();
-		//	new MutableBigInteger(a2.multiply(m1)).multiply(new MutableBigInteger(y2), t2);
-		//	t1.add(t2);
-		//	MutableBigInteger q = new MutableBigInteger();
-		//	result = t1.divide(new MutableBigInteger(m), q).toBigInteger();
-		//}
-	}
-
-	return (invertResult ? result.modInverse(m) : result);
-	 */
-}
-
-template<BIG_INT_WORD_COUNT_TYPE S>
-SFixBigInt<S> SFixBigInt<S>::modPow_naiv(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const {
-	if(modulus.UFixBigInt<S>::isOne()) {
-		return SFixBigInt<S>(1);
-	}
-
-	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
-
-	// ensure that the base is < modulus
-	SFixBigInt<FBI_WC_Sm2> base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	
+	SFixBigInt<S> base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 
 	bool invertResult = exponent.signum < 0;
 	SFixBigInt<S> absExponent(exponent);
@@ -787,16 +702,21 @@ SFixBigInt<S> SFixBigInt<S>::modPow_naiv(const SFixBigInt<S> &exponent, const SF
 		absExponent.setAbs();
 	}
 
-	SFixBigInt<FBI_WC_Sm2> result(1);
-	while ( !absExponent.isZero() > 0) {
-		if (absExponent.isOdd()) {
-			result = (result * base) % modulus;
-		}
-		absExponent = absExponent >> 1;
-		base = base.pow(2) % modulus;
-	}
+	base.UFixBigInt<S>::modPow(absExponent, modulus, result); // This methods call does the actual work! All other lines in the method are just checks / fixes for negative numbers
+	result.fixSignumAfterUnsafeOperation(false);
 
-	return (invertResult ? result.modInverse(modulus) : result);
+	
+	if(invertResult) {
+		result = result.modInverse(modulus);
+	}
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::modPow(const SFixBigInt<S> &exponent, const SFixBigInt<S> &modulus) const {
+	SFixBigInt<FBI_WC_Sm2> result{1};
+	SFixBigInt<S> tmpExponent{exponent};
+	this->modPow(tmpExponent, modulus, result);
+	return result;
 }
 
 

@@ -546,7 +546,12 @@ namespace ppvr {
 
 		// ----- modInverse / gcd -----
 		private:
+			/**
+			 * Basic Euclidean Algorithm
+			 * returns the gcd of a and b
+			 */
 			static UArbBigInt gcd(const UArbBigInt & a, const UArbBigInt & b);
+			
 		public:
 			UArbBigInt gcd(const UArbBigInt & b) const;
 			
@@ -559,7 +564,7 @@ namespace ppvr {
 			 * The Bézout coefficients are useful for solving Diophantine equations.
 			 * @return gcd of b and a.
 			 */
-			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v);
+			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u/*, UArbBigInt& v*/);
 			
 		public:
 			UArbBigInt modInverse(const UArbBigInt & m) const;
@@ -631,7 +636,8 @@ namespace ppvr {
 			 * /
 			static void implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
 			*/
-		public:
+		
+		protected:
 			/**
 			 * Returns a BigInteger whose value is
 			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
@@ -647,6 +653,7 @@ namespace ppvr {
 			 */
 			void modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const;
 			
+		public:
 			/**
 			 * Returns a BigInteger whose value is
 			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
