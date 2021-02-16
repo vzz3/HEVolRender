@@ -213,10 +213,9 @@ file(GLOB TEST_FILES
 	"test/*/*/*.c"	"test/*/*/*.cpp"	"test/*/*/*.h"	"test/*/*/*.hpp"
 )
 
-# Set sheme working directory for Xcode (important, because otherwise the compiled shaders can not be found at application startup)
-set(CMAKE_XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-# add the executable
+
+# configure the final app target
 add_executable(${PROJECT_NAME} ${SRC_FILES}
 	${SHADER_FILES}
 	${APP_FILES}
@@ -228,9 +227,6 @@ add_executable(${PROJECT_NAME} ${SRC_FILES}
 	#${SHADER_RSC_ADDED}
 )
 #add_framework(Security ppvr)
-
-add_executable(${PROJECT_NAME}-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES} ${SRC_UTIL_FILES})
-#add_framework(Security ppvr-test)
 
 target_link_libraries(${PROJECT_NAME}
 	Qt5::Core
@@ -261,7 +257,15 @@ add_shader(${PROJECT_NAME} "encryptedXRay.vert")
 
 configure_file(app/vk_layer_settings.txt vk_layer_settings.txt COPYONLY)
 
+# configuret the test target
+add_executable(${PROJECT_NAME}-test ${TEST_FILES} ${SRC_MATH_FILES} ${SRC_PAILLIER_FILES} ${SRC_UTIL_FILES})
+#add_framework(Security ppvr-test)
+target_link_libraries(${PROJECT_NAME}-test
+	Qt5::Core
+) # QT core is required in for math/Random thread syncronization
 
+# Set sheme working directory for Xcode (important, because otherwise the compiled shaders can not be found at application startup)
+set(CMAKE_XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # for Xcode file tree
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/app" PREFIX "app" FILES ${APP_FILES})

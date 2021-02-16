@@ -59,7 +59,7 @@ namespace ppvr {
 				 * @param plaintext to be encrypted.
 				 * @return corresponding ciphertext.
 				 */
-				PaillierInt encrypt(const PaillierInt & plaintext) const;
+				PaillierInt encrypt(const PaillierInt & plaintext, Random* rnd = nullptr) const;
 
 				/**
 				 * The encryption function of the Paillier encryption scheme can be divided
@@ -87,14 +87,14 @@ namespace ppvr {
 				 * @param ciphertext to be ofuscated
 				 * @return obfuscated ciphertext.
 				 */
-				PaillierInt obfuscate(const PaillierInt & ciphertext) const;
+				PaillierInt obfuscate(const PaillierInt & ciphertext, Random* rnd = nullptr) const;
 
 			private:
 				/**
 				 * returns a rendom number that is greater the 0 and less then the modulus.
 				 * @return
 				 */
-				PaillierInt getNewRandomNumber() const;
+				PaillierInt getNewRandomNumber(Random* rnd = nullptr) const;
 
 			public:
 				/**

@@ -520,10 +520,15 @@ namespace ppvr {
 
 		// ----- pow(), sqrt() -----
 		private:
-			
+			/**
+			 * Calculates a*a
+			 */
 			static void square(const UArbBigInt& a, UArbBigInt& result);
 			
 		public:
+			/**
+			 * @return this * this
+			 */
 			UArbBigInt square() const;
 
 			/**
@@ -553,7 +558,6 @@ namespace ppvr {
 			 * It returns not only the gcd but alls the the Bézout coefficients, u and v, which satisfy: a.*u + b.*v = gcd.
 			 * The Bézout coefficients are useful for solving Diophantine equations.
 			 * @return gcd of b and a.
-
 			 */
 			static UArbBigInt gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& u, UArbBigInt& v);
 			
@@ -562,7 +566,7 @@ namespace ppvr {
 			
 		// ----- modPow -----
 		private:
-			static void modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result);
+			static void modPow_naiv(UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result);
 			
 			/**
 			 * Efficient Modular Exponentiation with Montgomery Reduction and the K-Ary method
@@ -605,28 +609,28 @@ namespace ppvr {
 			 * Assumes that this {@code BigInteger >= 0} and {@code p > 0}.
 			 */
 			UArbBigInt mod2(uint p) const;
-			
+			/*
 			static void modPow_montgomeryOdd_window(const UArbBigInt& base, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result);
 			
-			/**
+			/ **
 			 * Montgomery reduce n, modulo mod.  This reduces modulo mod and divides
 			 * by 2^(32*mlen). 
-			 */
+			 * /
 			static void montReduce(UArbBigInt& n, const UArbBigInt& mod, BIG_INT_WORD_COUNT_TYPE mlen, BIG_INT_WORD_COUNT_TYPE inv);
 			static void montgomeryMultiply(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product);
 			static void montgomerySquare(const UArbBigInt& a, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, uint64_t inv, UArbBigInt& product);
 			static void implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBigInt& b, const UArbBigInt& n, BIG_INT_WORD_COUNT_TYPE len, UArbBigInt& product);
 			
-			/**
+			/ **
 			 * Multiply an array by one word k and add to result, return the carry
-			 */
+			 * /
 			static BIG_INT_WORD_TYPE mulAdd(MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
 			
-			/**
+			/ **
 			 * Parameters validation.
-			 */
+			 * /
 			static void implMulAddCheck(const MagnitudeView& out, const MagnitudeView& in, BIG_INT_WORD_COUNT_TYPE offset, BIG_INT_WORD_COUNT_TYPE len, BIG_INT_WORD_TYPE k);
-			
+			*/
 		public:
 			/**
 			 * Returns a BigInteger whose value is

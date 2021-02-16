@@ -4,7 +4,7 @@
 //#include <sys/types.h>
 
 
-#define USE_FIX_WIDTH_INTEGER 			1
+//#define USE_FIX_WIDTH_INTEGER 			1
 #define PAILLIER_MODULUS_BIT_LENGTH 	256 // GPU test: 64 // Paillier test: 256
 
 

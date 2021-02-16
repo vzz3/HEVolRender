@@ -229,7 +229,7 @@ void MainWindow::renderEcrypted() {
 	// rendering config
 	size_t volumeSize = 100;
 	QSize imageSize{150, 150};
-	PaillierInt rayNrmalizationDivisor = PaillierInt::fromInt64(volumeSize/2);
+	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(volumeSize/2);
 	
 	// create key
 	SecureKey sk = SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH);
@@ -263,7 +263,7 @@ void MainWindow::renderEcrypted() {
 	encRenderer->framebuffer2host(encryptedImage);
 	
 	// decrypt (and normalize) the resulting image
-	PRINT_DURATION( CryptoUtil::decrypt(sk, rayNrmalizationDivisor, encryptedImage, paintextImage), "decrypt");
+	PRINT_DURATION( CryptoUtil::decrypt(sk, rayNormalizationDivisor, encryptedImage, paintextImage), "decrypt");
 	QImage img = ppvr::rendering::data::ImageUtil::convertToNewQImage(paintextImage);
 	
 	// cleanup GPU resources

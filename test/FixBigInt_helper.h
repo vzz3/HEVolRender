@@ -14,6 +14,7 @@
 
 	#define   _8_x2 	   8
 	#define  _46_x2 	  46
+	#define _128_x2 	 128
 	#define _256_x2 	 256
 #else
 	#define logFixBigIntAutoSizeInfo()  \
@@ -31,5 +32,6 @@
 	// mulSchool() not poible without FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 	#define   _8_x2 	(  8 * 2)
 	#define  _46_x2 	( 46 * 2)
+	#define _128_x2		(128 * 2)
 	#define _256_x2		(256 * 2)
 #endif

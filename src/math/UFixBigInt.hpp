@@ -7,7 +7,7 @@
 
 #include "Random.hpp"
 
-//#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
+#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 
 #ifdef FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 	#define FBI_WC_Sp1 (S+1)
@@ -323,6 +323,17 @@ namespace ppvr {
 		public:
 			UFixBigInt<S> operator>> (const uint bits) const;
 
+		// ----- boolean operations -----
+		protected:
+			void boolXor(const UFixBigInt<S> &other);
+		public:
+			UFixBigInt<S> operator^ (const UFixBigInt<S>& other) const;
+			
+		protected:
+			void boolAnd(const UFixBigInt<S> &other);
+		public:
+			UFixBigInt<S> operator& (const UFixBigInt<S>& other) const;
+			
 		// ----- addition -----
 		protected:
 			/**
@@ -477,7 +488,17 @@ namespace ppvr {
 			UFixBigInt<S> operator% (const UFixBigInt<S>& other) const;
 			
 		// ----- pow(), sqrt() -----
+		private:
+			/**
+			 * Calculates a*a
+			 */
+			static void square(const UFixBigInt<S>& a, UFixBigInt<S>& result);
+			
 		public:
+			/**
+			 * @return this * this
+			 */
+			UFixBigInt<S> square() const;
 
 			/**
 			 * power this = this ^ pow
@@ -491,7 +512,61 @@ namespace ppvr {
 			 * ('digit-by-digit' algorithm)
 			 */
 			UFixBigInt<S> sqrt() const;
- 
+			
+		// ----- modInverse / gcd -----
+		private:
+			static UFixBigInt<S> gcd(const UFixBigInt<S> & a, const UFixBigInt<S> & b);
+		public:
+			UFixBigInt<S> gcd(const UFixBigInt<S> & b) const;
+			
+		private:
+			
+			/**
+			 * Function for a binary extended Euclidean Algorithm that uses only unsigned arithmetic.
+			 * It returns not only the gcd but alls the the Bézout coefficients, u and v, which satisfy: a.*u + b.*v = gcd.
+			 * The Bézout coefficients are useful for solving Diophantine equations.
+			 * @return gcd of b and a.
+			 */
+			static UFixBigInt<S> gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& u, UFixBigInt<S>& v);
+			
+		public:
+			UFixBigInt<S> modInverse(const UFixBigInt<S> & m) const;
+			
+		// ----- modPow -----
+		private:
+			static void modPow_naiv(UFixBigInt<FBI_WC_Sm2>& base, UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result);
+			
+		public:
+			/**
+			 * Returns a BigInteger whose value is
+			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
+			 * method permits negative exponents.)
+			 *
+			 * @param  exponent the exponent.
+			 * @param  modulus the modulus.
+			 * @param  result <code>this<sup>exponent</sup> mod m</code>
+			 * @throws ArithmeticException {@code m} &le; 0 or the exponent is
+			 *         negative and this BigInteger is not <i>relatively
+			 *         prime</i> to {@code m}.
+			 * @see    #modInverse
+			 */
+			void modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result) const;
+			
+			/**
+			 * Returns a BigInteger whose value is
+			 * <code>(this<sup>exponent</sup> mod m)</code>.  (Unlike {@code pow}, this
+			 * method permits negative exponents.)
+			 *
+			 * @param  exponent the exponent.
+			 * @param  modulus the modulus.
+			 * @return <code>this<sup>exponent</sup> mod m</code>
+			 * @throws ArithmeticException {@code m} &le; 0 or the exponent is
+			 *         negative and this BigInteger is not <i>relatively
+			 *         prime</i> to {@code m}.
+			 * @see    #modInverse
+			 */
+			UFixBigInt<S> modPow(const UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus) const;
+			
 		// ----- Comparison operators -----
 		public:
 			bool operator< (const UFixBigInt<S>& other) const;

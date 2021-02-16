@@ -31,11 +31,12 @@ namespace ppvr {
 					inline void run() override {
 						const uint h = src->height();
 						const uint d = src->depth();
+						Random* rnd = Random::getForLocalThread();
 						
 						for(uint y = 0; y < h; y++) {
 							for(uint z = 0; z < d; z++) {
 								PaillierInt pVoxel = PaillierInt::fromInt64(src->get(x, y, z));
-								dst->set(x, y, z, publicKey->encrypt(pVoxel));
+								dst->set(x, y, z, publicKey->encrypt(pVoxel, rnd));
 							}
 						}
 					}

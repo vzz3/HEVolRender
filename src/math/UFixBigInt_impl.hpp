@@ -682,6 +682,35 @@ UFixBigInt<S> UFixBigInt<S>::operator>> (const uint bits) const {
 }
 
 
+// ----- boolean operations -----
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::boolXor(const UFixBigInt<S> &other) {
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
+		this->value[i] = this->value[i] ^ other.value[i];
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator^ (const UFixBigInt<S>& other) const {
+	UFixBigInt<S> result(*this);
+	result.boolXor(other);
+	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::boolAnd(const UFixBigInt<S> &other) {
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
+		this->value[i] = this->value[i] & other.value[i];
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::operator& (const UFixBigInt<S>& other) const {
+	UFixBigInt<S> result(*this);
+	result.boolAnd(other);
+	return result;
+}
 
 
 // ----- addition -----
@@ -1303,6 +1332,19 @@ UFixBigInt<S> UFixBigInt<S>::operator% (const UFixBigInt<S>& other) const {
 // ----- pow(), sqrt() -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::square(const UFixBigInt<S>& a, UFixBigInt<S>& result) {
+	a.mul(a, result);
+}
+	
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::square() const {
+	UFixBigInt<S> result = UFixBigInt<S>{0};
+	square(*this, result);
+	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::pow(UFixBigInt<S> pow) const {
 	//if( IsNan() )
 	//	return 1;
@@ -1384,7 +1426,184 @@ UFixBigInt<S> UFixBigInt<S>::sqrt() const {
 	return result;
 }
 
+// ----- modInverse / gcd -----
 
+// https://www.di-mgt.com.au/euclidean.html
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::gcd(const UFixBigInt<S> & a, const UFixBigInt<S> & b) {
+	if (a.isZero()) {
+		return b;
+	}
+	return gcd(b % a, a);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::gcd(const UFixBigInt<S> & b) const {
+	return gcd(*this, b);
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::gcdExtended_binaryIterative(const UFixBigInt<S>& aIn, const UFixBigInt<S>& bIn, UFixBigInt<S>& uOut, UFixBigInt<S>& vOut) {
+	
+	// Shifting Euclidean algorithm with unsigned arithmetic:
+	// SEUinv(a,b) -> inverse of a mod bIn, Shifting Euclidean alg, using Unsigned
+	UFixBigInt<S> u, v, s;
+	UFixBigInt<FBI_WC_Sp1> t, r;
+	uint f;
+	if (aIn < bIn) {
+	   u = bIn; v = aIn;
+	   r = 0; s = 1;
+	} else {
+	   v = bIn; u = aIn;
+	   s = 0; r = 1;
+	}
+	while( v > 1) {
+		f = u.bitLength() - v.bitLength();    // U >= V, f >= 0
+		if(  u < (v << f)) {
+			f = f - 1;
+		}
+		u = u - (v << f);   // always U >= 0
+		t = s;
+		for (uint i=0; i<f; i++) { //for i = 1:f
+			t = t+t;               // #adds <= bits(U)+bits(V)
+			if( t > bIn) {
+				t = t - bIn;
+			}
+		}
+		//R = R - t;                // check R < t beforhand
+		while( r < t) {
+			r = r + bIn; // one of R,S gets large soon
+		}
+		r = r - t;
+		
+		if( u < v) {
+		  t = u; u = v; v = t;   // swap(U,V)
+		  t = r; r = s; s = t;   // swap(R,S)
+		}
+	}
+//	if (V == 0) {
+//		S = 0;
+//	}
+	
+	uOut = s;
+	vOut = r;
+	
+	if( v.isZero() ) {
+		assert( u == UFixBigInt<S>::gcd(aIn, bIn) );
+		return u;
+	} else {
+		assert( v == UFixBigInt<S>::gcd(aIn, bIn) );
+		return v;
+	}
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::modInverse(const UFixBigInt<S> & m) const {
+	if (m.isZero()) {
+		std::string msg = "ERROR UArbBigInt: modulus not positive!";
+		//std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	if (m.isOne()) {
+		return UFixBigInt<S>(0);
+	}
+
+	// all the hard work will be done by gcd.
+	UFixBigInt<S> u, v;
+	
+	UFixBigInt<S> gcd = gcdExtended_binaryIterative(*this, m, u, v);
+	if(!gcd.isOne()) {
+		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+		//std::cerr << msg << std::endl;
+		throw NoMultiplicativeInverse(msg);
+	}
+
+	return u % m;
+}
+
+// ----- modPow -----
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow_naiv(UFixBigInt<FBI_WC_Sm2>& base, UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+	result.setOne();
+	 //Assert :: (modulus - 1) * (modulus - 1) does not overflow base
+	 
+	 // ensure that the base is < modulus
+	 //SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	 //UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
+	 
+	UFixBigInt<FBI_WC_Sm2> squereRes{0};
+	 
+	 while ( !exponent.isZero()) {
+		 if (exponent.isOdd()) {
+			 result = (result * base) % modulus;
+		 }
+		 exponent.rcr(1);
+		 UFixBigInt<FBI_WC_Sm2>::square(base, squereRes);
+		 base = squereRes % modulus;
+	 }
+ }
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus, UFixBigInt<FBI_WC_Sm2>& result) const {
+	if (modulus.isZero()) {
+		//throw new ArithmeticException("BigInteger: modulus not positive");
+		std::string msg = "ERROR UArbBigInt: modulus not positive!";
+		std::cerr << msg << std::endl;
+		throw std::invalid_argument(msg);
+	}
+
+	// Trivial cases: exponent = 0
+	if (exponent.isZero()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
+	}
+	
+	// ensure that the base is < modulus
+	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	UFixBigInt<FBI_WC_Sm2> base = (*this >= modulus) ? (*this % modulus) : *this;
+
+	// Trivial cases: base = 1
+	if (base.isOne()) {
+		if(modulus.isOne()) {
+			result.setZero();
+		} else {
+			result.setOne();
+		}
+		return;
+	}
+
+	// Trivial cases: base = 0
+	if (base.isZero() && !exponent.isZero()) {
+		result.setZero();
+		return;
+	}
+	
+	// Trivial cases: modulus = 1
+	if(modulus.isOne()) {
+		result.setOne();
+		return;
+	}
+
+//#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
+	modPow_naiv(base, exponent, modulus, result);
+//#else
+//	modPow_montgomery(base, exponent, modulus, result);
+//#endif
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+UFixBigInt<S> UFixBigInt<S>::modPow(const UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus) const {
+	UFixBigInt<FBI_WC_Sm2> result{1};
+	UFixBigInt<S> tmpExponent(exponent);
+	this->modPow(tmpExponent, modulus, result);
+	return result;
+}
 
 // ----- comparisons -----
 

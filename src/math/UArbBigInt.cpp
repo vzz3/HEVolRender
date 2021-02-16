@@ -1635,6 +1635,7 @@ UArbBigInt UArbBigInt::gcd(const UArbBigInt & a, const UArbBigInt & b) {
 	}
 	return gcd(b % a, a);
 }
+
 UArbBigInt UArbBigInt::gcd(const UArbBigInt & b) const {
 	return gcd(*this, b);
 }
@@ -1788,57 +1789,55 @@ void UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBi
 */
 
 UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const UArbBigInt& bIn, UArbBigInt& uOut, UArbBigInt& vOut) {
-	const UArbBigInt& a = aIn;
-	const UArbBigInt& b = bIn;
 	
 	// Shifting Euclidean algorithm with unsigned arithmetic:
 	// SEUinv(a,b) -> inverse of a mod bIn, Shifting Euclidean alg, using Unsigned
-	UArbBigInt U, R, V, S, t;
+	UArbBigInt u, r, v, s, t;
 	uint f;
-	if (a < b) {
-	   U = b; V = a;
-	   R = 0; S = 1;
+	if (aIn < bIn) {
+	   u = bIn; v = aIn;
+	   r = 0; s = 1;
 	} else {
-	   V = b; U = a;
-	   S = 0; R = 1;
+	   v = bIn; u = aIn;
+	   s = 0; r = 1;
 	}
-	while( V > 1) {
-		f = U.bitLength() - V.bitLength();    // U >= V, f >= 0
-		if(  U < (V << f)) {
+	while( v > 1) {
+		f = u.bitLength() - v.bitLength();    // U >= V, f >= 0
+		if(  u < (v << f)) {
 			f = f - 1;
 		}
-		U = U - (V << f);   // always U >= 0
-		t = S;
+		u = u - (v << f);   // always U >= 0
+		t = s;
 		for (uint i=0; i<f; i++) { //for i = 1:f
 			t = t+t;               // #adds <= bits(U)+bits(V)
-			if( t > b) {
-				t = t - b;
+			if( t > bIn) {
+				t = t - bIn;
 			}
 		}
 		//R = R - t;                // check R < t beforhand
-		while( R < t) {
-			R = R + b; // one of R,S gets large soon
+		while( r < t) {
+			r = r + bIn; // one of R,S gets large soon
 		}
-		R = R - t;
+		r = r - t;
 		
-		if( U < V) {
-		  t = U; U = V; V = t;   // swap(U,V)
-		  t = R; R = S; S = t;   // swap(R,S)
+		if( u < v) {
+		  t = u; u = v; v = t;   // swap(U,V)
+		  t = r; r = s; s = t;   // swap(R,S)
 		}
 	}
 //	if (V == 0) {
 //		S = 0;
 //	}
 	
-	uOut = S;
-	vOut = R;
+	uOut = s;
+	vOut = r;
 	
-	if( V.isZero() ) {
-		assert( U == UArbBigInt::gcd(aIn, bIn) );
-		return U;
+	if( v.isZero() ) {
+		assert( u == UArbBigInt::gcd(aIn, bIn) );
+		return u;
 	} else {
-		assert( V == UArbBigInt::gcd(aIn, bIn) );
-		return V;
+		assert( v == UArbBigInt::gcd(aIn, bIn) );
+		return v;
 	}
 }
 
@@ -1942,30 +1941,23 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 
 // ----- modPow -----
 
-void UArbBigInt::modPow_naiv(const UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) {
+void UArbBigInt::modPow_naiv(UArbBigInt& base, UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) {
 	result.setOne();
-	if(modulus.isOne()) {
-		return;
-	}
-
 	//Assert :: (modulus - 1) * (modulus - 1) does not overflow base
 
 	// ensure that the base is < modulus
 	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
-	UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
+	//UArbBigInt baseTmp = (base >= modulus) ? (base % modulus) : base;
 	
 	UArbBigInt squereRes{0, modulus.wordSize*2};
 	
 	while ( !exponent.isZero()) {
 		if (exponent.isOdd()) {
-			result = (result * baseTmp) % modulus;
+			result = (result * base) % modulus;
 		}
-		//exponent = exponent >> 1;
-		//baseTmp = baseTmp.pow(2) % modulus;
-		// should be faster
 		exponent.rcr(1);
-		square(baseTmp, squereRes);
-		baseTmp = squereRes % modulus;
+		UArbBigInt::square(base, squereRes);
+		base = squereRes % modulus;
 	}
 }
 
@@ -2276,10 +2268,10 @@ UArbBigInt UArbBigInt::mod2(uint p) const {
 }
 
 // ---
-
+/*
 void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UArbBigInt& exponent, const UArbBigInt& modulus, UArbBigInt& result) {
 	assert(BIG_INT_BITS_PER_WORD <= 32);
-	/*
+	/ *
 	 * The algorithm is adapted from Javas BigInteger class.
 	 *
 	 * The algorithm is adapted from Colin Plumb's C library.
@@ -2337,7 +2329,7 @@ void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UAr
 	 * and you'll see that a k-bit window saves k-2 squarings
 	 * as well as reducing the multiplies.  (It actually doesn't
 	 * hurt in the case k = 1, either.)
-	 */
+	 * /
 	// Special case for exponent of one
 	//if (exponent.isOne()) {
 	//	return base;
@@ -2389,7 +2381,7 @@ void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UAr
 	uint64_t inv = BigIntUtil::inverseMod64(n0); //long inv = -MutableBigInteger.inverseMod64(n0);
 
 	// Convert base to Montgomery form
-	/* Move base up "mlen" words into a */
+	// Move base up "mlen" words into a
 	UArbBigInt a{0, 2*modLen}; a.initUnusedWords(); std::copy_n(&baseIn.value[0], baseIn.wordSize, &a.value[modLen]); a.trimWordSize(2*modLen); //UArbBigInt a{baseIn}; a.rcl(modLen * BIG_INT_BITS_PER_WORD, 0, true); //int[] a = leftShift(base, base.length, modLen << 5);
 
 	UArbBigInt 	q{}, //MutableBigInteger q = new MutableBigInteger(),
@@ -2413,7 +2405,7 @@ void UArbBigInt::modPow_montgomeryOdd_window(const UArbBigInt& baseIn, const UAr
 	// Set b to the square of the base
 	UArbBigInt b{0, modLen}; montgomerySquare(table[0], mod, modLen, inv, b); //int[] b = montgomerySquare(table[0], mod, modLen, inv, null);
 
-	// Set t to high half of b /* Use high half of b to initialize the table */
+	// Set t to high half of b /* Use high half of b to initialize the table
 	UArbBigInt t{0, modLen}; t.initUnusedWords(); std::copy_n(&b.value[modLen/2], modLen/2, &t.value[0]); t.trimWordSize(modLen/2); //int[] t = Arrays.copyOf(b, modLen);
 
 	// Fill in the table with odd powers of the base
@@ -2577,7 +2569,7 @@ void UArbBigInt::implMontgomeryMultiplyChecks(const UArbBigInt& a, const UArbBig
 	if (len > a.wordCapacity ||
 		len > b.wordCapacity ||
 		len > n.wordCapacity ||
-		(/*product != null &&*/ len > product.wordCapacity)) {
+		(/*product != null && * / len > product.wordCapacity)) {
 		throw std::invalid_argument("input array length out of bound: " + std::to_string(len));
 	}
 }
@@ -2602,7 +2594,7 @@ void UArbBigInt::implMulAddCheck(const MagnitudeView& out, const MagnitudeView& 
 		throw std::invalid_argument("input len is out of bound: " + std::to_string(len) + " > " + std::to_string(out.wordCapacity() - offset));
 	}
 }
-
+*/
 // ---
 
 void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBigInt& result) const {
@@ -2623,7 +2615,9 @@ void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBig
 		return;
 	}
 	
-	UArbBigInt base = (*this) % modulus;
+	// ensure that the base is < modulus
+	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
+	UArbBigInt base = (*this >= modulus) ? (*this % modulus) : *this;
 
 	// Trivial cases: base = 1
 	if (base.isOne()) {
@@ -2638,6 +2632,12 @@ void UArbBigInt::modPow(UArbBigInt &exponent, const UArbBigInt &modulus, UArbBig
 	// Trivial cases: base = 0
 	if (base.isZero() && !exponent.isZero()) {
 		result.setZero();
+		return;
+	}
+	
+	// Trivial cases: modulus = 1
+	if(modulus.isOne()) {
+		result.setOne();
 		return;
 	}
 

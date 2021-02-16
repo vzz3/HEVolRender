@@ -12,7 +12,7 @@ PublicKey::PublicKey(const PaillierInt & yModulus)
 
 PublicKey::~PublicKey() {}
 
-PaillierInt PublicKey::encrypt(const PaillierInt & plaintext) const {
+PaillierInt PublicKey::encrypt(const PaillierInt & plaintext, Random* rnd) const {
 	return obfuscate(encryptWithoutObfuscation(plaintext));
 }
 
@@ -33,14 +33,16 @@ PaillierInt PublicKey::encryptWithoutObfuscation(const PaillierInt & plaintext) 
 	return (modulus * plaintext + PaillierInt(1)) % _modulusSquared;
 }
 
-PaillierInt PublicKey::obfuscate(const PaillierInt & ciphertext) const {
+PaillierInt PublicKey::obfuscate(const PaillierInt & ciphertext, Random* rnd) const {
 	//return BigIntegerUtil.modPow(randomPositiveNumber(modulus), modulus, _modulusSquared).multiply(ciphertext).mod(_modulusSquared);
 	PaillierInt r = getNewRandomNumber();
 	return r.modPow(modulus, _modulusSquared) * ciphertext % _modulusSquared;
 }
 
-PaillierInt PublicKey::getNewRandomNumber() const {
-	Random* rnd = Random::getForLocalThread();
+PaillierInt PublicKey::getNewRandomNumber(Random* rnd) const {
+	if(rnd == nullptr) {
+		rnd = Random::getForLocalThread();
+	}
 	return PaillierInt::randomNumber(modulus, *rnd);
 }
 

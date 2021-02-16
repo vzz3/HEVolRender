@@ -926,7 +926,7 @@ TEST_CASE( "unsigned infinit big integer XOR", "[UABigint]" ) {
 	
 
 	
-	// 8 Byte (64bit)
+	// 9 Byte (65bit)
 	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) ^ (UArbBigInt::fromString("1", 2) <<  0)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) );
 	REQUIRE( ((UArbBigInt::fromString("1", 2) <<  0) ^ (UArbBigInt::fromString("1", 2) << 64)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) ); // increas word count
 	REQUIRE( ((UArbBigInt::fromString("1", 2) << 64) ^ (UArbBigInt::fromString("1", 2) << 15)) == UArbBigInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000", 2) );
@@ -1172,7 +1172,7 @@ TEST_CASE( "unsigned infinit big integer multiplication", "[UABigint]" ) {
 	REQUIRE( UArbBigInt::fromString("987654321000000000000000000000000000009876543210", 10) *  UArbBigInt::fromString("123456789000000000000000000000000000001234567890", 10) == UArbBigInt::fromString("121932631112635269000000000000000000002438652622252705380000000000000000000012193263111263526900", 10) );
 	
 	
-	REQUIRE( UArbBigInt::fromString("141", 16) *  UArbBigInt::fromString("141", 16) == UArbBigInt::fromString("19281", 16) );
+	REQUIRE( UArbBigInt::fromString(  "141", 16) *  UArbBigInt::fromString(  "141", 16) == UArbBigInt::fromString("19281", 16) );
 	REQUIRE( UArbBigInt::fromString("19281", 16) *  UArbBigInt::fromString("19281", 16) == UArbBigInt::fromString("278D96501", 16) );
 	
 	REQUIRE( UArbBigInt::fromString("a2aeb24566780652625e99853cc671dd330d593a9a54b069e5b49ad3456656546209c2", 16) *  UArbBigInt::fromString("a2aeb24566780652625e99853cc671dd330d593a9a54b069e5b49ad3456656546209c2", 16) == UArbBigInt::fromString("676190d6a82bc8782aff49697a4d625b298f8cc9e93b7b38de9152eadd018f5fafd49918dee1874f701a535e7b720b7f536f5edacc30600c1e309f4c8eb1fc09a24ac8e73704", 16) );
