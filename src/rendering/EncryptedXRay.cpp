@@ -281,12 +281,16 @@ void EncryptedXRay::updateUniformBuffer(uint32_t yCurrentSwapChainImageIndex) {
 	ubo.volumeInfo.volumeDepth = (*volumeSet)[0].depth();
 	//std::copy_n(pk->getModulusSquared().getData(), PAILLIER_INT_WORD_SIZE, ubo.volumeInfo.modulusSquared);
 	const PaillierInt pkM2 = pk->getModulusSquared();
-	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) {
-		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
-			ubo.volumeInfo.modulusSquared[texIndex][channelIndex] = pkM2.getData()[texIndex*4 + channelIndex];
-		}
-	}
-		
+	PAILLIER_INT_TO_STORAGE_UVEC4(pkM2.getData(), ubo.volumeInfo.modulusSquared)
+	
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		MontgomeryReducer<PaillierInt> mmr{pkM2};
+		const PaillierInt mmZero = mmr.convertIn(pk->encryptWithoutObfuscation(0));
+		ubo.volumeInfo.montReducerBits = mmr.getReducerBits();
+		PAILLIER_INT_TO_UVEC4(mmr.getMask().getData(), ubo.volumeInfo.montMask);
+		PAILLIER_INT_TO_UVEC4(mmr.getFactor().getData(), ubo.volumeInfo.montFactor);
+		PAILLIER_INT_TO_STORAGE_UVEC4(mmZero.getData(), ubo.volumeInfo.montConvertedEncZero);
+	#endif
 	
 	constexpr VkDeviceSize uboSize = sizeof(uniform::EncryptedXRayUniformBufferObject);
 	void* data;

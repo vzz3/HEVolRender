@@ -67,8 +67,17 @@
 #define GPU_INT_TEXTURE_WORD_COUNT			4							// words per texture
 #define GPU_INT_TEXTURE_SIZE				((PAILLIER_INT_STORAGE_WORD_SIZE + (GPU_INT_TEXTURE_WORD_COUNT-1)) / GPU_INT_TEXTURE_WORD_COUNT)	// = ciel(PAILLIER_INT_WORD_SIZE / GpuVolume::bigIntWordCount); the numbers of textures required for storing PAILLIER_INT_STORAGE_WORD_SIZE words
 
+#define GPU_INT_UVEC4_SIZE					((PAILLIER_INT_WORD_SIZE + (4-1)) / 4)
+#define GPU_INT_UVEC4_STORAGE_SIZE			((PAILLIER_INT_STORAGE_WORD_SIZE + (4-1)) / 4)
 
-#define GPU_INT_UVEC4_STORAGE_SIZE			GPU_INT_TEXTURE_SIZE
+
+/* ****************************************
+ * *** Config. for different reder modi ***
+ * ****************************************
+ *
+ */
+#define GPU_MONTGOMERY_REDUCTION			1
+
 
 /* *************************************
  * ***     Storage Types for GLSL    ***

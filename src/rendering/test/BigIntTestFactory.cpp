@@ -20,6 +20,9 @@ std::vector<BigIntTestCase> BigIntTestFactory::createAllTest() {
 	testCases.push_back(createShiftLeftTest());
 	testCases.push_back(createShiftRightTest());
 	
+	testCases.push_back(createXorTest());
+	testCases.push_back(createAndTest());
+	
 	testCases.push_back(createAddTest());
 	testCases.push_back(createSubTest());
 	testCases.push_back(createMulTest());
@@ -1477,6 +1480,97 @@ BigIntTestCase BigIntTestFactory::createShiftRightTest() {
 	tc.addAssertion({PaillierInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2), PaillierInt(127)}, PaillierInt::fromString("0", 10) );
 	tc.addAssertion({PaillierInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2), PaillierInt(128)}, PaillierInt::fromString("0", 10) );
 	tc.addAssertion({PaillierInt::fromString("10111111 01010010 01010101 10000000 10101010 01010101 00000001 10001010 00100101", 2), PaillierInt(129)}, PaillierInt::fromString("0", 10) );
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createXorTest() {
+	BigIntTestCase tc{"GPU big int XOR", BIG_INT_GPU_TEST_OPERATION_xor, 2};
+	
+	// 1 Byte (8bit)
+	// assertion Nr: 0
+	tc.addAssertion({PaillierInt::fromString("0", 2), PaillierInt::fromString("0", 2)}, PaillierInt::fromString("0", 2) );
+	tc.addAssertion({PaillierInt::fromString("0", 2), PaillierInt::fromString("1", 2)}, PaillierInt::fromString("1", 2) );
+	tc.addAssertion({PaillierInt::fromString("1", 2), PaillierInt::fromString("0", 2)}, PaillierInt::fromString("1", 2) );
+	tc.addAssertion({PaillierInt::fromString("1", 2), PaillierInt::fromString("1", 2)}, PaillierInt::fromString("0", 2) );
+	
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0001", 2)}, PaillierInt::fromString("1010 1011", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0011", 2)}, PaillierInt::fromString("1010 1001", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0111", 2)}, PaillierInt::fromString("1010 1101", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 1111", 2)}, PaillierInt::fromString("1010 0101", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0001 1111", 2)}, PaillierInt::fromString("1011 0101", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0011 1111", 2)}, PaillierInt::fromString("1001 0101", 2) );
+	// assertion Nr: 10
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0111 1111", 2)}, PaillierInt::fromString("1101 0101", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1111 1111", 2)}, PaillierInt::fromString("0101 0101", 2) );
+	
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1111 1110", 2)}, PaillierInt::fromString("0101 0100", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1111 1010", 2)}, PaillierInt::fromString("0101 0000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1110 1010", 2)}, PaillierInt::fromString("0100 0000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1010 1010", 2)}, PaillierInt::fromString("0000 0000", 2) );
+
+	
+	// 9 Byte (65bit)
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) <<  0)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) );
+	tc.addAssertion({(PaillierInt::fromString("1", 2) <<  0), (PaillierInt::fromString("1", 2) << 64)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001", 2) ); // increas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) << 15)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000", 2) );
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 15), (PaillierInt::fromString("1", 2) << 64)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000", 2) ); // increas word count
+	
+	// 9 Byte
+	// assertion Nr: 20
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) <<  64)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) ); // decreas word count
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) ); // decreas word count
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) ); // decreas word count
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("0", 2) ); // decreas word count
+	tc.addAssertion({PaillierInt::fromString("01 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("11 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("10 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10101010 00000000", 2), PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 10101010 00000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 10101010 00000000", 2), PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 10101010 00000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2) );
+	
+	
+	return tc;
+}
+
+BigIntTestCase BigIntTestFactory::createAndTest() {
+	BigIntTestCase tc{"GPU big int AND", BIG_INT_GPU_TEST_OPERATION_and, 2};
+	
+	// 1 Byte (8bit)
+	// assertion Nr: 0
+	tc.addAssertion({PaillierInt::fromString("0", 2), PaillierInt::fromString("0", 2)}, PaillierInt::fromString("0", 2) );
+	tc.addAssertion({PaillierInt::fromString("0", 2), PaillierInt::fromString("1", 2)}, PaillierInt::fromString("0", 2) );
+	tc.addAssertion({PaillierInt::fromString("1", 2), PaillierInt::fromString("0", 2)}, PaillierInt::fromString("0", 2) );
+	tc.addAssertion({PaillierInt::fromString("1", 2), PaillierInt::fromString("1", 2)}, PaillierInt::fromString("1", 2) );
+	
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0001", 2)}, PaillierInt::fromString("0000 0000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0011", 2)}, PaillierInt::fromString("0000 0010", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 0111", 2)}, PaillierInt::fromString("0000 0010", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0000 1111", 2)}, PaillierInt::fromString("0000 1010", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0001 1111", 2)}, PaillierInt::fromString("0000 1010", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0011 1111", 2)}, PaillierInt::fromString("0010 1010", 2) );
+	// assertion Nr: 10
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("0111 1111", 2)}, PaillierInt::fromString("0010 1010", 2) );
+	tc.addAssertion({PaillierInt::fromString("1010 1010", 2), PaillierInt::fromString("1111 1111", 2)}, PaillierInt::fromString("1010 1010", 2) );
+	
+	
+	// 8 Byte (64bit)
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) <<  0)}, PaillierInt::fromString("0", 2) ); // decreas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) <<  0), (PaillierInt::fromString("1", 2) << 64)}, PaillierInt::fromString("0", 2) ); // decreas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) << 15)}, PaillierInt::fromString("0", 2) ); // decreas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 15), (PaillierInt::fromString("1", 2) << 64)}, PaillierInt::fromString("0", 2) ); // decreas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 15), (PaillierInt::fromString("1", 2) << 15)}, PaillierInt::fromString("                                                        10000000 00000000", 2) ); // decreas word count
+	tc.addAssertion({(PaillierInt::fromString("1", 2) << 64), (PaillierInt::fromString("1", 2) << 64)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	// assertion Nr: 20
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("111111111 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	tc.addAssertion({PaillierInt::fromString("10101010 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2), PaillierInt::fromString("111111100 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2)}, PaillierInt::fromString("10101000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000", 2) );
+	
 	
 	return tc;
 }

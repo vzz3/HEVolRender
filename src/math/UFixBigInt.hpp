@@ -333,12 +333,12 @@ namespace ppvr {
 
 		// ----- boolean operations -----
 		protected:
-			void boolXor(const UFixBigInt<S> &other);
+			void bitXor(const UFixBigInt<S> &other);
 		public:
 			UFixBigInt<S> operator^ (const UFixBigInt<S>& other) const;
 			
 		protected:
-			void boolAnd(const UFixBigInt<S> &other);
+			void bitAnd(const UFixBigInt<S> &other);
 		public:
 			UFixBigInt<S> operator& (const UFixBigInt<S>& other) const;
 			

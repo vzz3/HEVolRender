@@ -685,7 +685,7 @@ UFixBigInt<S> UFixBigInt<S>::operator>> (const uint bits) const {
 // ----- boolean operations -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::boolXor(const UFixBigInt<S> &other) {
+void UFixBigInt<S>::bitXor(const UFixBigInt<S> &other) {
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
 		this->value[i] = this->value[i] ^ other.value[i];
 	}
@@ -694,12 +694,12 @@ void UFixBigInt<S>::boolXor(const UFixBigInt<S> &other) {
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::operator^ (const UFixBigInt<S>& other) const {
 	UFixBigInt<S> result(*this);
-	result.boolXor(other);
+	result.bitXor(other);
 	return result;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::boolAnd(const UFixBigInt<S> &other) {
+void UFixBigInt<S>::bitAnd(const UFixBigInt<S> &other) {
 	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
 		this->value[i] = this->value[i] & other.value[i];
 	}
@@ -708,7 +708,7 @@ void UFixBigInt<S>::boolAnd(const UFixBigInt<S> &other) {
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::operator& (const UFixBigInt<S>& other) const {
 	UFixBigInt<S> result(*this);
-	result.boolAnd(other);
+	result.bitAnd(other);
 	return result;
 }
 
@@ -1810,7 +1810,7 @@ void UFixBigInt<S>::modPow_montgomeryOdd_kAry(const UFixBigInt<S>& base, const U
 	int remainingBitsOfExp = e.bitLength() % k;
 	if(remainingBitsOfExp > 0) {
 		BIG_INT_WORD_TYPE remainingBitsOfExpMask = (1 << remainingBitsOfExp) - 1;
-		e.boolAnd(UFixBigInt<S>{remainingBitsOfExpMask});
+		e.bitAnd(UFixBigInt<S>{remainingBitsOfExpMask});
 		
 		for (int i = remainingBitsOfExp - 1; i >= 0; i--) {
 			res = mmReducer.square(res);

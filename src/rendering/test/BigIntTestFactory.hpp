@@ -25,6 +25,9 @@ namespace ppvr {
 				static BigIntTestCase createShiftLeftTest();
 				static BigIntTestCase createShiftRightTest();
 				
+				static BigIntTestCase createXorTest();
+				static BigIntTestCase createAndTest();
+				
 				static BigIntTestCase createAddTest();
 				static BigIntTestCase createSubTest();
 				static BigIntTestCase createMulTest();

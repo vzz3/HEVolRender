@@ -80,6 +80,13 @@ void main() {
 			ufBigIntRes = UFixBigInt_rcr(ufBigIntA, ufBigIntB[0]);
 			break;
 
+		case BIG_INT_GPU_TEST_OPERATION_xor:
+			ufBigIntRes = UFixBigInt_xor(ufBigIntA, ufBigIntB);
+			break;
+		case BIG_INT_GPU_TEST_OPERATION_and:
+			ufBigIntRes = UFixBigInt_and(ufBigIntA, ufBigIntB);
+			break;
+
 		case BIG_INT_GPU_TEST_OPERATION_add:
 			ufBigIntRes = UFixBigInt_add(ufBigIntA, ufBigIntB);
 			break;

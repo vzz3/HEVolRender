@@ -9,6 +9,9 @@
 #include "math/BigIntUtil.glsl"
 #include "math/UFixBigInt.glsl"
 #include "lib/EncryptedVolumeUniformBufferObject.glsl"
+#ifdef GPU_MONTGOMERY_REDUCTION
+	#include "math/MontgomeryReducer.glsl"
+#endif
 
 layout(binding = 1) uniform uboEncVolume {
 	EncryptedVolumeUniformBufferObject volumeInfo;
@@ -28,8 +31,20 @@ layout (location = 0) out uvec4 outFragColor[GPU_INT_TEXTURE_SIZE];
 
 void main()
 {
-	uvec4[GPU_INT_UVEC4_STORAGE_SIZE] pkM2fromUniform = volumeInfo.modulusSquared;
-	FIX_BIG_INT_VALUE pkM2 = UFixBigInt_fromUniform(pkM2fromUniform);
+	uvec4[GPU_INT_UVEC4_STORAGE_SIZE] pkM2FromUniform = volumeInfo.modulusSquared;
+	FIX_BIG_INT_VALUE pkM2 = UFixBigInt_fromUniform(pkM2FromUniform);
+
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		uint montReducerBitsFromUniform = volumeInfo.montReducerBits;
+		uvec4[GPU_INT_UVEC4_SIZE] montMaskFromUniform = volumeInfo.montMask;
+		uvec4[GPU_INT_UVEC4_SIZE] montFactorFromUniform = volumeInfo.montFactor;
+
+		MontgomeryReducer_Data montData;
+		montData.reducerBits = montReducerBitsFromUniform;
+		montData.modulus = pkM2;
+		montData.mask = UFixBigInt_fromUniform(montMaskFromUniform);
+		montData.factor = UFixBigInt_fromUniform(montFactorFromUniform);
+	#endif
 
 	//outFragColor = texture(samplerColor, inUV);
 
@@ -46,7 +61,13 @@ void main()
 	float rayLength = length(direction);
 	direction = normalize(direction);
 	//float sum = 0.0;
-	FIX_BIG_INT_VALUE sum; UFixBigInt_setOne(sum); // Paillier encrypt(): {modulus * plaintext + PaillierInt(1)) % _modulusSquared} => 1 is a valide encryption of 0
+	FIX_BIG_INT_VALUE sum;
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		uvec4[GPU_INT_UVEC4_STORAGE_SIZE] montConvertedEncZeroFromUniform = volumeInfo.montConvertedEncZero;
+		sum = UFixBigInt_fromUniform(montConvertedEncZeroFromUniform);
+	#else
+		UFixBigInt_setOne(sum); // Paillier encrypt(): {modulus * plaintext + PaillierInt(1)) % _modulusSquared} => 1 is a valide encryption of 0
+	#endif
 	//float sampleCount = 0.0;
 	while (d < rayLength) {
 		samplePos = inPos + (direction * d);
@@ -54,11 +75,15 @@ void main()
 		FIX_BIG_INT_VALUE density = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, samplePos);
 		//FIX_BIG_INT_VALUE density = UFixBigInt_fromVolume(samplerVolumes, texturesVolumes, ivec3(gl_FragCoord.x, gl_FragCoord.y, 10));
 
-		//sum += density;
-		FIX_BIG_INT_VALUE heProduct = UFixBigInt_mul(sum, density);
-		FIX_BIG_INT_VALUE heM = pkM2;
-		sum = UFixBigInt_mod(heProduct, heM); // Paillier add(): {ciphertext1 * ciphertext2 % _modulusSquared}
-		//sum[0] = 127;
+		#ifdef GPU_MONTGOMERY_REDUCTION
+			sum = MontgomeryReducer_multiply(montData, sum, density);
+		#else
+			//sum += density;
+			FIX_BIG_INT_VALUE heProduct = UFixBigInt_mul(sum, density);
+			FIX_BIG_INT_VALUE heM2 = pkM2;
+			sum = UFixBigInt_mod(heProduct, heM2); // Paillier add(): {ciphertext1 * ciphertext2 % _modulusSquared}
+			//sum[0] = 127;
+		#endif
 
 		//sampleCount++;
 		d += raySamplerDist;

@@ -51,6 +51,7 @@ FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utex
 
 /**
  * Read from memory alignment optimal uniform. ;-)
+ * Input array like texture storage size (modulus bit length * 2).
  *
  * @static
  * @public
@@ -65,6 +66,24 @@ FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_STORAG
 
 	for(uint i = PAILLIER_INT_STORAGE_WORD_SIZE; i < PAILLIER_INT_WORD_SIZE; i++) {
 		val[i] = 0;
+	}
+
+	return val;
+}
+
+/**
+ * Read from memory alignment optimal uniform. ;-)
+ * Input array length for full caclulation space (modulus bit length * 4).
+ *
+ * @static
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_SIZE]) {
+	FIX_BIG_INT_VALUE val;
+	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_SIZE; texIndex++) {
+		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
+			val[texIndex*4 + channelIndex] = yIn[texIndex][channelIndex];
+		}
 	}
 
 	return val;
@@ -500,7 +519,35 @@ FIX_BIG_INT_VALUE UFixBigInt_rcr(const in FIX_BIG_INT_VALUE me, const uint bits)
 }
 
 
+// ----- boolean operations -----
 
+/**
+ * bitwise XOR (^) operation
+ *
+ * @const
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_xor(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	FIX_BIG_INT_VALUE res;
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
+		res[i] = me[i] ^ other[i];
+	}
+	return res;
+}
+
+/**
+ * bitwise AND (&) operation
+ *
+ * @const
+ * @public
+ */
+FIX_BIG_INT_VALUE UFixBigInt_and(const in FIX_BIG_INT_VALUE me, const in FIX_BIG_INT_VALUE other) {
+	FIX_BIG_INT_VALUE res;
+	for (BIG_INT_WORD_COUNT_TYPE i = 0; i < S; i++) {
+		res[i] = me[i] & other[i];
+	}
+	return res;
+}
 
 // ----- addition -----
 

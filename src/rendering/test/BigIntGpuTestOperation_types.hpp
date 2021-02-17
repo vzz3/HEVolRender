@@ -12,8 +12,11 @@
 #define BIG_INT_GPU_TEST_OPERATION_shiftLeft 				110
 #define BIG_INT_GPU_TEST_OPERATION_shiftRight 				120
 
-#define BIG_INT_GPU_TEST_OPERATION_add 						210
-#define BIG_INT_GPU_TEST_OPERATION_sub 						220
-#define BIG_INT_GPU_TEST_OPERATION_mul 						230
-#define BIG_INT_GPU_TEST_OPERATION_div 						240
-#define BIG_INT_GPU_TEST_OPERATION_mod 						250
+#define BIG_INT_GPU_TEST_OPERATION_xor 						210
+#define BIG_INT_GPU_TEST_OPERATION_and 						220
+
+#define BIG_INT_GPU_TEST_OPERATION_add 						310
+#define BIG_INT_GPU_TEST_OPERATION_sub 						320
+#define BIG_INT_GPU_TEST_OPERATION_mul 						330
+#define BIG_INT_GPU_TEST_OPERATION_div 						340
+#define BIG_INT_GPU_TEST_OPERATION_mod 						350

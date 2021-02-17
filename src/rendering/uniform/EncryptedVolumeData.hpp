@@ -33,7 +33,14 @@ namespace ppvr {
 				alignas(16) float volumeDepth;
 				//BIG_INT_WORD_TYPE modulus[PAILLIER_INT_WORD_SIZE];
 				//alignas(16) BIG_INT_WORD_TYPE modulusSquared[PAILLIER_INT_WORD_SIZE];
-				alignas(16) glm::uvec4  modulusSquared[GPU_INT_UVEC4_STORAGE_SIZE];
+				alignas(16) glm::uvec4 modulusSquared[GPU_INT_UVEC4_STORAGE_SIZE];
+				
+				// Data for MontgomeryReducer
+				alignas(16) uint32_t montReducerBits;
+				alignas(16) glm::uvec4 montMask[GPU_INT_UVEC4_SIZE];
+				alignas(16) glm::uvec4 montFactor[GPU_INT_UVEC4_SIZE];
+				alignas(16) glm::uvec4 montConvertedEncZero[GPU_INT_UVEC4_STORAGE_SIZE]; // encrypted and montogomery encoded zero
+				
 			};
 		}
 	}

@@ -28,6 +28,10 @@ namespace ppvr {
 						// Auto-deletion is enabled by default.
 					}
 					
+					#ifdef GPU_MONTGOMERY_REDUCTION
+						MontgomeryReducer<PaillierInt> mmr{publicKey->getModulusSquared()}; // One for all threads would be enough.
+					#endif
+					
 					inline void run() override {
 						const uint h = src->height();
 						const uint d = src->depth();
@@ -36,7 +40,12 @@ namespace ppvr {
 						for(uint y = 0; y < h; y++) {
 							for(uint z = 0; z < d; z++) {
 								PaillierInt pVoxel = PaillierInt::fromInt64(src->get(x, y, z));
-								dst->set(x, y, z, publicKey->encrypt(pVoxel, rnd));
+								PaillierInt eVoxel = publicKey->encryptWithoutObfuscation(pVoxel);
+								//PaillierInt eVoxel = publicKey->encrypt(pVoxel, rnd);
+								#ifdef GPU_MONTGOMERY_REDUCTION
+									eVoxel = mmr.convertIn(eVoxel);
+								#endif
+								dst->set(x, y, z, eVoxel);
 							}
 						}
 					}

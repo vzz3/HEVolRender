@@ -27,6 +27,17 @@ namespace ppvr {
 			BigInt reducer, modulus, mask, reciprocal, factor, convertedOne;
 			
 		public:
+			uint getReducerBits() const {
+				return reducerBits;
+			}
+			const BigInt& getMask() const {
+				return mask;
+			}
+			const BigInt& getFactor() const {
+				return factor;
+			}
+			
+		public:
 			const BigInt& getConvertedOne() const {
 				return convertedOne;
 			}

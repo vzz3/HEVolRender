@@ -53,4 +53,31 @@
 #define GPU_INT_TEXTURE_SIZE			((PAILLIER_INT_STORAGE_WORD_SIZE + (GPU_INT_TEXTURE_WORD_COUNT-1)) / GPU_INT_TEXTURE_WORD_COUNT)	// = ciel(PAILLIER_INT_WORD_SIZE / GpuVolume::bigIntWordCount); the numbers of textures required for storing PAILLIER_INT_STORAGE_WORD_SIZE words
 
 
-#define GPU_INT_UVEC4_STORAGE_SIZE			GPU_INT_TEXTURE_SIZE
+#define GPU_INT_UVEC4_SIZE					((PAILLIER_INT_WORD_SIZE + (4-1)) / 4)
+#define GPU_INT_UVEC4_STORAGE_SIZE			((PAILLIER_INT_STORAGE_WORD_SIZE + (4-1)) / 4)
+
+/* ****************************************
+ * *** Config. for different reder modi ***
+ * ****************************************
+ *
+ */
+#define GPU_MONTGOMERY_REDUCTION			1
+
+
+// --- MACROS ---
+#define PAILLIER_INT_TO_STORAGE_UVEC4(src, dst) { 									\
+	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) { 	\
+		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
+		} 																			\
+	} 																				\
+}
+
+#define PAILLIER_INT_TO_UVEC4(src, dst) { 											\
+	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_SIZE; texIndex++) { 			\
+		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
+		} 																			\
+	} 																				\
+}
+

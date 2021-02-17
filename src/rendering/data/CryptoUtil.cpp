@@ -31,12 +31,19 @@ void CryptoUtil::encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& yS
 
 void CryptoUtil::decrypt(const SecureKey& ySecureKey, const PaillierInt& yScale, const Image<PaillierInt>& ySrc, Image<uint16_t>& yDst) {
 	//PaillierInt test1{1};
+	
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		MontgomeryReducer<PaillierInt> mmr{ySecureKey.publicKey.getModulusSquared()};
+	#endif
+	
 	yDst.resize(ySrc.width(), ySrc.height());
 	size_t n = ySrc.length();
 	for (size_t i=0; i<n; i++) {
-		//PaillierInt src = ySrc.get(i);
-		
-		PaillierInt bigVal = ySecureKey.decrypt(ySrc.get(i)) ;
+		PaillierInt eVoxel = ySrc.get(i);
+		#ifdef GPU_MONTGOMERY_REDUCTION
+			eVoxel = mmr.convertOut(eVoxel);
+		#endif
+		PaillierInt bigVal = ySecureKey.decrypt(eVoxel) ;
 		bigVal = bigVal / yScale; //PaillierInt::fromInt64(50);
 		yDst.set(i, (uint16_t)bigVal.toInt64());
 		

@@ -367,12 +367,12 @@ namespace ppvr {
 			
 		// ----- boolean operations -----
 		protected:
-			void boolXor(const UArbBigInt &other);
+			void bitXor(const UArbBigInt &other);
 		public:
 			UArbBigInt operator^ (const UArbBigInt& other) const;
 			
 		protected:
-			void boolAnd(const UArbBigInt &other);
+			void bitAnd(const UArbBigInt &other);
 		public:
 			UArbBigInt operator& (const UArbBigInt& other) const;
 			

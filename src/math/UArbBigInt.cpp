@@ -716,7 +716,7 @@ UArbBigInt UArbBigInt::operator>> (const uint bits) const {
 
 // ----- boolean operations -----
 
-void UArbBigInt::boolXor(const UArbBigInt &other) {
+void UArbBigInt::bitXor(const UArbBigInt &other) {
 	if(this->wordSize < other.wordSize) {
 		this->reserveWordsAndInitUnused(other.wordSize, 0);
 	}
@@ -738,11 +738,11 @@ void UArbBigInt::boolXor(const UArbBigInt &other) {
 
 UArbBigInt UArbBigInt::operator^ (const UArbBigInt& other) const {
 	UArbBigInt result(*this, std::max(this->wordSize, other.wordSize));
-	result.boolXor(other);
+	result.bitXor(other);
 	return result;
 }
 
-void UArbBigInt::boolAnd(const UArbBigInt &other) {
+void UArbBigInt::bitAnd(const UArbBigInt &other) {
 	BIG_INT_WORD_COUNT_TYPE maxNewWordSize = std::min(this->wordSize, other.wordSize);
 	
 	BIG_INT_WORD_COUNT_TYPE newWordSize = 0;
@@ -759,7 +759,7 @@ void UArbBigInt::boolAnd(const UArbBigInt &other) {
 
 UArbBigInt UArbBigInt::operator& (const UArbBigInt& other) const {
 	UArbBigInt result(*this);
-	result.boolAnd(other);
+	result.bitAnd(other);
 	return result;
 }
 
@@ -2211,7 +2211,7 @@ void UArbBigInt::modPow_montgomeryOdd_kAry(const UArbBigInt& base, const UArbBig
 	int remainingBitsOfExp = e.bitLength() % k;
 	if(remainingBitsOfExp > 0) {
 		BIG_INT_WORD_TYPE remainingBitsOfExpMask = (1 << remainingBitsOfExp) - 1;
-		e.boolAnd(UArbBigInt{remainingBitsOfExpMask});
+		e.bitAnd(UArbBigInt{remainingBitsOfExpMask});
 		
 		for (int i = remainingBitsOfExp - 1; i >= 0; i--) {
 			res = mmReducer.square(res);
