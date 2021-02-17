@@ -107,6 +107,6 @@ int main(int argc, char *argv[]) {
 	//}
 	//return 0;
 	
-	return executePerformanceTest(argc, argv);
-	//return showQtWindow(argc, argv);
+	//return executePerformanceTest(argc, argv);
+	return showQtWindow(argc, argv);
 }

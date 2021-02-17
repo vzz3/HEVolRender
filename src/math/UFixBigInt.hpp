@@ -7,7 +7,7 @@
 
 #include "Random.hpp"
 
-#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
+//#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 
 #ifdef FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 	#define FBI_WC_Sp1 (S+1)
