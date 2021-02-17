@@ -48,6 +48,10 @@
 #define BIG_INT_BIT_TO_SIZE(bit) BIG_INT_WORD_COUNT_TYPE( (bit + (BIG_INT_BITS_PER_WORD - 1)) / BIG_INT_BITS_PER_WORD )
 
 
+// --- Optimizations ---
+//#define BIG_INT_FORCE_SCHOOL 1
+
+
 /* *************************************
  * *** Paillier modulus dependencies ***
  * *************************************

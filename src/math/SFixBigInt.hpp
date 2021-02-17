@@ -385,6 +385,16 @@ namespace ppvr {
 
 		// ----- modInverse / gcd -----
 		private:
+			/**
+			 * Basic Euclidean Algorithm
+			 * returns the gcd of a and b
+			 */
+			static SFixBigInt<S> gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b);
+			
+		public:
+			SFixBigInt<S> gcd(const SFixBigInt<S> & b) const;
+			
+		private:
 
 			/**
 			 * Function for extended Euclidean Algorithm
@@ -398,12 +408,6 @@ namespace ppvr {
 
 			SFixBigInt<S> gcdExtended_internRecursive(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const;
 			SFixBigInt<S> gcdExtended_internIterative(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const;
-
-			/**
-			 * Basic Euclidean Algorithm
-			 * returns the gcd of a and b
-			 */
-			SFixBigInt<S> gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b) const;
 
 		public:
 			/**

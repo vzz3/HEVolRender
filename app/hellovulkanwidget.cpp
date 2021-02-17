@@ -255,27 +255,27 @@ void MainWindow::renderEcrypted() {
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
 	
-	// draw cube postions textures and render an encrypted image from the encrypted Volume
-	PRINT_DURATION(encRenderer->draw(0), "draw on GPU");
-	
-	// copy the result from the GPU memory to the main memory
-	//QImage img = encRenderer->framebuffer2host();
-	encRenderer->framebuffer2host(encryptedImage);
-	
-	// decrypt (and normalize) the resulting image
-	PRINT_DURATION( CryptoUtil::decrypt(sk, rayNormalizationDivisor, encryptedImage, paintextImage), "decrypt");
-	QImage img = ppvr::rendering::data::ImageUtil::convertToNewQImage(paintextImage);
-	
+	for(size_t f = 0; f < 3; f++) {
+		// draw cube postions textures and render an encrypted image from the encrypted Volume
+		PRINT_DURATION(encRenderer->draw(0), "draw on GPU");
+		
+		// copy the result from the GPU memory to the main memory
+		//QImage img = encRenderer->framebuffer2host();
+		encRenderer->framebuffer2host(encryptedImage);
+		
+		// decrypt (and normalize) the resulting image
+		PRINT_DURATION( CryptoUtil::decrypt(sk, rayNormalizationDivisor, encryptedImage, paintextImage), "decrypt");
+		QImage img = ppvr::rendering::data::ImageUtil::convertToNewQImage(paintextImage);
+		
+		// show image in QT GUI
+		m_scene4EncryptedImageView->clear();
+		m_scene4EncryptedImageView->addPixmap(QPixmap::fromImage(img));
+		m_scene4EncryptedImageView->setSceneRect(img.rect());
+	}
 	// cleanup GPU resources
 	encRenderer->releaseSwapChainResources();
 	encRenderer->releaseGpuResources();
 	delete encRenderer;
-	
-	// show image in QT GUI
-	m_scene4EncryptedImageView->clear();
-	m_scene4EncryptedImageView->addPixmap(QPixmap::fromImage(img));
-    m_scene4EncryptedImageView->setSceneRect(img.rect());
-	
 }
 
 void MainWindow::testGpuBigInt() {

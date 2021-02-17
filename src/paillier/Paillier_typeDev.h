@@ -26,7 +26,12 @@
 
 #ifdef USE_FIX_WIDTH_INTEGER
 	#include "../math/SFixBigInt.hpp"
-	typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
+	#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
+		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
+	#else
+		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
+		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE+1> PaillierInt;
+	#endif
 #else
 	#include "../math/SArbBigInt.hpp"
 	typedef SArbBigInt PaillierInt;

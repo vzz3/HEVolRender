@@ -530,6 +530,19 @@ SFixBigInt<S> SFixBigInt<S>::sqrt() const {
 /* ---------- modInverse / gcd ---------- */
 
 template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b) {
+	if (a.isZero()) {
+		return b;
+	}
+	return gcd(b % a, a);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
+SFixBigInt<S> SFixBigInt<S>::gcd(const SFixBigInt<S> & b) const {
+	return SFixBigInt<S>::gcd(*this, b);
+}
+
+template<BIG_INT_WORD_COUNT_TYPE S>
 SFixBigInt<S> SFixBigInt<S>::gcdExtended(const SFixBigInt<S> &a, const SFixBigInt<S> &b, SFixBigInt<S> &u, SFixBigInt<S> &v) const {
 	// https://math.stackexchange.com/questions/37806/extended-euclidean-algorithm-with-negative-numbers
 	//  |𝑎|𝑥+|𝑏|𝑦=1 => 𝑎(sign(𝑎)⋅𝑥)+𝑏(sign(𝑏)⋅𝑦)=1.
@@ -635,14 +648,6 @@ SFixBigInt<S> SFixBigInt<S>::gcdExtended_internIterative(const SFixBigInt<S> &a,
 		vnCur = vnNew;
 	}
 	return a1;
-}
-
-template<BIG_INT_WORD_COUNT_TYPE S>
-SFixBigInt<S> SFixBigInt<S>::gcd(const SFixBigInt<S> & a, const SFixBigInt<S> & b) const {
-	if (a.isZero()) {
-		return b;
-	}
-	return gcd(b % a, a);
 }
 
 template<BIG_INT_WORD_COUNT_TYPE S>

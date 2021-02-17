@@ -245,6 +245,15 @@ BIG_INT_WORD_TYPE BigIntUtil_subInt(const in BIG_INT_WORD_TYPE word, const in BI
 void BigIntUtil_mulTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, out BIG_INT_WORD_TYPE resultHigh, out BIG_INT_WORD_TYPE resultLow);
 
 
+/**
+ * Multiply an n-word input (in) by a 1-word (k) input and add the
+ * low n words of the product to the destination (out).  *Returns the n+1st word
+ * of the product.*
+ * @static
+ * @public
+ */
+BIG_INT_WORD_TYPE BigIntUtil_mulAdd(inout FIX_BIG_INT_VALUE yOut, in BIG_INT_WORD_COUNT_TYPE indexOut, const in FIX_BIG_INT_VALUE yIn, in BIG_INT_WORD_COUNT_TYPE indexIn, const in BIG_INT_WORD_COUNT_TYPE len, const in BIG_INT_WORD_TYPE k);
+
 
 // ----- division -----
 

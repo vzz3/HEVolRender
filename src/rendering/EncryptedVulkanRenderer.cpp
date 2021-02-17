@@ -76,11 +76,16 @@ void EncryptedVulkanRenderer::initVulkan(QVulkanInstance* yQVulkanInstance, VkPh
 			break;
 		}
 	}
+	
+	VkPhysicalDeviceFeatures physDevFeatures = {};
+	//physDevFeatures.shaderInt64 = VK_TRUE; // my Metal GPU can use 64bit ints but moltenVK 1.1.1 does not support it => wait for moltenVK 1.1.2 and ignore the warning in the log in the mean time. Clang compiles the shader for Metal corretly with 64bit support anyway.
+	
 	// Create logical device
 	VkDeviceCreateInfo deviceCreateInfo = {};
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = 1;
 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+	deviceCreateInfo.pEnabledFeatures = &physDevFeatures;
 	VK_CHECK_RESULT( vulkanInstance.funcs->vkCreateDevice(yVkPhysicalDevice, &deviceCreateInfo, nullptr, &device.vkDev), "Can not create device.");
 	
 	// create device functions

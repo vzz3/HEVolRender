@@ -744,28 +744,58 @@ void UFixBigInt_mulSchool(const in FIX_BIG_INT_VALUE a, const in FIX_BIG_INT_VAL
 
 	assert_msg((aSize + bSize - 1) > S, "mulSchool not posible without overflow (aSize + bSize >= S)");
 
-	BIG_INT_WORD_TYPE r2, r1, carry = 0;
-
-	for(uint aI=aStart ; aI<aSize ; ++aI) {
-		//for(uint bI=bStart ; bI<bSize ; ++bI) {
-		for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
-			BigIntUtil_mulTwoWords(a[aI], b[bI], r2, r1);
-			carry += BigIntUtil_addTwoInts(r2, r1, bI+aI, result, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
-
+	#if !defined(BIG_INT_FORCE_SCHOOL) //&& _BIG_INT_WORD_LENGTH_PRESET_ <= 32
+		//UFixBigInt_setZero(result);
+		if (bSize == 1) {
+			UFixBigInt_mulInt(a, b[0], result);
+			return;
+		} else if (aSize == 1) {
+			UFixBigInt_mulInt(b, a[0], result);
+			return;
 		}
-	}
 
-	assert_msg(carry > 0, "mulSchool not posible without overflow (loop)");
+		bStart = aStart = 0;
 
-	// multiply with last word if required
-	if( (aSize + bSize - 1) == S ) {
-		BigIntUtil_mulTwoWords(a[aSize-1], b[bSize-1], r2, r1);
-		carry = r2;
-		assert_msg(carry > 0, "mulSchool not posible without overflow (r2)");
+		// Multiply first word
+		BIG_INT_WORD_TYPE carry = BigIntUtil_mulAdd(result, 0, b, bStart, bSize, a[0]);
+		result[bSize] = carry;
 
-		carry = BigIntUtil_addInt(r1, S-1, result, S);
-		assert_msg(arry > 0, "mulSchool not posible without overflow (r1)");
-	}
+		// Add in subsequent words, storing the most significant word, which is new each time.
+		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+			assert( bSize-1+i < S);
+			carry = BigIntUtil_mulAdd(result, bStart+i, b, bStart, bSize, a[i]);
+
+			if( bSize+i < S) {
+				result[bSize+i] = carry;
+			} else {
+				assert_msg( carry == 0, "mulSchool not posible without overflow")
+			}
+		}
+	#else
+		BIG_INT_WORD_TYPE r2, r1, carry = 0;
+
+		for(uint aI=aStart ; aI<aSize ; ++aI) {
+			//for(uint bI=bStart ; bI<bSize ; ++bI) {
+			for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
+				BigIntUtil_mulTwoWords(a[aI], b[bI], r2, r1);
+				carry += BigIntUtil_addTwoInts(r2, r1, bI+aI, result, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
+
+			}
+		}
+
+		assert_msg(carry > 0, "mulSchool not posible without overflow (loop)");
+
+		// multiply with last word if required
+		if( (aSize + bSize - 1) == S ) {
+			BigIntUtil_mulTwoWords(a[aSize-1], b[bSize-1], r2, r1);
+			carry = r2;
+			assert_msg(carry > 0, "mulSchool not posible without overflow (r2)");
+
+			carry = BigIntUtil_addInt(r1, S-1, result, S);
+			assert_msg(arry > 0, "mulSchool not posible without overflow (r1)");
+		}
+
+	#endif
 }
 
 /*

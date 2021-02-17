@@ -1,5 +1,6 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 // DO NOT FORGET:
 //	cd /Users/sebastian/Documents/_Eigene_Dokumente/TU/CsProject/prototypeVulkan/build
