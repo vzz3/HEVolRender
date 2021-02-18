@@ -1304,6 +1304,8 @@ TEST_CASE( "unsigned infinit big integer division", "[UABigint]" ) {
 	REQUIRE( (UArbBigInt::fromUint64(          0x121FA00A35068740ull) % UArbBigInt::fromUint64( 0x12345678ull)).toUint64() ==          0ull );
 	REQUIRE( (UArbBigInt::fromUint64(  0xFEDCBA98ull * 0x12345678ull) / UArbBigInt::fromUint64( 0x12345678ull)).toUint64() == 0xFEDCBA98ull );
 	REQUIRE( (UArbBigInt::fromUint64(  0xFEDCBA98ull * 0x12345678ull) % UArbBigInt::fromUint64( 0x12345678ull)).toUint64() ==          0ull );
+	REQUIRE( (UArbBigInt::fromUint64(          0x000038b96cd183ddull) / UArbBigInt::fromUint64( 0x0000279ff1212878ull)).toUint64() == 0x1ull ); // 62369045775325 / 43567898765432 = 1
+	REQUIRE( (UArbBigInt::fromUint64(          0x000038b96cd183ddull) % UArbBigInt::fromUint64( 0x0000279ff1212878ull)).toUint64() == 0x11197BB05B65ull ); // 62369045775325 / 43567898765432 = 18801147009893
 
 	// 16 Bytes (128bit)
 	REQUIRE( UArbBigInt::fromString(       "FFFFFFFFFFFFFFFE0000000000000001", 16) / UArbBigInt::fromUint64( 0xFFFFFFFFFFFFFFFFull) == UArbBigInt::fromUint64(    0xFFFFFFFFFFFFFFFFull)); // test of D5. [Test Remainder] and D6. [add back] (at 8bit words)

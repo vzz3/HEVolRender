@@ -1020,7 +1020,7 @@ BIG_INT_WORD_TYPE UFixBigInt<S>::divInt(BIG_INT_WORD_TYPE divisor) {
 // -- divKnuth
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, const uint m, const uint n) const {
+void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, const BIG_INT_WORD_COUNT_TYPE m, const BIG_INT_WORD_COUNT_TYPE n) const {
 	// this: dividend
 	assert(n >= 2);
 	//assert(this != &remainder);
@@ -1109,13 +1109,14 @@ void UFixBigInt<S>::divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &resu
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, const BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE const n, const BIG_INT_WORD_TYPE u_max) const {
+void UFixBigInt<S>::divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, const BIG_INT_WORD_COUNT_TYPE j, const BIG_INT_WORD_COUNT_TYPE n, const BIG_INT_WORD_TYPE u_max) const {
 	BIG_INT_WORD_COUNT_TYPE i;
 	
 	//for(i=0 ; i<n ; ++i, ++j)
 	//	uu.table[i] = table[j];
 	//uu.reserveWords(n);
 	assert( (j+n) <= (FBI_WC_Sp1) );
+	assert( (n) < (FBI_WC_Sp1) );
 	std::copy_n(&this->value[j], n, &uu.value[0]);
 	i = n;
 	
@@ -1148,7 +1149,7 @@ void UFixBigInt<S>::divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, const B
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
-BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, const uint n, uint& d) {
+BIG_INT_WORD_TYPE UFixBigInt<S>::divKnuth_normalize(UFixBigInt<S>& divisor, const BIG_INT_WORD_COUNT_TYPE n, uint& d) {
 	// this = dividend, v = divisor
 	// v.table[n-1] is != 0
 	
@@ -1404,11 +1405,14 @@ void UFixBigInt<S>::square(const UFixBigInt<S>& a, UFixBigInt<S>& result) {
 
 	BIG_INT_WORD_COUNT_TYPE len = a.getWordSize();
 	BIG_INT_WORD_COUNT_TYPE resultLen = len * 2;
-	result.setZero();
 	
-	if((resultLen - 1) > S) {
-		throw FixBigIntOverflow(std::string("square not posible without overflow (aSize * 2 >= S)"));
+	if( resultLen > S) {
+		// it is my be posible to multiply with std mull algorithem (think og one word wher only the lor half of bits is used)
+		a.mul(a, result);
+		return;
 	}
+	
+	result.setZero();
 	
 	// Store the squares, right shifted one bit (i.e., divided by 2)
 	BIG_INT_WORD_TYPE lastProductLowWord = 0;
@@ -1691,6 +1695,7 @@ void UFixBigInt<S>::modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixB
 	// Calculate new base from m1
 	UFixBigInt<S> base2 = (/*base.signum < 0 ||*/ base >= m1) ? (base % m1) : base;
 	
+	assert( modulus.bitLength()*2 <= FBI_WC_Sm2*BIG_INT_BITS_PER_WORD );
 	UFixBigInt<FBI_WC_Sm2> a1, a2;
 	
 	// Caculate (base ** exponent) mod m1.
@@ -1721,6 +1726,9 @@ void UFixBigInt<S>::modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixB
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::modPow_montgomeryOdd(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
+
+	assert( ((modulus.bitLength() / 8 + 1) * 8 + 1) < (FBI_WC_MM * BIG_INT_BITS_PER_WORD)); // minimal size required for calculating the reduction mask
+
 //#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
 //	modPow_montgomeryOdd_window(base, exponent, modulus, result);
 //#else
@@ -1825,6 +1833,8 @@ void UFixBigInt<S>::modPow_montgomeryOdd_kAry(const UFixBigInt<S>& base, const U
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::modPow2(UFixBigInt<S> exponent, uint p) const {
+	assert( (p+1)*2 < FBI_WC_Sm2*BIG_INT_BITS_PER_WORD ); // worst case size: (1<<p)^2 
+	
 	/*
 	 * Perform exponentiation using repeated squaring trick, chopping off
 	 * high order bits as indicated by modulus.
@@ -1870,7 +1880,7 @@ UFixBigInt<S> UFixBigInt<S>::mod2(uint p) const {
 
 	// Mask out any excess bits
 	BIG_INT_WORD_COUNT_TYPE mostSignificantWordIndex = numWords-1;
-	int excessBits = (numWords << 5) - p;
+	int excessBits = (numWords * BIG_INT_BITS_PER_WORD) - p; //int excessBits = (numWords << 5) - p;
 	result.value[mostSignificantWordIndex] &= (BIG_INT_WORD_TYPE{1} << (BIG_INT_BITS_PER_WORD-excessBits)) - 1;
 
 	return result;
@@ -1896,6 +1906,7 @@ void UFixBigInt<S>::modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus
 	}
 	
 	// ensure that the base is < modulus
+	assert( modulus.bitLength() <= FBI_WC_Sm2*BIG_INT_BITS_PER_WORD );
 	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 	UFixBigInt<FBI_WC_Sm2> base = (*this >= modulus) ? (*this % modulus) : *this;
 

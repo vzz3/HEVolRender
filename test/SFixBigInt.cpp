@@ -1045,20 +1045,20 @@ TEST_CASE( "signed fixed big integer modPow", "[SFBigint]" ) {
 	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(  1).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(254), SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(  1) ); // PowerMod[ 1, 254, 255]
 	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(  1).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(253), SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE( 8 )>(  1) ); // PowerMod[ 1, 253, 255]
 
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(128) ); // PowerMod[ 1, 255, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>( 64) ); // PowerMod[ 1, 254, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(253), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>( 32) ); // PowerMod[ 1, 253, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(252), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>( 16) ); // PowerMod[ 1, 252, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(251), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  8) ); // PowerMod[ 1, 251, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(250), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  4) ); // PowerMod[ 1, 250, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(249), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2) ); // PowerMod[ 1, 249, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(248), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  1) ); // PowerMod[ 1, 248, 255]
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(247), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(128) ); // PowerMod[ 1, 247, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(128) ); // PowerMod[ 1, 255, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>( 64) ); // PowerMod[ 1, 254, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(253), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>( 32) ); // PowerMod[ 1, 253, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(252), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>( 16) ); // PowerMod[ 1, 252, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(251), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  8) ); // PowerMod[ 1, 251, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(250), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  4) ); // PowerMod[ 1, 250, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(249), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2) ); // PowerMod[ 1, 249, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(248), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  1) ); // PowerMod[ 1, 248, 255]
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(247), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(128) ); // PowerMod[ 1, 247, 255]
 
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  8) );
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  2).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(251), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(250)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(248) );
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254) );
-	REQUIRE( SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254).modPow(SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(254), SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(255)) == SFixBigInt<BIG_INT_BIT_TO_SIZE(_8_x2)>(  1) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  8) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  2).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(251), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(250)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(248) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254) );
+	REQUIRE( UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254).modPow(UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(254), UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(255)) == UFixBigInt<BIG_INT_BIT_TO_SIZE(_8_mm)>(  1) );
 }
 
 TEST_CASE( "signed fixed big integer fromSArbBigInt", "[SFBigint]" ) {

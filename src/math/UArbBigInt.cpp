@@ -2267,7 +2267,7 @@ UArbBigInt UArbBigInt::mod2(uint p) const {
 
 	// Mask out any excess bits
 	BIG_INT_WORD_COUNT_TYPE mostSignificantWordIndex = numWords-1;
-	int excessBits = (numWords << 5) - p;
+	int excessBits = (numWords * BIG_INT_BITS_PER_WORD) - p; //int excessBits = (numWords << 5) - p;
 	mag[mostSignificantWordIndex] &= (BIG_INT_WORD_TYPE{1} << (BIG_INT_BITS_PER_WORD-excessBits)) - 1;
 
 	//return (mag[mostSignificantWordIndex] == 0 ? new BigInteger(1, mag) : new BigInteger(mag, 1));

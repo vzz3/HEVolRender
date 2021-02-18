@@ -9,6 +9,7 @@
 	#define   _8_p1 	   8
 	#define  _16_p1 	  16
 	#define  _46_p1 	  46
+	#define  _64_p1 	  64
 	#define  _72_p1 	  72
 	#define _256_p1		 256
 
@@ -16,6 +17,9 @@
 	#define  _46_x2 	  46
 	#define _128_x2 	 128
 	#define _256_x2 	 256
+	
+	#define   _8_mm 	   8
+	#define  _16_mm 	  16
 #else
 	#define logFixBigIntAutoSizeInfo()  \
 		std::cout << ("INFO: Fix width big integer autosizing of temporary variable is disabled => increase the bit length for testing") << std::endl
@@ -25,6 +29,7 @@
 	#define   _8_p1 	(  8 + BIG_INT_BITS_PER_WORD)
 	#define  _16_p1 	( 16 + BIG_INT_BITS_PER_WORD)
 	#define  _46_p1 	( 47 + BIG_INT_BITS_PER_WORD)
+	#define  _64_p1 	( 64 + BIG_INT_BITS_PER_WORD)
 	#define  _72_p1 	( 72 + BIG_INT_BITS_PER_WORD)
 	#define _256_p1		(256 + BIG_INT_BITS_PER_WORD)
 
@@ -34,4 +39,12 @@
 	#define  _46_x2 	( 46 * 2)
 	#define _128_x2		(128 * 2)
 	#define _256_x2		(256 * 2)
+	
+	#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
+		#define   _8_mm 	   8*2
+		#define  _16_mm 	  16*2
+	#else
+		#define   _8_mm 	   8*2+1	// mongommery reducer mask calculation requires 9 bits more then the size of the modulus
+		#define  _16_mm 	  16*2
+	#endif
 #endif

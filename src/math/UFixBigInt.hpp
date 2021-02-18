@@ -443,8 +443,8 @@ namespace ppvr {
 		private:
 			// -- divKnuth
 
-			void divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, const uint m, const uint n) const;
-			void divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, const BIG_INT_WORD_COUNT_TYPE j, const BIG_INT_WORD_COUNT_TYPE n, const BIG_INT_WORD_TYPE u_max) const;
+			void divKnuth_division(UFixBigInt<S> divisor, UFixBigInt<S> &result, UFixBigInt<S>& remainder, const BIG_INT_WORD_COUNT_TYPE m, const BIG_INT_WORD_COUNT_TYPE n) const;
+			void divKnuth_makeNewU(UFixBigInt<FBI_WC_Sp1> &uu, const BIG_INT_WORD_COUNT_TYPE j, BIG_INT_WORD_COUNT_TYPE n, const BIG_INT_WORD_TYPE u_max) const;
 			void divKnuth_copyNewU(const UFixBigInt<FBI_WC_Sp1> & uu, const BIG_INT_WORD_COUNT_TYPE j, const BIG_INT_WORD_COUNT_TYPE n);
 
 			/**
@@ -458,7 +458,7 @@ namespace ppvr {
 			 * -  d - how many times we've moved
 			 * -  return - the next-left value from 'this' (that after value[value_size-1])
 			 */
-			BIG_INT_WORD_TYPE divKnuth_normalize(UFixBigInt<S>& divisor, const uint n, uint& d);
+			BIG_INT_WORD_TYPE divKnuth_normalize(UFixBigInt<S>& divisor, const BIG_INT_WORD_COUNT_TYPE n, uint& d);
 
 			void divKnuth_unnormalize(const BIG_INT_WORD_COUNT_TYPE d);
 			BIG_INT_WORD_TYPE divKnuth_calculate(const BIG_INT_WORD_TYPE u2, const BIG_INT_WORD_TYPE u1, const BIG_INT_WORD_TYPE u0, const BIG_INT_WORD_TYPE v1, const BIG_INT_WORD_TYPE v0) const;
