@@ -15,7 +15,7 @@ FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utex
 	FIX_BIG_INT_VALUE val;
 	for(uint texIndex = 0; texIndex < GPU_INT_TEXTURE_SIZE; texIndex++) {
 		uvec4 voxelPart = texelFetch(usampler3D(yTex[texIndex], ySampler), yPos, 0);
-		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT; channelIndex++) {
+		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT && (texIndex*4 + channelIndex) < PAILLIER_INT_STORAGE_WORD_SIZE; channelIndex++) {
 			val[texIndex*4 + channelIndex] = voxelPart[channelIndex];
 		}
 	}
@@ -37,7 +37,7 @@ FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utex
 	FIX_BIG_INT_VALUE val;
 	for(uint texIndex = 0; texIndex < GPU_INT_TEXTURE_SIZE; texIndex++) {
 		uvec4 voxelPart = texture(usampler3D(yTex[texIndex], ySampler), yPos);
-		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT; channelIndex++) {
+		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT && (texIndex*4 + channelIndex) < PAILLIER_INT_STORAGE_WORD_SIZE; channelIndex++) {
 			val[texIndex*4 + channelIndex] = voxelPart[channelIndex];
 		}
 	}
@@ -59,7 +59,7 @@ FIX_BIG_INT_VALUE UFixBigInt_fromVolume(const in sampler ySampler, const in utex
 FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_STORAGE_SIZE]) {
 	FIX_BIG_INT_VALUE val;
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) {
-		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
+		for(uint channelIndex = 0; channelIndex < 4 && (texIndex*4 + channelIndex) < PAILLIER_INT_STORAGE_WORD_SIZE; channelIndex++) {
 			val[texIndex*4 + channelIndex] = yIn[texIndex][channelIndex];
 		}
 	}
@@ -81,7 +81,7 @@ FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_STORAG
 FIX_BIG_INT_VALUE UFixBigInt_fromUniform(const in uvec4 yIn[GPU_INT_UVEC4_SIZE]) {
 	FIX_BIG_INT_VALUE val;
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_SIZE; texIndex++) {
-		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) {
+		for(uint channelIndex = 0; channelIndex < 4 && (texIndex*4 + channelIndex) < PAILLIER_INT_WORD_SIZE; channelIndex++) {
 			val[texIndex*4 + channelIndex] = yIn[texIndex][channelIndex];
 		}
 	}

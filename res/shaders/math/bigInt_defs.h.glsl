@@ -68,7 +68,7 @@
 #ifndef GPU_MONTGOMERY_REDUCTION
 	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)
 #else
-	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)+(4*BIG_INT_BITS_PER_WORD) 		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
+	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)+18 		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
 #endif
 #define PAILLIER_INT_WORD_SIZE 				BIG_INT_BIT_TO_SIZE( PAILLIER_INT_BIT_LENGTH )
 

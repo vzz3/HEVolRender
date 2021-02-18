@@ -24,10 +24,10 @@
 //		t1 = c1 * c2;	 		=> bitLengt(M) * 4
 //		return t2 % M^2;		=> bitLengt(M) * 2
 //}
-#ifndef GPU_MONTGOMERY_REDUCTION
+#if !defined(GPU_MONTGOMERY_REDUCTION) && !defined(BIG_INT_NO_MONTGOMERY_REDUCTION)
 	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)
 #else
-	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)+(4*BIG_INT_BITS_PER_WORD)		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
+	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)+18		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
 #endif
 #define PAILLIER_INT_WORD_SIZE 		BIG_INT_BIT_TO_SIZE( PAILLIER_INT_BIT_LENGTH )
 
@@ -36,12 +36,7 @@
 
 #ifdef USE_FIX_WIDTH_INTEGER
 	#include "../math/SFixBigInt.hpp"
-	#ifdef BIG_INT_NO_MONTGOMERY_REDUCTION
-		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
-	#else
-		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
-		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
-	#endif
+	typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
 #else
 	#include "../math/SArbBigInt.hpp"
 	typedef SArbBigInt PaillierInt;
@@ -75,7 +70,7 @@
 // --- MACROS ---
 #define PAILLIER_INT_TO_STORAGE_UVEC4(src, dst) { 									\
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) { 	\
-		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+		for(uint channelIndex = 0; channelIndex < 4 && (texIndex*4 + channelIndex) < PAILLIER_INT_STORAGE_WORD_SIZE; channelIndex++) { 	\
 			assert( texIndex*4 + channelIndex < PAILLIER_INT_STORAGE_WORD_SIZE );	\
 			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
 		} 																			\
@@ -84,7 +79,7 @@
 
 #define PAILLIER_INT_TO_UVEC4(src, dst) { 											\
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_SIZE; texIndex++) { 			\
-		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+		for(uint channelIndex = 0; channelIndex < 4 && (texIndex*4 + channelIndex) < PAILLIER_INT_WORD_SIZE; channelIndex++) { 	\
 			assert( texIndex*4 + channelIndex < PAILLIER_INT_WORD_SIZE );			\
 			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
 		} 																			\
