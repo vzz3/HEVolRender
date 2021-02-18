@@ -17,7 +17,7 @@ MontgomeryReducer<BigInt>::MontgomeryReducer(const BigInt& yModulus): modulus{yM
 	
 	// Other computed numbers:
 	this->reciprocal = this->reducer.modInverse(modulus);
-	this->factor = (reducer * reciprocal - one ) / modulus;
+	this->factor = (reducer * reciprocal - one ) / modulus;		// reducer * reciprocal => (bitLength(modulus) + 9) * 2 !!!! => we need to ensure that we have min. 18 bit more available then the modulus (modulus sequerd for Paillier)
 	this->convertedOne = this->reducer % modulus;
 }
 

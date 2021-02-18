@@ -48,8 +48,13 @@
 #define BIG_INT_BIT_TO_SIZE(bit) BIG_INT_WORD_COUNT_TYPE( (bit + (BIG_INT_BITS_PER_WORD - 1)) / BIG_INT_BITS_PER_WORD )
 
 
-// --- Optimizations ---
-//#define BIG_INT_FORCE_SCHOOL 1
+/* ****************************************
+ * *** Config. for different reder modi ***
+ * ****************************************
+ *
+ */
+#define BIG_INT_REDUCE_BRANCHING 		1
+#define GPU_MONTGOMERY_REDUCTION		1
 
 
 /* *************************************
@@ -60,8 +65,11 @@
  */
 #define PAILLIER_MODULUS_BIT_LENGTH 		256
 
-
-#define PAILLIER_INT_BIT_LENGTH 			(PAILLIER_MODULUS_BIT_LENGTH*4)
+#ifndef GPU_MONTGOMERY_REDUCTION
+	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)
+#else
+	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)+(4*BIG_INT_BITS_PER_WORD) 		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
+#endif
 #define PAILLIER_INT_WORD_SIZE 				BIG_INT_BIT_TO_SIZE( PAILLIER_INT_BIT_LENGTH )
 
 #define PAILLIER_INT_STORAGE_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*2)
@@ -75,12 +83,6 @@
 #define GPU_INT_UVEC4_STORAGE_SIZE			((PAILLIER_INT_STORAGE_WORD_SIZE + (4-1)) / 4)
 
 
-/* ****************************************
- * *** Config. for different reder modi ***
- * ****************************************
- *
- */
-#define GPU_MONTGOMERY_REDUCTION			1
 
 
 /* *************************************

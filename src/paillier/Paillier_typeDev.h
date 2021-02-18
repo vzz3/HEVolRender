@@ -7,6 +7,12 @@
 #define USE_FIX_WIDTH_INTEGER 			1
 #define PAILLIER_MODULUS_BIT_LENGTH 	256 // GPU test: 64 // Paillier test: 256
 
+/* ****************************************
+ * *** Config. for different reder modi ***
+ * ****************************************
+ *
+ */
+#define GPU_MONTGOMERY_REDUCTION			1
 
 // Why is the required integer bit length $ bitLengt(M) * 4 $ ?
 // obfuscate(c) {
@@ -18,7 +24,11 @@
 //		t1 = c1 * c2;	 		=> bitLengt(M) * 4
 //		return t2 % M^2;		=> bitLengt(M) * 2
 //}
-#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)
+#ifndef GPU_MONTGOMERY_REDUCTION
+	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)
+#else
+	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)+(4*BIG_INT_BITS_PER_WORD)		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
+#endif
 #define PAILLIER_INT_WORD_SIZE 		BIG_INT_BIT_TO_SIZE( PAILLIER_INT_BIT_LENGTH )
 
 #define PAILLIER_INT_STORAGE_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*2)
@@ -30,7 +40,7 @@
 		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
 	#else
 		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)
-		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE+1> PaillierInt;
+		typedef SFixBigInt<PAILLIER_INT_WORD_SIZE> PaillierInt;
 	#endif
 #else
 	#include "../math/SArbBigInt.hpp"
@@ -61,18 +71,12 @@
 #define GPU_INT_UVEC4_SIZE					((PAILLIER_INT_WORD_SIZE + (4-1)) / 4)
 #define GPU_INT_UVEC4_STORAGE_SIZE			((PAILLIER_INT_STORAGE_WORD_SIZE + (4-1)) / 4)
 
-/* ****************************************
- * *** Config. for different reder modi ***
- * ****************************************
- *
- */
-#define GPU_MONTGOMERY_REDUCTION			1
-
 
 // --- MACROS ---
 #define PAILLIER_INT_TO_STORAGE_UVEC4(src, dst) { 									\
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_STORAGE_SIZE; texIndex++) { 	\
 		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+			assert( texIndex*4 + channelIndex < PAILLIER_INT_STORAGE_WORD_SIZE );	\
 			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
 		} 																			\
 	} 																				\
@@ -81,6 +85,7 @@
 #define PAILLIER_INT_TO_UVEC4(src, dst) { 											\
 	for(uint texIndex = 0; texIndex < GPU_INT_UVEC4_SIZE; texIndex++) { 			\
 		for(uint channelIndex = 0; channelIndex < 4; channelIndex++) { 				\
+			assert( texIndex*4 + channelIndex < PAILLIER_INT_WORD_SIZE );			\
 			dst[texIndex][channelIndex] = src[texIndex*4 + channelIndex]; 			\
 		} 																			\
 	} 																				\

@@ -23,8 +23,16 @@ namespace ppvr {
 		
 		// ----- member variables -----
 		private:
-			uint reducerBits;
-			BigInt reducer, modulus, mask, reciprocal, factor, convertedOne;
+			// m = length in bits of the quered public key modulus
+			
+			uint reducerBits; // (m+1 ... m+8)
+			
+			BigInt reducer,		// m+9 bit long (worst case)
+				modulus,		// m
+				mask,			// m+8 bit long (worst case)
+				reciprocal,		// m+9 bit long (worst case)
+				factor,			// m+18 bit long (worst case)
+				convertedOne;	// m
 			
 		public:
 			uint getReducerBits() const {

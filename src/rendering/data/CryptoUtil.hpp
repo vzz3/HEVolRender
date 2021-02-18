@@ -51,6 +51,39 @@ namespace ppvr {
 					}
 				};
 				
+				class ImageRowDecTask : public QRunnable {
+					const uint x;
+					const Image<PaillierInt>* src;
+					Image<uint16_t>* dst;
+					const SecureKey* secureKey;
+					const PaillierInt* scale;
+					
+				public:
+					inline ImageRowDecTask(const SecureKey* ySecureKey, const Image<PaillierInt>* ySrc, Image<uint16_t>* yDst, const uint yX, const PaillierInt* yScale)
+					: secureKey{ySecureKey}, src{ySrc}, dst{yDst}, x{yX}, scale{yScale}  {
+						// Auto-deletion is enabled by default.
+					}
+					
+					inline void run() override {
+						const uint h = src->height();
+						Random* rnd = Random::getForLocalThread();
+						
+						#ifdef GPU_MONTGOMERY_REDUCTION
+							MontgomeryReducer<PaillierInt> mmr{secureKey->publicKey.getModulusSquared()}; // One for all threads would be enough.
+						#endif
+						
+						for(uint y = 0; y < h; y++) {
+								PaillierInt ePixel = src->get(x, y);
+								#ifdef GPU_MONTGOMERY_REDUCTION
+									ePixel = mmr.convertOut(ePixel);
+								#endif
+								PaillierInt bigVal = secureKey->decrypt(ePixel) ;
+								bigVal = bigVal / (*scale); //PaillierInt::fromInt64(50);
+								dst->set(x, y, (uint16_t)bigVal.toInt64());
+						}
+					}
+				};
+				
 			public:
 				static void encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& ySrc, Volume<PaillierInt>& yDst);
 				

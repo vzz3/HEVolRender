@@ -255,7 +255,7 @@ void MainWindow::renderEcrypted() {
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
 	
-	for(size_t f = 0; f < 3; f++) {
+	for(size_t f = 0; f < 2; f++) {
 		// draw cube postions textures and render an encrypted image from the encrypted Volume
 		PRINT_DURATION(encRenderer->draw(0), "draw on GPU");
 		

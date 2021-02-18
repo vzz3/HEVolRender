@@ -731,47 +731,70 @@ void UFixBigInt_mulSchool(const in FIX_BIG_INT_VALUE a, const in FIX_BIG_INT_VAL
 	BIG_INT_WORD_COUNT_TYPE aSize  = S, 	bSize  = S;
 	BIG_INT_WORD_COUNT_TYPE aStart = 0,     bStart = 0;
 
-	for( ; aSize>0 && a[aSize-1]==0 ; --aSize);
-	for(aStart=0 ; aStart<aSize && a[aStart]==0 ; ++aStart);
-
-	for( ; bSize>0 && b[bSize-1]==0 ; --bSize);
-	for(bStart=0 ; bStart<bSize && b[bStart]==0 ; ++bStart);
-
 	UFixBigInt_setZero(result);
-	if( aSize==0 || bSize==0 ) {
-		return;
-	}
-
-	assert_msg((aSize + bSize - 1) > S, "mulSchool not posible without overflow (aSize + bSize >= S)");
 
 	#if !defined(BIG_INT_FORCE_SCHOOL) //&& _BIG_INT_WORD_LENGTH_PRESET_ <= 32
-		//UFixBigInt_setZero(result);
-		if (bSize == 1) {
-			UFixBigInt_mulInt(a, b[0], result);
-			return;
-		} else if (aSize == 1) {
-			UFixBigInt_mulInt(b, a[0], result);
-			return;
-		}
+		#ifndef BIG_INT_REDUCE_BRANCHING
+			aSize = UFixBigInt_getWordSize(a);
+			bSize = UFixBigInt_getWordSize(b);
+			if( aSize==0 || bSize==0 ) {
+				return;
+			}
 
-		bStart = aStart = 0;
+			assert_msg((aSize + bSize - 1) > S, "mulSchool not posible without overflow (aSize + bSize >= S)");
+
+			if (bSize == 1) {
+				UFixBigInt_mulInt(a, b[0], result);
+				return;
+			} else if (aSize == 1) {
+				UFixBigInt_mulInt(b, a[0], result);
+				return;
+			}
+		#endif
 
 		// Multiply first word
 		BIG_INT_WORD_TYPE carry = BigIntUtil_mulAdd(result, 0, b, bStart, bSize, a[0]);
-		result[bSize] = carry;
+		#ifndef BIG_INT_REDUCE_BRANCHING
+			assert(bSize < S);
+			result[bSize] = carry;
+		#else
+			assert( carry == 0);
+		#endif
 
 		// Add in subsequent words, storing the most significant word, which is new each time.
 		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
-			assert( bSize-1+i < S);
-			carry = BigIntUtil_mulAdd(result, bStart+i, b, bStart, bSize, a[i]);
+			#ifndef BIG_INT_REDUCE_BRANCHING
+				assert( bSize-1+i < S);
+				carry = BigIntUtil_mulAdd(result, bStart+i, b, bStart, bSize, a[i]);
+			#else
+				assert( bStart+i+S-i-1 < S);
+				carry = BigIntUtil_mulAdd(result, bStart+i, b, bStart, S-i  , a[i]);
+			#endif
 
 			if( bSize+i < S) {
 				result[bSize+i] = carry;
-			} else {
-				assert_msg( carry == 0, "mulSchool not posible without overflow")
 			}
+			#ifndef BIG_INT_REDUCE_BRANCHING
+				else {
+					assert_msg( carry == 0, "mulSchool not posible without overflow")
+				}
+			#endif
 		}
 	#else
+		// basic school algorithem
+		for( ; aSize>0 && a[aSize-1]==0 ; --aSize);
+		for(aStart=0 ; aStart<aSize && a[aStart]==0 ; ++aStart);
+
+		for( ; bSize>0 && b[bSize-1]==0 ; --bSize);
+		for(bStart=0 ; bStart<bSize && b[bStart]==0 ; ++bStart);
+
+
+		if( aSize==0 || bSize==0 ) {
+			return;
+		}
+
+		assert_msg((aSize + bSize - 1) > S, "mulSchool not posible without overflow (aSize + bSize >= S)");
+
 		BIG_INT_WORD_TYPE r2, r1, carry = 0;
 
 		for(uint aI=aStart ; aI<aSize ; ++aI) {
