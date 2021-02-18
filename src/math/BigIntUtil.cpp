@@ -121,15 +121,15 @@ BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const
 				c = BigIntUtil::addTwoWords(targetArray[index],   wordLow, 0, &targetArray[index]);
 				c = BigIntUtil::addTwoWords(targetArray[index+1], wordHigh, c, &targetArray[index+1]);
 				
-				#ifndef BIG_INT_REDUCE_BRANCHING
+//				#ifndef BIG_INT_REDUCE_BRANCHING
 					for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount && c > 0; ++i) { // TODO
 						c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
 					}
-				#else
-					for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount; i++) {
-						c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
-					}
-				#endif
+//				#else
+//					for(BIG_INT_WORD_COUNT_TYPE i=index+2 ; i < targetWordCount; i++) {
+//						c = BigIntUtil::addTwoWords(targetArray[i], 0, c, &targetArray[i]);
+//					}
+//				#endif
 //			}
 			
 		//#endif
@@ -381,12 +381,12 @@ void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 //	 * start with.  It is by far the most commonly called function.
 //	 *
 //	 */
-//	
+//
 //	assert(len > 0);
-//	
+//
 //	uint64_t kLong = k;
 //	uint64_t carry = 0;
-//	
+//
 //	for (BIG_INT_WORD_COUNT_TYPE i = 0; i<len; i++) {
 //		carry = (uint64_t)in[indexIn] * kLong +
 //				(uint64_t)out[indexOut] + carry;
@@ -394,7 +394,7 @@ void BigIntUtil::mulTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE 
 //		carry = (BIG_INT_WORD_TYPE)(carry >> BIG_INT_BITS_PER_WORD);
 //		indexOut++;
 //		indexIn++;
-//		
+//
 //	}
 //
 //	return (BIG_INT_WORD_TYPE)carry;

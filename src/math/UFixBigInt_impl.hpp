@@ -861,63 +861,89 @@ void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UF
 	BIG_INT_WORD_COUNT_TYPE aSize  = S, 	bSize  = S;
 	BIG_INT_WORD_COUNT_TYPE aStart = 0,     bStart = 0;
 	
-	//if( aSize > 2 ) {
-		// if the wordCount is smaller than or equal to 2
-		// there is no sense to set aSize (and others) to another values
-		
-		for( ; aSize>0 && a.value[aSize-1]==0 ; --aSize);
-		for(aStart=0 ; aStart<aSize && a.value[aStart]==0 ; ++aStart);
-	//}
-	//if( bSize > 2 ) {
-		// if the wordCount is smaller than or equal to 2
-		// there is no sense to set bSize (and others) to another values
-		
-		for( ; bSize>0 && b.value[bSize-1]==0 ; --bSize);
-		for(bStart=0 ; bStart<bSize && b.value[bStart]==0 ; ++bStart);
-	//}
-	
 	result.setZero();
-	if( aSize==0 || bSize==0 ) {
-		return;
-	}
-	
-	if((aSize + bSize - 1) > S) {
-		throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
-	}
 	
 	#if !defined(BIG_INT_FORCE_SCHOOL) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
-		if (bSize == 1) {
-			a.mulInt(b.value[0], result);
-			return;
-		} else if (aSize == 1) {
-			b.mulInt(a.value[0], result);
-			return;
-		}
+		#ifndef BIG_INT_REDUCE_BRANCHING
+			aSize = a.getWordSize();
+			bSize = b.getWordSize();
+			if( aSize==0 || bSize==0 ) {
+				return;
+			}
+			
+			if((aSize + bSize - 1) > S) {
+				throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
+			}
 		
-		bStart = aStart = 0;
+			if (bSize == 1) {
+				a.mulInt(b.value[0], result);
+				return;
+			} else if (aSize == 1) {
+				b.mulInt(a.value[0], result);
+				return;
+			}
+		#endif
 		
 		// Multiply first word
 		BIG_INT_WORD_TYPE carry = BigIntUtil::mulAdd(result.value, 0, b.value, bStart, bSize, a.value[0]);
-		result.value[bSize] = carry;
+		#ifndef BIG_INT_REDUCE_BRANCHING
+			assert(bSize < S);
+			result.value[bSize] = carry;
+		#else
+			assert( carry == 0);
+		#endif
 		
 		// Add in subsequent words, storing the most significant word, which is new each time.
 		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
-			assert( bSize-1+i < S);
-			carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, bSize, a.value[i]);
+			#ifndef BIG_INT_REDUCE_BRANCHING
+				assert( bSize-1+i < S);
+				carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, bSize, a.value[i]);
+			#else
+				assert( bStart+i+S-i-1 < S);
+				carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, S-i  , a.value[i]);
+			#endif
 			
 			if( bSize+i < S) {
 				result.value[bSize+i] = carry;
-			} else if( carry > 0) {
-				throw FixBigIntOverflow(std::string("mulSchool not posible without overflow"));
 			}
+			#ifndef BIG_INT_REDUCE_BRANCHING
+				else if( carry > 0) {
+					throw FixBigIntOverflow(std::string("mulSchool not posible without overflow"));
+				}
+			#endif
 		}
 		
 	#else
 		// basic school algorithem
+		//if( aSize > 2 ) {
+			// if the wordCount is smaller than or equal to 2
+			// there is no sense to set aSize (and others) to another values
+			
+			for( ; aSize>0 && a.value[aSize-1]==0 ; --aSize);
+			for(aStart=0 ; aStart<aSize && a.value[aStart]==0 ; ++aStart);
+		//}
+		//if( bSize > 2 ) {
+			// if the wordCount is smaller than or equal to 2
+			// there is no sense to set bSize (and others) to another values
+			
+			for( ; bSize>0 && b.value[bSize-1]==0 ; --bSize);
+			for(bStart=0 ; bStart<bSize && b.value[bStart]==0 ; ++bStart);
+		//}
+		
+		if( aSize==0 || bSize==0 ) {
+			return;
+		}
+		
+		if((aSize + bSize - 1) > S) {
+			throw FixBigIntOverflow(std::string("mulSchool not posible without overflow (aSize + bSize >= S)"));
+		}
+		
 		BIG_INT_WORD_TYPE r2, r1, carry = 0;
 		for(uint aI=aStart ; aI<aSize ; ++aI) {
+			assert( aI < S);
 			//for(uint bI=bStart ; bI<bSize ; ++bI) {
 			for(uint bI=bStart ; bI<bSize && bI+aI < (S-1) ; ++bI) {
+				assert( bI < S);
 				BigIntUtil::mulTwoWords(a.value[aI], b.value[bI], &r2, &r1);
 				carry += BigIntUtil::addTwoInts(r2, r1, bI+aI, result.value, S); // there can be a carry during the last iteration of the outer loop here will never be a carry
 				
@@ -1695,7 +1721,6 @@ void UFixBigInt<S>::modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixB
 	// Calculate new base from m1
 	UFixBigInt<S> base2 = (/*base.signum < 0 ||*/ base >= m1) ? (base % m1) : base;
 	
-	assert( modulus.bitLength()*2 <= FBI_WC_Sm2*BIG_INT_BITS_PER_WORD );
 	UFixBigInt<FBI_WC_Sm2> a1, a2;
 	
 	// Caculate (base ** exponent) mod m1.
@@ -1906,7 +1931,6 @@ void UFixBigInt<S>::modPow(UFixBigInt<S> &exponent, const UFixBigInt<S> &modulus
 	}
 	
 	// ensure that the base is < modulus
-	assert( modulus.bitLength() <= FBI_WC_Sm2*BIG_INT_BITS_PER_WORD );
 	//SArbBigInt base = (this->signum < 0 || *this >= modulus) ? (*this % modulus) : *this;
 	UFixBigInt<FBI_WC_Sm2> base = (*this >= modulus) ? (*this % modulus) : *this;
 
