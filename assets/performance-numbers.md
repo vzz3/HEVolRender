@@ -46,7 +46,19 @@ Begin Task encrypt volume ... time required: 69675ms
 Begin Task draw on GPU ... time required: 3189ms
 Begin Task decrypt ... time required: 9296ms
 
-### Rendering test on GPU with standardized model-/view- and projection matrixes from Java
+
+### Rendering on GPU with standardized model-/view- and projection matrixes from Java
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled, force basic school multiplication
+Key: P=E0036F7B3446C9B94AE76CD984A1A42D, Q=C5465D187388377101D0962D388D0E3F, M=ACA03730EFD5B78C8F37951A932B342BF57ED5902321C5C237E551A2BF8ADD13, M^2=7467AE6ECB590A32F5D9AF3914CDB624328D8AE9ECC404E8444A67860601BF1FAF566BDC65824D9532A242EAE3A098DFCC8C39954D1D0CE688F453417165CF69
+Begin Task create volume ... time required: 4ms
+Begin Task encrypt volume ... time required: 63034ms
+Begin Task draw on GPU ... time required: 3505ms
+Begin Task decrypt ... time required: 659ms
+Begin Task draw on GPU ... time required: 3459ms
+Begin Task decrypt ... time required: 675ms
+
+
 mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
 GPU: Montgomery disabled, branch reduction disabled
 Key: P=F194367DE565CFC1907CA7D53E3FF003, Q=BF255AF757CD7F7E0B441E583E408367, M=B460D4EB525D3E5A766F9D09AD338421BB8CCA19CE6F88FF4C538CCB7E4B1A35, M^2=7F18500B4D677E58BB5BF4B2009E2E1BB1CA22903423B9356F62E67CF592587931C8048EF5BFC0665B15B63D16A2CDE2CA83901AD7CC35BC24718BE289BCCEF9
@@ -89,6 +101,7 @@ Begin Task draw on GPU ... time required: 1617ms
 Begin Task decrypt ... time required: 691ms
 Begin Task draw on GPU ... time required: 1631ms
 Begin Task decrypt ... time required: 666ms
+
 
 
 # modPow

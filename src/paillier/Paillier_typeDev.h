@@ -12,7 +12,7 @@
  * ****************************************
  *
  */
-#define GPU_MONTGOMERY_REDUCTION			1
+//#define GPU_MONTGOMERY_REDUCTION			1
 
 // Why is the required integer bit length $ bitLengt(M) * 4 $ ?
 // obfuscate(c) {

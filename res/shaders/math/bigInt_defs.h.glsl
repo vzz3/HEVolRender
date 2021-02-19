@@ -53,8 +53,9 @@
  * ****************************************
  *
  */
-#define BIG_INT_REDUCE_BRANCHING 		1
-#define GPU_MONTGOMERY_REDUCTION		1
+#define BIG_INT_FORCE_SCHOOL
+//#define BIG_INT_REDUCE_BRANCHING 		1
+//#define GPU_MONTGOMERY_REDUCTION		1
 
 
 /* *************************************
