@@ -13,6 +13,7 @@ using namespace ppvr::rendering;
 PlainVulkanRenderer::PlainVulkanRenderer(QVulkanWindow *w/*, bool msaa = false*/)
     : m_window(w), m_camera(1,1)
 {
+	m_camera.setPostion2TopRight();
 }
 
 void PlainVulkanRenderer::initResources()
