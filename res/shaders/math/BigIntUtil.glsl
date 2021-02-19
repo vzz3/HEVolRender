@@ -120,6 +120,7 @@ BIG_INT_WORD_TYPE BigIntUtil_getLowAsHighBits(const in BIG_INT_WORD_TYPE src) {
 // ----- addition -----
 
 BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE carry, out BIG_INT_WORD_TYPE result) {
+#if !defined(BIG_INT_REDUCE_BRANCHING)
 	BIG_INT_WORD_TYPE temp;
 	if( carry == 0 ) {
 		temp = a + b;
@@ -141,6 +142,16 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 	}
 	result = temp;
 	return carry;
+#else
+	uint64_t temp = uint64_t(a) + uint64_t(b) + uint64_t(carry);
+	result = BIG_INT_WORD_TYPE(temp);
+	//return BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
+	carry = BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
+#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	carry = carry & BIG_INT_WORD_ALL_BIT_MASK;
+#endif
+	return carry;
+#endif
 }
 
 BIG_INT_WORD_TYPE BigIntUtil_addTwoInts(const in BIG_INT_WORD_TYPE wordHigh, const in BIG_INT_WORD_TYPE wordLow

@@ -40,8 +40,8 @@ namespace ppvr {
 						for(uint y = 0; y < h; y++) {
 							for(uint z = 0; z < d; z++) {
 								PaillierInt pVoxel = PaillierInt::fromInt64(src->get(x, y, z));
-								PaillierInt eVoxel = publicKey->encryptWithoutObfuscation(pVoxel);
-								//PaillierInt eVoxel = publicKey->encrypt(pVoxel, rnd);
+								//PaillierInt eVoxel = publicKey->encryptWithoutObfuscation(pVoxel);
+								PaillierInt eVoxel = publicKey->encrypt(pVoxel, rnd);
 								#ifdef GPU_MONTGOMERY_REDUCTION
 									eVoxel = mmr.convertIn(eVoxel);
 								#endif

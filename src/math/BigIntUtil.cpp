@@ -42,29 +42,6 @@ int BigIntUtil::findLowestSetBitInWord(BIG_INT_WORD_TYPE word) {
 
 // ----- addition -----
 
-BIG_INT_WORD_TYPE BigIntUtil::addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE * result) {
-	
-	BIG_INT_WORD_TYPE temp;
-	if( carry == 0 ) {
-		temp = a + b;
-		if( temp < a ) {
-			carry = 1;
-		}
-	} else {
-		carry = 1;
-		temp  = a + b + carry;
-		if( temp > a ) { // !(temp<=a)
-			carry = 0;
-		}
-	}
-	*result = temp;
-	return carry;
-	
-//	uint64_t temp = (uint64_t)a + (uint64_t)b + (uint64_t)carry;
-//	*result = temp;
-//	return (temp > uint64_t(BIG_INT_WORD_MAX_VALUE));
-}
-
 BIG_INT_WORD_TYPE BigIntUtil::addTwoInts(const BIG_INT_WORD_TYPE wordHigh, const BIG_INT_WORD_TYPE wordLow, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount) {
 	
 	addTwoIntsCounter++;

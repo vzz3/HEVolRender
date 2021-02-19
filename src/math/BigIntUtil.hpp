@@ -162,12 +162,33 @@ namespace ppvr {
 			}
 		
 		// ----- addition -----
-			
 			/**
 			 * this method adds two words together
 			 * returns carry
 			 */
-			static BIG_INT_WORD_TYPE addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result);
+			static inline BIG_INT_WORD_TYPE addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) {
+				#if _BIG_INT_WORD_LENGTH_PRESET_ > 32 //|| !defined(BIG_INT_REDUCE_BRANCHING)
+					BIG_INT_WORD_TYPE temp;
+					if( carry == 0 ) {
+						temp = a + b;
+						if( temp < a ) {
+							carry = 1;
+						}
+					} else {
+						carry = 1;
+						temp  = a + b + carry;
+						if( temp > a ) { // !(temp<=a)
+							carry = 0;
+						}
+					}
+					*result = temp;
+					return carry;
+				#else
+					uint64_t temp = (uint64_t)a + (uint64_t)b + (uint64_t)carry;
+					*result = (BIG_INT_WORD_TYPE)temp;
+					return BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
+				#endif
+			}
 			
 			/**
 			 * this method adds only two unsigned words to the existing value

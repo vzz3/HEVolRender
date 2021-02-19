@@ -24,7 +24,7 @@
 //		t1 = c1 * c2;	 		=> bitLengt(M) * 4
 //		return t2 % M^2;		=> bitLengt(M) * 2
 //}
-#if !defined(GPU_MONTGOMERY_REDUCTION) && !defined(BIG_INT_NO_MONTGOMERY_REDUCTION)
+#if !defined(GPU_MONTGOMERY_REDUCTION) && defined(BIG_INT_NO_MONTGOMERY_REDUCTION)
 	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)
 #else
 	#define PAILLIER_INT_BIT_LENGTH 	(PAILLIER_MODULUS_BIT_LENGTH*4)+18		// enshure that the reciprocal of the MontgomeryReducer can be calculated (modInverse ith one bit more then PAILLIER_MODULUS_BIT_LENGTH*2)

@@ -46,6 +46,51 @@ Begin Task encrypt volume ... time required: 69675ms
 Begin Task draw on GPU ... time required: 3189ms
 Begin Task decrypt ... time required: 9296ms
 
+### Rendering test on GPU with standardized model-/view- and projection matrixes from Java
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled
+Key: P=F194367DE565CFC1907CA7D53E3FF003, Q=BF255AF757CD7F7E0B441E583E408367, M=B460D4EB525D3E5A766F9D09AD338421BB8CCA19CE6F88FF4C538CCB7E4B1A35, M^2=7F18500B4D677E58BB5BF4B2009E2E1BB1CA22903423B9356F62E67CF592587931C8048EF5BFC0665B15B63D16A2CDE2CA83901AD7CC35BC24718BE289BCCEF9
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 63266ms
+Begin Task draw on GPU ... time required: 2703ms
+Begin Task decrypt ... time required: 642ms
+Begin Task draw on GPU ... time required: 2697ms
+Begin Task decrypt ... time required: 685ms
+
+
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction enabled
+Key: P=D3A19FE913168882D99D27CDD960BA1F, Q=A98BD85124E04D278B46034D4B3CC7CB, M=8C294E2624B3A5E58E7F79888FF3B5EFB61451C95B4D081B9A3E35BB44A5AF95, M^2=4CBD3423D837830A9B13397841B2CF4CA4A79E3FB816E483E01B2FCB604B0E696F07899669678F1C047C93C401987B812F710A07C42204584756A630F67F0CB9
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 61354ms
+Begin Task draw on GPU ... time required: 2479ms
+Begin Task decrypt ... time required: 648ms
+Begin Task draw on GPU ... time required: 2464ms
+Begin Task decrypt ... time required: 653ms
+
+
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction disabled
+Key: P=9233B18CA8EAC158459FEFB50749E111, Q=E6D336A4D5159529AF83821D73DB3B49, M=83D31154C0F4E317E36B7C85A0B623AEDC46493A9DFA244F3B59A088477B18D9, M^2=43E1B1C2505D11C8846F57670FF2EB0685EC66871B312FD2590ED1CE7B6CC3007A175C1F14826F91951BF1FF8EEC78B2BCB174D1432970DF32B1298940EF67F1
+Begin Task create volume ... time required: 4ms
+Begin Task encrypt volume ... time required: 61622ms
+Begin Task draw on GPU ... time required: 3058ms
+Begin Task decrypt ... time required: 679ms
+Begin Task draw on GPU ... time required: 3043ms
+Begin Task decrypt ... time required: 679ms
+
+
+mac OS 10.15, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction enabled
+Key: P=CEFC7309B91D89BBB90CD74DC6D2DABB, Q=DE88E1D8D693A29543FB91267378FD83, M=B3ED987ABF4CF79DBD3437731C9D7E13018DF50C14064BA996A95825A8B8BCB1, M^2=7E761FBF559DD4CF5B029BE15242CBA7611E6A0F6FC0AF34D976F12D140A236536D3623024A7EDFEFEEF100CD784380E297E96A324900243C405382219847261
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 62310ms
+Begin Task draw on GPU ... time required: 1617ms
+Begin Task decrypt ... time required: 691ms
+Begin Task draw on GPU ... time required: 1631ms
+Begin Task decrypt ... time required: 666ms
+
+
 # modPow
 modPow() Naiv 2048bit        ... time required:  7479ms, addTwoIntsCounter: 24776765
 modPow() Montgomery 2048bit  ... time required: 10078ms, addTwoIntsCounter: 36830577
