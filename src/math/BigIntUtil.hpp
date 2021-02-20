@@ -167,7 +167,7 @@ namespace ppvr {
 			 * returns carry
 			 */
 			static inline BIG_INT_WORD_TYPE addTwoWords(const BIG_INT_WORD_TYPE a, const BIG_INT_WORD_TYPE b, BIG_INT_WORD_TYPE carry, BIG_INT_WORD_TYPE* result) {
-				#if _BIG_INT_WORD_LENGTH_PRESET_ > 32 //|| !defined(BIG_INT_REDUCE_BRANCHING)
+				#if _BIG_INT_WORD_LENGTH_PRESET_ > 32 || !defined(BIG_INT_64BIT_WORD_ADD)
 					BIG_INT_WORD_TYPE temp;
 					if( carry == 0 ) {
 						temp = a + b;

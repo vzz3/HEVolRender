@@ -13,9 +13,9 @@ int BigIntUtil_findHighestSetBitInWord(in BIG_INT_WORD_TYPE word) {
 
 	while( (word & BIG_INT_WORD_HIGHEST_BIT) == 0 ) {
 		word = word << 1;
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 		word &= BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#endif
 		--bit;
 	}
 
@@ -120,22 +120,22 @@ BIG_INT_WORD_TYPE BigIntUtil_getLowAsHighBits(const in BIG_INT_WORD_TYPE src) {
 // ----- addition -----
 
 BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in BIG_INT_WORD_TYPE b, in BIG_INT_WORD_TYPE carry, out BIG_INT_WORD_TYPE result) {
-#if !defined(BIG_INT_REDUCE_BRANCHING)
+#if !defined(BIG_INT_64BIT_WORD_ADD)
 	BIG_INT_WORD_TYPE temp;
 	if( carry == 0 ) {
 		temp = a + b;
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 		temp = temp & BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#endif
 		if( temp < a ) {
 			carry = 1;
 		}
 	} else {
 		carry = 1;
 		temp  = a + b + carry;
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 		temp = temp & BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#endif
 		if( temp > a ) { // !(temp<=a)
 			carry = 0;
 		}
@@ -147,9 +147,9 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 	result = BIG_INT_WORD_TYPE(temp);
 	//return BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
 	carry = BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
-	carry = carry & BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		carry = carry & BIG_INT_WORD_ALL_BIT_MASK;
+	#endif
 	return carry;
 #endif
 }
@@ -190,9 +190,9 @@ BIG_INT_WORD_TYPE BigIntUtil_subTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 		result = a - b;
 		if( a < b ) {
 			carry = 1;
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 			result = result & BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+		#endif
 		}
 	} else {
 		carry   = 1;
@@ -201,9 +201,9 @@ BIG_INT_WORD_TYPE BigIntUtil_subTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 		if( a > b ) { // !(a <= b )
 			carry = 0;
 		} else {
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 			result = result & BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+		#endif
 		}
 	}
 
@@ -414,13 +414,13 @@ uint BigIntUtil_divTwoWordsKnuth_normalize(inout BIG_INT_WORD_TYPE a, inout BIG_
 		BIG_INT_WORD_TYPE bc = b & BIG_INT_WORD_HIGHEST_BIT; // carry from 'b'
 
 		b = b << 1;
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 		b &= BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#endif
 		a = a << 1; // carry bits from 'a' are simply skipped
-#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
 		a &= BIG_INT_WORD_ALL_BIT_MASK;
-#endif
+	#endif
 
 		if( bc > 0 ) {
 			a = a | 1;

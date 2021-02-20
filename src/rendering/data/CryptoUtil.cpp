@@ -28,8 +28,8 @@ void CryptoUtil::encrypt(const PublicKey& yPublicKey, const Volume<uint16_t>& yS
 		size_t n = ySrc.length();
 		for (size_t i=0; i<n; i++) {
 			PaillierInt pVoxel = PaillierInt::fromInt64(ySrc.get(i));
-			PaillierInt eVoxel = yPublicKey.encryptWithoutObfuscation(pVoxel);
-			//PaillierInt eVoxel = yPublicKey.encrypt(pVoxel);
+			//PaillierInt eVoxel = yPublicKey.encryptWithoutObfuscation(pVoxel);
+			PaillierInt eVoxel = yPublicKey.encrypt(pVoxel);
 			#ifdef GPU_MONTGOMERY_REDUCTION
 				eVoxel = mmr.convertIn(eVoxel);
 			#endif

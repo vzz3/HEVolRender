@@ -104,6 +104,163 @@ Begin Task decrypt ... time required: 666ms
 
 
 
+Linux 20.04, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled, force basic school multiplication
+Key: P=CDBFA68FF7D237295407446F84137481, Q=ACEDA1FA2CFD937A2D451D9DBE704197, M=8AFBC08486DB9BAFA6EEDDCC08154A0C6FB219D12F96673C655FF7678E7E7917, M^2=4B746321F60C45616D758A70F9CD6DA8DD6522A6CAE645873A2E45FF2666F0B827AD7A203D25D31889D02BBF37DC5D168E07CCA02E11D10E0BD25F52EFEAC011
+Begin Task create volume ... time required: 4ms
+Begin Task encrypt volume ... time required: 60924ms
+Begin Task draw on GPU ... time required: 303ms
+Begin Task decrypt ... time required: 691ms
+Begin Task draw on GPU ... time required: 305ms
+Begin Task decrypt ... time required: 689ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled
+Key: P=CAC04FD763ED1BAD6CAE7ABA349C8AC7, Q=E228335BF2889F7378551A75C1CD1AC3, M=B31D9D35C23939E11B02D217056F13702FC34B203C290E4077DB2E1C21B0EB95, M^2=7D526D462C55036C18D0EB4A6FF01C2FF9E57E7FEE9E5E7E10C5158D8BD8D95F5DAB0D3982B3E9DC73EF1D769BA6CC57C4CF8E9F93B6556A8EBA2B992FAAE4B9
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 62754ms
+Begin Task draw on GPU ... time required: 225ms
+Begin Task decrypt ... time required: 713ms
+Begin Task draw on GPU ... time required: 211ms
+Begin Task decrypt ... time required: 718ms
+
+Linux 20.04, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction enabled
+Key: P=B961B898F2DAC45BEC388C6E122507E5, Q=B91F1F3A50C599F74204516C1ACC44CD, M=860E27D8F20179D506302D4454494271B287B7C2C9F1056BCCD6B2E1EA3C2661, M^2=4632D27F7F47D54A102A665E882551A13A33C03DD672052DA283157D0F828FEA7D73C6DAE56CFB6D3D0D441C121AE64331E18FB0586C49E9FB985ECD5738F0C1
+Begin Task create volume ... time required: 4ms
+Begin Task encrypt volume ... time required: 62012ms
+Begin Task draw on GPU ... time required: 199ms
+Begin Task decrypt ... time required: 717ms
+Begin Task draw on GPU ... time required: 199ms
+Begin Task decrypt ... time required: 718ms
+
+Linux 20.04, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction disabled
+Thread 1 "HEVolRender" received signal SIGFPE, Arithmetic exception.
+0x00007fffee8de464 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+```
+    #0  0x00007fffee8de464 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #1  0x00007fffee90c3ae in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #2  0x00007fffee8ace8a in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #3  0x00007fffee834320 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #4  0x00007fffee834789 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #5  0x00007fffee82b13d in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #6  0x00007fffee82cf4a in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #7  0x00007fffee82f944 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #8  0x00007fffee82fa36 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+    #9  0x00007fffeda10a5c in ?? () from /lib/x86_64-linux-gnu/libVkLayer_khronos_validation.so
+    #10 0x00007fffed998ac8 in ?? () from /lib/x86_64-linux-gnu/libVkLayer_khronos_validation.so
+    #11 0x00007ffff749bda8 in QVulkanDeviceFunctions::vkCreateGraphicsPipelines (this=0x5555560e3650, 
+        device=0x5555561586d0, pipelineCache=0x0, createInfoCount=1, pCreateInfos=0x7fffffffb8d0, pAllocator=0x0, 
+        pPipelines=0x55555641aef0) at vulkan/qvulkanfunctions_p.cpp:448
+    #12 0x00005555555b798a in ppvr::rendering::EncryptedXRay::createPipeline (this=0x55555641ae50, ySwapChain=...)
+        at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedXRay.cpp:429
+    #13 0x00005555555b514c in ppvr::rendering::EncryptedXRay::initSwapChainResources (this=0x55555641ae50, 
+        ySwapChain=..., yPK=0x7fffffffbe90, yVolumeSet=0x55555616ef70, yCubeFront=0x10dc00000010dc, 
+        yCubeBack=0x10e100000010e1) at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedXRay.cpp:35
+    #14 0x00005555555b0db4 in ppvr::rendering::EncryptedVulkanRenderer::initSwapChainResources (this=0x5555561289b0, 
+        yTargetSize=..., ySwapChainImageCount=1)
+        at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedVulkanRenderer.cpp:199
+    #15 0x000055555568c344 in MainWindow::renderEcrypted (this=0x555555749340)
+        at /home/sebastian/Desktop/HEVolRender-Cpp/app/hellovulkanwidget.cpp:256
+    #16 0x0000555555563d93 in MainWindow::qt_static_metacall (_o=0x555555749340, _c=QMetaObject::InvokeMetaMethod, 
+        _id=4, _a=0x7fffffffc9a0)
+        at /home/sebastian/Desktop/HEVolRender-Cpp/build/HEVolRender_autogen/VJIZ3MDCXP/moc_hellovulkanwidget.cpp:95
+```
+
+Linux 20.04, Radeon RX 580 8 GB, 256 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction enabled
+Key: P=EF089D040D465223CD0075789471CB03, Q=EEA13B7849E86A34495DFA0AC06A907F, M=DED08DEBD11FBA4B35B8F75F49EB5A71AB01CDD69F6D4FE1905AC5CFF5E3667D, M^2=C1EE600BEC94783FB9AFCAFB14A1D68DE1E9FCFD78063D566CCDD42E36A87168B4CF883F15920E5564136C61D1508964F2E1B7FAC31FBE4A3D8D2C502CB5D909
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 65940ms
+Begin Task draw on GPU ... time required: 250ms
+Begin Task decrypt ... time required: 767ms
+Begin Task draw on GPU ... time required: 242ms
+Begin Task decrypt ... time required: 792ms
+
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled, force basic school multiplication
+Key: P=E1AEC8F22FC77B060EBFE1057F70759FADA380042762BDF14C2A14C85643C761, Q=CC1E9E6A3C02A3AC2A38EC25E61E5DC698007A8A22F320841AF857744B8640D3, M=B3F2464411C087EE8AAE825402950219BFD46D05FD5D5D969C47B52A20C14B02ADE137E17ABE04D959385E9519029C7965BB92E3A566F50EFD748887D37B94F3, M^2=7E7CB38C1CCE19E74EC8099ADAD5184FB2AC24DB1AD36377EC714C07C40610C4454BADD3274B2373D4C9C23FE941FC62788AEAE16C95D1CD011D745F559F920EE1ECA197028216679404828B9BEFCD82F532CFF279BD2B093F07BE4925F5937D06A06086085B37715E67B0FEE31A60C0FFED9BFC182BEDBF53863B7B0A2BDEA9
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 307975ms
+Begin Task draw on GPU ... time required: 4032ms
+Begin Task decrypt ... time required: 2837ms
+Begin Task draw on GPU ... time required: 4045ms
+Begin Task decrypt ... time required: 2847ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction disabled
+Key: P=E9E04E596CACC67685F8FAB293062B584AE31F13335FD38B3EEB6CADEF48B1E7, Q=BCF39F9AAE08B1837DDEEE63FFFDE5B681C48CF875F3240A0AA4CFF0FE26BB85, M=AC9F4B43AB481C798DB1F4B3AB6B27D0B0F1CFA92BBE6A1725DF932337B1537934F9E5B03752CD8B85A02C26FA6B4EA0789606A306E5A32B77EABB0505022A03, M^2=7466704182586216106CAEE040E48AD040AB90667821F598B51DBE6389CFC9BBC5D7CD2BF374C568814F52D44D8B1FE9A2F54978D66686AD8F0C3E94F2462667EB8FE635CFF7126FC9FB6983542431ADE813341FA104F31461F3E023FC3C25C647187DAEDBB8BFF373D0BB1980768F19C4A3FCD2D60D6F6FF30B1BC6CCF0FC09
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 309151ms
+Begin Task draw on GPU ... time required: 3657ms
+Begin Task decrypt ... time required: 2871ms
+Begin Task draw on GPU ... time required: 3640ms
+Begin Task decrypt ... time required: 2853ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery disabled, branch reduction enabled
+Key: P=DB2FA944072208F9EC87F775924A69B894F7815E71770C2AF83DBDBAA18C4CB3, Q=F8FBCA523F60D5E07A85630ED10AA26AAA90096915FB3E9E4A53009996077AEF, M=D52DC0EEE3B380221FDF63667AC60563D3C2DB7F5CB96D6EEAE9D96C2623E25F512986A84725BFB4CB957C6020511A61C7D932C09158D0F3E1B488FBA96DE91D, M^2=B1852B3AEC4BF4CD4186324CC72C1A63F182147F7CA3918250B0B8D7F6990B2FDDA4FDB68D4DDBA5EBD34B8BF178BE1BBDD532022483B0AEC68C04F4A967A6AD3B407C10457A1B9BD1D312BF02F14AD104C6C853B5CB522952A4E85C0EF5DDECF09799E6558D4984A5FE4B3EA54356CE425DD654AA6D7ECD40203BD6A0F7CD49
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 321388ms
+Begin Task draw on GPU ... time required: 3065ms
+Begin Task decrypt ... time required: 2885ms
+Begin Task draw on GPU ... time required: 3121ms
+Begin Task decrypt ... time required: 2893ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction disabled
+Key: P=D0FA4BFDCF5970FC2CE8546FB5D00CB71495AF1CC0D0235E219902B9B0906575, Q=B5809CD7105F9E6F861F201E161ED84AC78EF7EE3F8716A08A9AA9CE8B0B8967, M=9429F4E88864191603DDD59931090D3C8FD295E889520ADC24D80CB6C1D31762D9027BE9B900CB0F0CA0DF5E6A0FD2BD13B4F3756F6E6C91D96C56A4336B6F13, M^2=55C08A0D3A7B8447CB6FAD186CC75E3E070480FDF4D7319453BCE5C7C1B5E03560D8AB497176ED1859ABEBE9774DD0F84E36DEC8AE18D8F539157BBB906AB56FCAAB0AF7551EE5D389BF465C9289E98E556ED9924505CC80017066A50557715BC21F1077E2DB3A6D7905E46985128A1C41FA7E246ACA1C5808A30FAF9C137B69
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 309090ms
+Begin Task draw on GPU ... time required: 1936ms
+Begin Task decrypt ... time required: 2971ms
+Begin Task draw on GPU ... time required: 1945ms
+Begin Task decrypt ... time required: 2935ms
+Begin Task draw on GPU ... time required: 1936ms
+Begin Task decrypt ... time required: 2930ms
+Begin Task draw on GPU ... time required: 1945ms
+Begin Task decrypt ... time required: 2956ms
+Begin Task draw on GPU ... time required: 1930ms
+Begin Task decrypt ... time required: 2927ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction disabled but "if less" 64bit addTwoWords
+Key: P=A336A5069F837CB106A697C1D637D256822F94EFD4B48C06E24C2D76CEE5E6E7, Q=E302D56A5BA399E250C5FEAC7A1670F323D3FFE4683A1A5B80B3C9BFB69AF561, M=90BB42D26FDA689EC5C1F3EA65A041EFA16F7BBD9592C8C2BFB60285E1DDB6C59555513A9323341C9AA7628FAEDDC977AF7CB74869024BBC4A477BD48C0D9087, M^2=51D334276EB64D6FC793BF4687662E424050AAD497B0D542E189BE2E1285DC195B3A2C646F402491A2E41C269D5EBE67BC915A5A2B88056341597D893AA83E946D14875073A7575917C331B37DCBC019B381C30F8DE6086260EB8F5D04AAEA7E2D8E3032B7238D9F30D0550AD18FC6BE1C59707F737AD66982D9F063A74E2731
+Begin Task create volume ... time required: 5ms
+Begin Task encrypt volume ... time required: 307686ms
+Begin Task draw on GPU ... time required: 1939ms
+Begin Task decrypt ... time required: 2862ms
+Begin Task draw on GPU ... time required: 1945ms
+Begin Task decrypt ... time required: 2875ms
+Begin Task draw on GPU ... time required: 1913ms
+Begin Task decrypt ... time required: 2878ms
+Begin Task draw on GPU ... time required: 1945ms
+Begin Task decrypt ... time required: 2869ms
+Begin Task draw on GPU ... time required: 1953ms
+Begin Task decrypt ... time required: 2882ms
+
+
+Linux 20.04, Radeon RX 580 8 GB, 512 bit modulus, 32 bit words, obfuscated
+GPU: Montgomery enabled, branch reduction enabled
+Key: P=C96DCCE7177E1930A4447C175F3BBD3500A04EE549E54B32916012DB52C54DAD, Q=E3D5AA14AEF883A6B26FB2CFC0F10EB5E4E694CDBA61610398ED28E5AE9D4B03, M=B3447ADF966CFF2294FF7DD2D8AD94D5F425634890A8FEB878D7BB9008D0AEE2BBD2BD0A5A7E0AA11210F482DE1D565796AC51D21EE986D9FC34DB5EFF2A9807, M^2=7D88D6262E1E35593431CF57961F0EBB5C6D532A9248D88E24B8A199B6E2FF0655775D7B5516125FA0D7D6B7514EA11D0C68BED02372820A5F04E74B4FEB04159A7ACD2B48E72B620583EC287A0317333A1657758F8F2C865A07018F5DFC995522C958A95AD25050E5FFF467CDD742C089F3C5A06F0A404CCC9181182E945031
+Begin Task create volume ... time required: 4ms
+Begin Task encrypt volume ... time required: 308083ms
+Begin Task draw on GPU ... time required: 3596ms
+Begin Task decrypt ... time required: 2950ms
+Begin Task draw on GPU ... time required: 3663ms
+Begin Task decrypt ... time required: 2920ms
+
+
+
+
 # modPow
 modPow() Naiv 2048bit        ... time required:  7479ms, addTwoIntsCounter: 24776765
 modPow() Montgomery 2048bit  ... time required: 10078ms, addTwoIntsCounter: 36830577

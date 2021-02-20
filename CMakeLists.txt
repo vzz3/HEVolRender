@@ -2,7 +2,8 @@
 
 #######################################################
 # --------------- RELEASE BUILD LINUX! ----------------
-# $cmake --config Release ..
+# #$cmake --config Release ..
+# cmake -DCMAKE_BUILD_TYPE=Release ..
 #######################################################
 
 cmake_minimum_required(VERSION 3.10)
@@ -14,7 +15,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=westmere")
 # print supported instructions for march: $ echo | clang -E - -march=native -###
