@@ -33,6 +33,10 @@ namespace ppvr {
 				reciprocal,		// m+9 bit long (worst case)
 				factor,			// m+18 bit long (worst case)
 				convertedOne;	// m
+				
+			#ifndef BIG_INT_MONTGOMERY_FORCE_READABLE
+				BIG_INT_WORD_COUNT_TYPE reducerWords;
+			#endif
 			
 		public:
 			uint getReducerBits() const {

@@ -308,3 +308,6 @@ modPow() Mont(8)Ary 8192bit  ... time required:  2017ms, addTwoIntsCounter:     
 modPow() Mont(4)Ary 2024bit  ... time required:    42ms, addTwoIntsCounter:      16332
 modPow() Mont(6)Ary 2024bit  ... time required:    40ms, addTwoIntsCounter:      16332
 modPow() Mont(8)Ary 2024bit  ... time required:    42ms, addTwoIntsCounter:      16332
+
+#### non readable montgomery reduction
+modPow() Mont(6)Ary 2024bit  ... time required:    35ms, addTwoIntsCounter:      16253

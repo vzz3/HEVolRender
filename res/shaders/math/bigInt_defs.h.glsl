@@ -54,9 +54,10 @@
  *
  */
 //#define BIG_INT_FORCE_SCHOOL
-//#define BIG_INT_REDUCE_BRANCHING 		1
-//#define BIG_INT_64BIT_WORD_ADD			1
+#define BIG_INT_REDUCE_BRANCHING 		1
+#define BIG_INT_64BIT_WORD_ADD			1
 #define GPU_MONTGOMERY_REDUCTION		1
+//#define BIG_INT_MONTGOMERY_FORCE_READABLE 1
 
 
 /* *************************************
@@ -65,7 +66,7 @@
  *
  * see src/paillier/Paillier_typeDev.h
  */
-#define PAILLIER_MODULUS_BIT_LENGTH 		512
+#define PAILLIER_MODULUS_BIT_LENGTH 		256
 
 #ifndef GPU_MONTGOMERY_REDUCTION
 	#define PAILLIER_INT_BIT_LENGTH 		(PAILLIER_MODULUS_BIT_LENGTH*4)

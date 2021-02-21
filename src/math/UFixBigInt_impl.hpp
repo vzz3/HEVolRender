@@ -457,6 +457,13 @@ BIG_INT_WORD_COUNT_TYPE UFixBigInt<S>::getWordSize() const {
 	return wordIndex + 1;
 }
 
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::clearHigherWords(const BIG_INT_WORD_COUNT_TYPE n) {
+	if( n < S ) {
+		std::fill_n(&this->value[n], S-n, 0);
+	}
+}
+
 
 // ----- shift left -----
 
@@ -682,7 +689,7 @@ UFixBigInt<S> UFixBigInt<S>::operator>> (const uint bits) const {
 }
 
 
-// ----- boolean operations -----
+// ----- bitwise operations -----
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::bitXor(const UFixBigInt<S> &other) {
@@ -696,6 +703,12 @@ UFixBigInt<S> UFixBigInt<S>::operator^ (const UFixBigInt<S>& other) const {
 	UFixBigInt<S> result(*this);
 	result.bitXor(other);
 	return result;
+}
+
+template <BIG_INT_WORD_COUNT_TYPE S>
+void UFixBigInt<S>::bitAnd(const BIG_INT_WORD_COUNT_TYPE wordIndex, const BIG_INT_WORD_TYPE other) {
+	assert( wordIndex < S );
+	this->value[wordIndex] &= other;
 }
 
 template <BIG_INT_WORD_COUNT_TYPE S>
@@ -1858,7 +1871,7 @@ void UFixBigInt<S>::modPow_montgomeryOdd_kAry(const UFixBigInt<S>& base, const U
 
 template <BIG_INT_WORD_COUNT_TYPE S>
 UFixBigInt<S> UFixBigInt<S>::modPow2(UFixBigInt<S> exponent, uint p) const {
-	assert( (p+1)*2 < FBI_WC_Sm2*BIG_INT_BITS_PER_WORD ); // worst case size: (1<<p)^2 
+	assert( (p*2+1) < FBI_WC_Sm2*BIG_INT_BITS_PER_WORD ); // worst case size: (1<<p)^2 
 	
 	/*
 	 * Perform exponentiation using repeated squaring trick, chopping off

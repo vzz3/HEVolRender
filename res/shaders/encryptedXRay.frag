@@ -46,6 +46,7 @@ void main()
 		montData.modulus = pkM2;
 		montData.mask = UFixBigInt_fromUniform(montMaskFromUniform);
 		montData.factor = UFixBigInt_fromUniform(montFactorFromUniform);
+		montData.reducerWords = BIG_INT_BIT_TO_SIZE(montData.reducerBits);
 	#endif
 
 	//outFragColor = texture(samplerColor, inUV);

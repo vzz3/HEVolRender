@@ -6,8 +6,9 @@
 #include "BigInt_wordDef.h"
 
 #include "Random.hpp"
+#include "MontgomeryReducer.hpp"
 
-//#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
+#define FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 
 #ifdef FIX_BIG_INT_AUTO_SIZE_TEMP_VARS
 	#define FBI_WC_Sp1 (S+1)
@@ -42,6 +43,9 @@ namespace ppvr {
 			// make every version of this template classe a frend of every other version
 			template<BIG_INT_WORD_COUNT_TYPE OS>
 			friend class UFixBigInt;
+			
+			// make the MontgomeryReducer with the current teplate version a firend
+			friend class MontgomeryReducer<UFixBigInt<S>>;
 			
 		public:
 			friend std::ostream& operator << ( std::ostream& os, const UFixBigInt<S>& value ){
@@ -244,6 +248,12 @@ namespace ppvr {
 			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}
+			
+		public:
+			/**
+			 * Set the word with the index n and all higher words to zero.
+			 */
+			void clearHigherWords(const BIG_INT_WORD_COUNT_TYPE n);
 
 		private:
 			
@@ -331,13 +341,14 @@ namespace ppvr {
 		public:
 			UFixBigInt<S> operator>> (const uint bits) const;
 
-		// ----- boolean operations -----
+		// ----- bitwise operations -----
 		protected:
 			void bitXor(const UFixBigInt<S> &other);
 		public:
 			UFixBigInt<S> operator^ (const UFixBigInt<S>& other) const;
 			
 		protected:
+			void bitAnd(const BIG_INT_WORD_COUNT_TYPE wordIndex, const BIG_INT_WORD_TYPE other);
 			void bitAnd(const UFixBigInt<S> &other);
 		public:
 			UFixBigInt<S> operator& (const UFixBigInt<S>& other) const;

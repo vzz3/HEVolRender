@@ -211,6 +211,19 @@ BIG_INT_WORD_COUNT_TYPE UFixBigInt_getWordSize(const in FIX_BIG_INT_VALUE me) {
 }
 
 
+/**
+ * Set the word with the index n and all higher words to zero.
+ * @public
+ */
+void UFixBigInt_clearHigherWords(inout FIX_BIG_INT_VALUE me, const in BIG_INT_WORD_COUNT_TYPE n) {
+	if( n < S ) {
+		//std::fill_n(&this->value[n], S-n, 0);
+		for(BIG_INT_WORD_COUNT_TYPE i=n; i<S; i++) {
+			me[i] = 0;
+		}
+	}
+}
+
 
 // ----- shift left -----
 
@@ -533,6 +546,16 @@ FIX_BIG_INT_VALUE UFixBigInt_xor(const in FIX_BIG_INT_VALUE me, const in FIX_BIG
 		res[i] = me[i] ^ other[i];
 	}
 	return res;
+}
+
+/**
+ * bitwise AND (&) operation for a single word
+ *
+ * @public
+ */
+void UFixBigInt_bitAnd(inout FIX_BIG_INT_VALUE me, const BIG_INT_WORD_COUNT_TYPE wordIndex, const BIG_INT_WORD_TYPE other) {
+	assert( wordIndex < S );
+	me[wordIndex] &= other;
 }
 
 /**

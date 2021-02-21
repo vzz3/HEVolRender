@@ -477,6 +477,13 @@ inline void UArbBigInt::trimWordSize(BIG_INT_WORD_COUNT_TYPE newMaxWordSize) {
 	this->wordSize = newWordSize;
 }
 
+void UArbBigInt::clearHigherWords(const BIG_INT_WORD_COUNT_TYPE n) {
+	if(n == 0) {
+		this->setZero();
+	} else if( n < this->wordSize ) {
+		this->trimWordSize(n);
+	}
+}
 
 // ----- shift left -----
 
@@ -714,7 +721,7 @@ UArbBigInt UArbBigInt::operator>> (const uint bits) const {
 }
 
 
-// ----- boolean operations -----
+// ----- bitwise operations -----
 
 void UArbBigInt::bitXor(const UArbBigInt &other) {
 	if(this->wordSize < other.wordSize) {
@@ -740,6 +747,13 @@ UArbBigInt UArbBigInt::operator^ (const UArbBigInt& other) const {
 	UArbBigInt result(*this, std::max(this->wordSize, other.wordSize));
 	result.bitXor(other);
 	return result;
+}
+
+void UArbBigInt::bitAnd(const BIG_INT_WORD_COUNT_TYPE wordIndex, const BIG_INT_WORD_TYPE other) {
+	if( wordIndex < this->wordSize ) {
+		this->value[wordIndex] &= other;
+		this->trimWordSize(this->wordSize);
+	}
 }
 
 void UArbBigInt::bitAnd(const UArbBigInt &other) {
@@ -1012,10 +1026,7 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 	#endif
 	
 	// optimize word count
-	BIG_INT_WORD_COUNT_TYPE usedWordIndex;
-	for(usedWordIndex = maxWordCount; usedWordIndex>0 && result.value[usedWordIndex-1] == 0; --usedWordIndex);
-
-	result.wordSize = usedWordIndex;
+	result.trimWordSize(maxWordCount);
 }
 
 void UArbBigInt::mulSchoolBasic(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt& result) const {

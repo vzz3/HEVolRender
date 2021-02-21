@@ -23,6 +23,9 @@ namespace ppvr {
 		class UFixBigInt;
 		
 		class UArbBigInt {
+		
+			// make the MontgomeryReducer a firend
+			friend class MontgomeryReducer<UArbBigInt>;
 
 		// ----- statics -----
 		public:
@@ -277,6 +280,12 @@ namespace ppvr {
 			inline BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}
+			
+		public:
+			/**
+			 * Set the word with the index n and all higher words to zero.
+			 */
+			void clearHigherWords(const BIG_INT_WORD_COUNT_TYPE n);
 
 		private:
 			
@@ -365,13 +374,14 @@ namespace ppvr {
 		public:
 			UArbBigInt operator>> (const uint bits) const;
 			
-		// ----- boolean operations -----
+		// ----- bitwise operations -----
 		protected:
 			void bitXor(const UArbBigInt &other);
 		public:
 			UArbBigInt operator^ (const UArbBigInt& other) const;
 			
 		protected:
+			void bitAnd(const BIG_INT_WORD_COUNT_TYPE wordIndex, const BIG_INT_WORD_TYPE other);
 			void bitAnd(const UArbBigInt &other);
 		public:
 			UArbBigInt operator& (const UArbBigInt& other) const;
