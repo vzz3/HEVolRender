@@ -42,7 +42,7 @@ std::string VulkanUtility::errorString(VkResult yErrorCode) {
 std::string VulkanUtility::textureFormatName(VkFormat yFormat) {
 	std::string textureFormatName = "Unknown (" + std::to_string(yFormat) + ")";
 	switch (yFormat) {
-		case VK_FORMAT_R8G8B8A8_UINT:     textureFormatName = "VK_FORMAT_R8G8B8A8_UINT";      break;
+		case VK_FORMAT_R8G8B8A8_UINT:     textureFormatName = "VK_FORMAT_R8G8B8A8_UINT";     break;
 		case VK_FORMAT_R16G16B16A16_UINT: textureFormatName = "VK_FORMAT_R16G16B16A16_UINT"; break;
 		case VK_FORMAT_R32G32B32A32_UINT: textureFormatName = "VK_FORMAT_R32G32B32A32_UINT"; break;
 		case VK_FORMAT_R64G64B64A64_UINT: textureFormatName = "VK_FORMAT_R64G64B64A64_UINT"; break;

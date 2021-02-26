@@ -36,6 +36,9 @@
 	#error A BigInteger word length preset of #_BIG_INT_WORD_LENGTH_PRESET_ is not supported.
 #endif
 
+// Check out https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GL_EXT_shader_explicit_arithmetic_types.txt
+// for better (explicit) types.
+
 // --- --- ---
 
 
