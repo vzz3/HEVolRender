@@ -26,6 +26,7 @@ namespace ppvr {
 				return (v + byteAlign - 1) & ~(byteAlign - 1);
 			}
 			static std::string errorString(VkResult yErrorCode);
+			static std::string textureFormatName(VkFormat yFormat);
 			
 			static VkShaderModule createShaderModule(VulkanDevice& yDev, const QString& yPath);
 			

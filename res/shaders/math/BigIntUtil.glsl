@@ -145,6 +145,9 @@ BIG_INT_WORD_TYPE BigIntUtil_addTwoWords(const in BIG_INT_WORD_TYPE a, const in 
 #else
 	uint64_t temp = uint64_t(a) + uint64_t(b) + uint64_t(carry);
 	result = BIG_INT_WORD_TYPE(temp);
+	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+		result = result & BIG_INT_WORD_ALL_BIT_MASK;
+	#endif
 	//return BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
 	carry = BIG_INT_WORD_TYPE(temp >> uint64_t(BIG_INT_BITS_PER_WORD));
 	#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
@@ -317,6 +320,9 @@ BIG_INT_WORD_TYPE BigIntUtil_mulAdd(inout FIX_BIG_INT_VALUE yOut, in BIG_INT_WOR
 		carry = uint64_t( yIn[indexIn] ) * kLong +
 				uint64_t(yOut[indexOut]) + carry;
 		yOut[indexOut] = BIG_INT_WORD_TYPE(carry);
+		#ifdef BIG_INT_LESS_BITS_THEN_WORD_TYPE
+			yOut[indexOut] = yOut[indexOut] & BIG_INT_WORD_ALL_BIT_MASK;
+		#endif
 		//carry = BIG_INT_WORD_TYPE(carry >> BIG_INT_BITS_PER_WORD);
 		carry = BIG_INT_WORD_ALL_BIT_MASK & (carry >> uint64_t(BIG_INT_BITS_PER_WORD));
 		indexOut++;

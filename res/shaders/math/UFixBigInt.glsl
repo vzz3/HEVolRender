@@ -133,11 +133,16 @@ void UFixBigInt_copy(const in FIX_BIG_INT_VALUE me, out BIG_INT_WORD_TYPE[FBI_WC
  * @const
  * @public
  */
-uvec4[GPU_INT_TEXTURE_SIZE] UFixBigInt_toColorOut(const in FIX_BIG_INT_VALUE me) {
-	uvec4 texOut[GPU_INT_TEXTURE_SIZE];
-	for(uint texIndex = 0; texIndex < GPU_INT_TEXTURE_SIZE; texIndex++) {
-		for(uint channelIndex = 0; channelIndex < GPU_INT_TEXTURE_WORD_COUNT; channelIndex++) {
-			texOut[texIndex][channelIndex] = me[texIndex*4 + channelIndex];
+GPU_INT_ATTACHMENT_FORMAT[GPU_INT_ATTACHMENT_SIZE] UFixBigInt_toColorOut(const in FIX_BIG_INT_VALUE me) {
+	GPU_INT_ATTACHMENT_FORMAT texOut[GPU_INT_ATTACHMENT_SIZE];
+	for(uint texIndex = 0; texIndex < GPU_INT_ATTACHMENT_SIZE; texIndex++) {
+		for(uint channelIndex = 0; channelIndex < GPU_INT_ATTACHMENT_WORD_COUNT; channelIndex++) {
+			#ifdef GPU_TARGET_DOUBLE_WORD_LENGTH
+				texOut[texIndex][channelIndex] = GPU_INT_ATTACHMENT_WORD_TYPE(me[texIndex*4*2 + channelIndex*2    ])
+											  | (GPU_INT_ATTACHMENT_WORD_TYPE(me[texIndex*4*2 + channelIndex*2 + 1]) << BIG_INT_BITS_PER_WORD);
+			#else
+				texOut[texIndex][channelIndex] = me[texIndex*4 + channelIndex];
+			#endif
 		}
 	}
 	//texOut[1].r = 255;

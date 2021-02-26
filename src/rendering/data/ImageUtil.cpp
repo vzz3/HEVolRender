@@ -260,15 +260,23 @@ void ImageUtil::framebuffer2Image(VulkanDevice& yDevice, const FrameBuffer& yFBO
 			Save host visible framebuffer image to disk (ppm format)
 		*/
 
-		size_t wordOffset = i * GPU_INT_TEXTURE_WORD_COUNT;
+		size_t wordOffset = i * GPU_INT_ATTACHMENT_WORD_COUNT;
+		#ifdef GPU_TARGET_DOUBLE_WORD_LENGTH
+			wordOffset *= 2;
+		#endif
 
 		// ppm binary pixel data
 		for (int32_t y = 0; y < height; y++) {
-			BIG_INT_WORD_TYPE *row = (BIG_INT_WORD_TYPE*)imageData;
+			GPU_INT_ATTACHMENT_WORD_TYPE *row = (GPU_INT_ATTACHMENT_WORD_TYPE*)imageData;
 			for (int32_t x = 0; x < width; x++) {
 				PaillierInt& bigIntVal = yDstImage.get(x,y);
-				for (size_t w = 0; w < GPU_INT_TEXTURE_WORD_COUNT; w++) {
-					bigIntVal.getDataUnsafe()[wordOffset + w] = *row;
+				for (size_t w = 0; w < GPU_INT_ATTACHMENT_WORD_COUNT; w += 1) {
+					#ifdef GPU_TARGET_DOUBLE_WORD_LENGTH
+						bigIntVal.getDataUnsafe()[wordOffset + w*2  ] = (BIG_INT_WORD_TYPE)(*row);							// read low word
+						bigIntVal.getDataUnsafe()[wordOffset + w*2+1] = (BIG_INT_WORD_TYPE)(*row >> BIG_INT_BITS_PER_WORD);	// read high word
+					#else
+						bigIntVal.getDataUnsafe()[wordOffset + w] = *row;
+					#endif
 					bigIntVal.fixSignumAfterUnsafeOperation(false);
 					row++;
 				}

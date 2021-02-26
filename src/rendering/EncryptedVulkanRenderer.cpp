@@ -21,8 +21,8 @@ EncryptedVulkanRenderer::EncryptedVulkanRenderer(QVulkanInstance* yQVulkanInstan
 		initBigIntTest(yBigIntTest),
 		//fboFormates{{VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL}}
 		fboFormates{
-			GPU_INT_TEXTURE_SIZE,
-			{GPU_INT_TEXTURE_FORMAT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL}
+			GPU_INT_ATTACHMENT_SIZE,
+			{GPU_INT_ATTACHMENT_FORMAT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL}
 		}
 	{
 	initVulkan(yQVulkanInstance, yVkPhysicalDevice);

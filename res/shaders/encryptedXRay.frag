@@ -1,6 +1,7 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_ARB_gpu_shader_int64 : require
 
 // DO NOT FORGET:
 //	cd /Users/sebastian/Documents/_Eigene_Dokumente/TU/CsProject/prototypeVulkan/build
@@ -29,7 +30,7 @@ layout (binding = 5) uniform utexture3D texturesVolumes[GPU_INT_TEXTURE_SIZE];
 layout (location = 0) in vec2 inUV;
 
 //layout (location = 0) out vec4 outFragColor;
-layout (location = 0) out uvec4 outFragColor[GPU_INT_TEXTURE_SIZE];
+layout (location = 0) out GPU_INT_ATTACHMENT_FORMAT outFragColor[GPU_INT_ATTACHMENT_SIZE];
 
 void main()
 {
