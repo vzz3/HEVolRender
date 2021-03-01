@@ -76,6 +76,7 @@ using ppvr::rendering::data::VolumeFactory;
 using ppvr::rendering::data::CryptoUtil;
 using ppvr::util::DurationDisplay;
 using ppvr::rendering::VulkanUtility;
+using ppvr::paillier::crypto::SecureKey;
 
 MainWindow::MainWindow() {
 
@@ -125,12 +126,21 @@ MainWindow::MainWindow() {
 }
 
 MainWindow::~MainWindow() {
+	if(m_secureKey != nullptr) {
+		delete m_secureKey;
+		m_secureKey = nullptr;
+	}
+	if(m_encryptedVolume != nullptr) {
+		delete m_encryptedVolume;
+		m_encryptedVolume = nullptr;
+	}
+	
 	delete qvInstance;
 	qvInstance = nullptr;
 	delete m_Ui;
 	m_Ui = nullptr;
 	delete m_scene4EncryptedImageView;
-	m_scene4EncryptedImageView = nullptr;
+	m_scene4EncryptedImageView = nullptr;	
 }
 
 void MainWindow::initVulkanWindow() {
@@ -229,22 +239,28 @@ void MainWindow::onGrabRequested()
 
 void MainWindow::renderEcrypted() {
 	// rendering config
-	size_t volumeSize = 100;
-	QSize imageSize{150, 150};
+	size_t volumeSize = 256;
+	QSize imageSize{512, 512};
 	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(volumeSize/2);
 	
 	// create key
-	SecureKey sk = SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH);
+	if(m_secureKey == nullptr) {
+		m_secureKey = new SecureKey{SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH)};
+	}
+	SecureKey sk = *m_secureKey;
 	PublicKey pk = sk.publicKey;
 	std::cout << "Key: P=" << sk.p.toStringHex() << ", Q=" << sk.q.toStringHex() << ", M=" << pk.modulus.toStringHex() << ", M^2=" << pk.getModulusSquared().toStringHex() << std::endl;
 	
-	// create volume
-	Volume<uint16_t> plainVolume;
-	PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
+	if(m_encryptedVolume == nullptr) {
+		// create volume
+		Volume<uint16_t> plainVolume;
+		PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
+		
+		// encrypt volume
+		m_encryptedVolume = new Volume<PaillierInt>{};
+		PRINT_DURATION(CryptoUtil::encrypt(sk.publicKey, plainVolume, *m_encryptedVolume), "encrypt volume");
+	}
 	
-	// encrypt volume
-	Volume<PaillierInt> encryptedVolume;
-	PRINT_DURATION(CryptoUtil::encrypt(sk.publicKey, plainVolume, encryptedVolume), "encrypt volume");
 	
 	Image<PaillierInt> encryptedImage;
 	Image<uint16_t> paintextImage;
@@ -253,7 +269,7 @@ void MainWindow::renderEcrypted() {
 	Camera cameraCopy = m_window->m_vulkanRenderer->camera();
 	cameraCopy.setViewportSize(imageSize.width(), imageSize.height());
 	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), cameraCopy);
-	encRenderer->setEncryptedVolume(&pk, &encryptedVolume);
+	encRenderer->setEncryptedVolume(&pk, m_encryptedVolume);
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
 	

@@ -8,7 +8,7 @@
  */
 
 // BigInt
-#define _BIG_INT_WORD_LENGTH_PRESET_ 			16
+#define _BIG_INT_WORD_LENGTH_PRESET_ 			32
 
 #define BIG_INT_WORD_COUNT_TYPE 				uint
 
@@ -61,12 +61,12 @@
  * ****************************************
  *
  */
-//#define BIG_INT_FORCE_SCHOOL					1		// if disable the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
-#define BIG_INT_REDUCE_BRANCHING 				1
-#define BIG_INT_64BIT_WORD_ADD					1		// if enabled the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
+#define BIG_INT_FORCE_SCHOOL					1		// if disable the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
 #define GPU_MONTGOMERY_REDUCTION				1
+//#define BIG_INT_REDUCE_BRANCHING 				1
+//#define BIG_INT_64BIT_WORD_ADD					1		// if enabled the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
 //#define BIG_INT_MONTGOMERY_FORCE_READABLE 	1
-#define GPU_TARGET_DOUBLE_WORD_LENGTH			1		// if enabled and 32bit BigInt words are used the GLSL extension "GL_ARB_gpu_shader_int64" is required
+//#define GPU_TARGET_DOUBLE_WORD_LENGTH			1		// if enabled and 32bit BigInt words are used the GLSL extension "GL_ARB_gpu_shader_int64" is required
 
 
 /* *************************************
@@ -75,7 +75,7 @@
  *
  * see src/paillier/Paillier_typeDev.h
  */
-#define PAILLIER_MODULUS_BIT_LENGTH 			64
+#define PAILLIER_MODULUS_BIT_LENGTH 			512
 
 #ifndef GPU_MONTGOMERY_REDUCTION
 	#define PAILLIER_INT_BIT_LENGTH 			(PAILLIER_MODULUS_BIT_LENGTH*4)

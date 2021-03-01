@@ -53,6 +53,9 @@
 
 #include "ui_MainWindow.h"
 #include "../src/rendering/PlainVulkanRenderer.hpp"
+#include "../src/rendering/data/Volume.hpp"
+#include "../src/paillier/Paillier_typeDev.h"
+#include "../src/paillier/crypto/SecureKey.hpp"
 
 class VulkanWindow;
 
@@ -63,6 +66,8 @@ class QLCDNumber;
 QT_END_NAMESPACE
 
 using ppvr::rendering::PlainVulkanRenderer;
+using ppvr::rendering::data::Volume;
+using ppvr::paillier::crypto::SecureKey;
 
 class MainWindow : public QMainWindow
 {
@@ -94,6 +99,9 @@ private:
 	
     QGraphicsScene *m_scene4EncryptedImageView;
 	QPixmap pixmap4EncryptedImageView;
+    
+    SecureKey *m_secureKey = nullptr;
+    Volume<PaillierInt> *m_encryptedVolume = nullptr;
 };
 
 class VulkanRenderer : public PlainVulkanRenderer //TriangleRenderer

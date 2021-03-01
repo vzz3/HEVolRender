@@ -5,7 +5,7 @@
 
 
 #define USE_FIX_WIDTH_INTEGER 					1
-#define PAILLIER_MODULUS_BIT_LENGTH 			64 // GPU test: 64 // Paillier test: 256
+#define PAILLIER_MODULUS_BIT_LENGTH 			512 // GPU test: 64 // Paillier test: 256
 
 /* ****************************************
  * *** Config. for different reder modi ***
@@ -13,7 +13,7 @@
  *
  */
 #define GPU_MONTGOMERY_REDUCTION				1
-#define GPU_TARGET_DOUBLE_WORD_LENGTH			1
+//#define GPU_TARGET_DOUBLE_WORD_LENGTH			1
 
 // Why is the required integer bit length $ bitLengt(M) * 4 $ ?
 // obfuscate(c) {
