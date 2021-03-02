@@ -75,7 +75,7 @@
  *
  * see src/paillier/Paillier_typeDev.h
  */
-#define PAILLIER_MODULUS_BIT_LENGTH 			512
+#define PAILLIER_MODULUS_BIT_LENGTH 			64
 
 #ifndef GPU_MONTGOMERY_REDUCTION
 	#define PAILLIER_INT_BIT_LENGTH 			(PAILLIER_MODULUS_BIT_LENGTH*4)

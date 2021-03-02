@@ -48,13 +48,13 @@
 **
 ****************************************************************************/
 
-#include "hellovulkanwidget.h"
-#include <QVulkanFunctions>
-#include <QApplication>
-#include <QVBoxLayout>
-#include <QPlainTextEdit>
-#include <QPushButton>
-#include <QLCDNumber>
+#include "MainWindow.hpp"
+//#include <QVulkanFunctions>
+//#include <QApplication>
+//#include <QVBoxLayout>
+//#include <QPlainTextEdit>
+//#include <QPushButton>
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTabWidget>
@@ -67,7 +67,9 @@
 #include "../src/rendering/data/ImageUtil.hpp"
 #include "../src/rendering/VulkanUtility.hpp"
 
-using ppvr::rendering::PlainVulkanRenderer;
+#include "VulkanWindow.hpp"
+#include "VulkanRenderer.hpp"
+
 using ppvr::rendering::Camera;
 using ppvr::rendering::EncryptedVulkanRenderer;
 using ppvr::rendering::test::BigIntTestCase;
@@ -134,6 +136,10 @@ MainWindow::~MainWindow() {
 		delete m_encryptedVolume;
 		m_encryptedVolume = nullptr;
 	}
+	if(m_encryptedVolumeKey != nullptr) {
+		delete m_encryptedVolumeKey;
+		m_encryptedVolumeKey = nullptr;
+	}
 	
 	delete qvInstance;
 	qvInstance = nullptr;
@@ -182,20 +188,18 @@ void MainWindow::initVulkanWindow() {
         qFatal("Failed to create Vulkan instance: %d", qvInstance->errorCode());
 	}
 	//VkInstance	vkTestInstance = qvInstance->vkInstance();
-    m_window = new VulkanWindow;
-    m_window->setVulkanInstance(qvInstance);
+    m_vulkanWindow = new VulkanWindow;
+    m_vulkanWindow->setVulkanInstance(qvInstance);
 	
 	
-	m_window->setDeviceExtensions(vkDeviceExtensions);
+	m_vulkanWindow->setDeviceExtensions(vkDeviceExtensions);
 	// QVulkanWindowPrivate::recreateSwapChain()
 	
-	
 	MainWindow* mainWindow = this;
-	VulkanWindow* vulkanWindow = m_window;
-    QObject::connect(vulkanWindow, &VulkanWindow::vulkanInfoReceived, mainWindow, &MainWindow::onVulkanInfoReceived);
-    QObject::connect(vulkanWindow, &VulkanWindow::frameQueued, mainWindow, &MainWindow::onFrameQueued);
+    QObject::connect(m_vulkanWindow, &VulkanWindow::vulkanInfoReceived, mainWindow, &MainWindow::onVulkanInfoReceived);
+    QObject::connect(m_vulkanWindow, &VulkanWindow::frameQueued, mainWindow, &MainWindow::onFrameQueued);
 	
-    QWidget *wrapper = QWidget::createWindowContainer(m_window);
+    QWidget *wrapper = QWidget::createWindowContainer(m_vulkanWindow);
 	//m_glWidget = new GLWidget(this, this);
 	m_Ui->vkLayout->addWidget(wrapper);
 	
@@ -219,12 +223,12 @@ void MainWindow::onFrameQueued(int colorValue)
 
 void MainWindow::onGrabRequested()
 {
-    if (!m_window->supportsGrab()) {
+    if (!m_vulkanWindow->supportsGrab()) {
         QMessageBox::warning(this, tr("Cannot grab"), tr("This swapchain does not support readbacks."));
         return;
     }
 
-    QImage img = m_window->grab();
+    QImage img = m_vulkanWindow->grab();
 
     // Our startNextFrame() implementation is synchronous so img is ready to be
     // used right here.
@@ -237,38 +241,56 @@ void MainWindow::onGrabRequested()
         img.save(fd.selectedFiles().first());
 }
 
+void MainWindow::encryptVolume(const PublicKey &yPK) {
+	size_t volumeSize = 256;
+
+	if(m_encryptedVolume != nullptr) {
+		delete m_encryptedVolume;
+		m_encryptedVolume = nullptr;
+	}
+	
+	// create volume
+	Volume<uint16_t> plainVolume;
+	PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
+	
+	// encrypt volume
+	m_encryptedVolume = new Volume<PaillierInt>{};
+	PRINT_DURATION(CryptoUtil::encrypt(yPK, plainVolume, *m_encryptedVolume), "encrypt volume");
+	
+	if(m_encryptedVolumeKey != nullptr) {
+		delete m_encryptedVolumeKey;
+		m_encryptedVolumeKey = nullptr;
+	}
+	m_encryptedVolumeKey = new PublicKey{yPK};
+}
+
 void MainWindow::renderEcrypted() {
 	// rendering config
-	size_t volumeSize = 256;
 	QSize imageSize{512, 512};
-	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(volumeSize/2);
 	
 	// create key
 	if(m_secureKey == nullptr) {
 		m_secureKey = new SecureKey{SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH)};
 	}
+	
+	if(m_encryptedVolume == nullptr) {
+		this->encryptVolume(m_secureKey->publicKey);
+	}
+	
+	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(m_encryptedVolume->depth()/2);
+	
 	SecureKey sk = *m_secureKey;
 	PublicKey pk = sk.publicKey;
 	std::cout << "Key: P=" << sk.p.toStringHex() << ", Q=" << sk.q.toStringHex() << ", M=" << pk.modulus.toStringHex() << ", M^2=" << pk.getModulusSquared().toStringHex() << std::endl;
-	
-	if(m_encryptedVolume == nullptr) {
-		// create volume
-		Volume<uint16_t> plainVolume;
-		PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
-		
-		// encrypt volume
-		m_encryptedVolume = new Volume<PaillierInt>{};
-		PRINT_DURATION(CryptoUtil::encrypt(sk.publicKey, plainVolume, *m_encryptedVolume), "encrypt volume");
-	}
 	
 	
 	Image<PaillierInt> encryptedImage;
 	Image<uint16_t> paintextImage;
 	
 	// inizialize GPU rendering
-	Camera cameraCopy = m_window->m_vulkanRenderer->camera();
+	Camera cameraCopy = m_vulkanWindow->m_vulkanRenderer->camera();
 	cameraCopy.setViewportSize(imageSize.width(), imageSize.height());
-	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), cameraCopy);
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_vulkanWindow->physicalDevice(), cameraCopy);
 	encRenderer->setEncryptedVolume(&pk, m_encryptedVolume);
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
@@ -310,7 +332,7 @@ void MainWindow::testGpuBigInt() {
 		<< std::endl;
 	
 	
-	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_window->physicalDevice(), m_window->m_vulkanRenderer->camera(), true);
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_vulkanWindow->physicalDevice(), m_vulkanWindow->m_vulkanRenderer->camera(), true);
 	
 	std::vector<BigIntTestCase> testCases = BigIntTestFactory::createAllTest();
 	for(BigIntTestCase& testCase : testCases) {
@@ -333,125 +355,3 @@ void MainWindow::testGpuBigInt() {
 	
 }
 
-
-//VulkanWindow::VulkanWindow(): m_camera(1,1) {}
-
-QVulkanWindowRenderer* VulkanWindow::createRenderer()
-{
-	m_vulkanRenderer = new VulkanRenderer(this);
-    return m_vulkanRenderer;
-}
-
-void VulkanWindow::mousePressEvent(QMouseEvent *event)
-{
-	m_lastPos = event->pos();
-}
-
-void VulkanWindow::wheelEvent(QWheelEvent *event)
-{
-	Camera& camera = m_vulkanRenderer->camera();
-	float zoomDelta = event->angleDelta().y() / 300.0f;
-	//qDebug() << "zoomDelta" << zoomDelta;
-	camera.zoom(zoomDelta);
-	//update(); // TODO render new frame
-}
-
-void VulkanWindow::mouseMoveEvent(QMouseEvent *event)
-{
-	Camera& camera = m_vulkanRenderer->camera();
-
-	int dx = event->x() - m_lastPos.x();
-	int dy = event->y() - m_lastPos.y();
-
-	if (event->buttons() & Qt::LeftButton) {
-		camera.rotateAzimuth(dx / 100.0f);
-		camera.rotatePolar(dy / 100.0f);
-	}
-
-	if (event->buttons() & Qt::RightButton) {
-		camera.rotateAzimuth(dx / 100.0f);
-		camera.rotatePolar(dy / 100.0f);
-	}
-	m_lastPos = event->pos();
-	//update(); // TODO render new frame
-}
-
-
-
-VulkanRenderer::VulkanRenderer(VulkanWindow *w)
-    :
-    //TriangleRenderer(w)
-    PlainVulkanRenderer(w)
-{
-}
-
-void VulkanRenderer::initResources()
-{
-    //TriangleRenderer::initResources();
-	PlainVulkanRenderer::initResources();
-
-    QVulkanInstance *inst = m_window->vulkanInstance();
-    //m_devFuncs = inst->deviceFunctions(m_window->device());
-
-    QString info;
-    info += QString().asprintf("Number of physical devices: %d\n", m_window->availablePhysicalDevices().count());
-
-    QVulkanFunctions *f = inst->functions();
-    VkPhysicalDeviceProperties props;
-    f->vkGetPhysicalDeviceProperties(m_window->physicalDevice(), &props);
-    info += QString().asprintf("Active physical device name: '%s' version %d.%d.%d\nAPI version %d.%d.%d\n",
-                              props.deviceName,
-                              VK_VERSION_MAJOR(props.driverVersion), VK_VERSION_MINOR(props.driverVersion),
-                              VK_VERSION_PATCH(props.driverVersion),
-                              VK_VERSION_MAJOR(props.apiVersion), VK_VERSION_MINOR(props.apiVersion),
-                              VK_VERSION_PATCH(props.apiVersion));
-
-    info += QStringLiteral("Supported instance layers:\n");
-    for (const QVulkanLayer &layer : inst->supportedLayers())
-        info += QString().asprintf("    %s v%u\n", layer.name.constData(), layer.version);
-    info += QStringLiteral("Enabled instance layers:\n");
-    for (const QByteArray &layer : inst->layers())
-        info += QString().asprintf("    %s\n", layer.constData());
-
-    info += QStringLiteral("Supported instance extensions:\n");
-    for (const QVulkanExtension &ext : inst->supportedExtensions())
-        info += QString().asprintf("    %s v%u\n", ext.name.constData(), ext.version);
-    info += QStringLiteral("Enabled instance extensions:\n");
-    for (const QByteArray &ext : inst->extensions())
-        info += QString().asprintf("    %s\n", ext.constData());
-	
-	{
-		info += QStringLiteral("VkPhysicalDeviceFeatures:\n");
-		VkPhysicalDeviceFeatures pDeviceFeatures{};
-		inst->functions()->vkGetPhysicalDeviceFeatures(m_window->physicalDevice(), &pDeviceFeatures);
-		info += QString().asprintf("    fragmentStoresAndAtomics: %s\n", 		(pDeviceFeatures.fragmentStoresAndAtomics ? "YES" : "NO"));
-		info += QString().asprintf("    vertexPipelineStoresAndAtomics: %s\n", 	(pDeviceFeatures.vertexPipelineStoresAndAtomics ? "YES" : "NO"));
-	}
-	
-    info += QString().asprintf("Color format: %u\nDepth-stencil format: %u\n",
-                              m_window->colorFormat(), m_window->depthStencilFormat());
-
-    info += QStringLiteral("Supported sample counts:");
-    const QVector<int> sampleCounts = m_window->supportedSampleCounts();
-    for (int count : sampleCounts)
-        info += QLatin1Char(' ') + QString::number(count);
-    info += QLatin1Char('\n');
-	
-	const VkPhysicalDeviceLimits& pdevLimits = props.limits; // https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkPhysicalDeviceLimits.html
-	info += QStringLiteral("VkPhysicalDeviceLimits:\n");
-	info += QString().asprintf("    maxFragmentOutputAttachments: %u\n", props.limits.maxFragmentOutputAttachments);
-	info += QString().asprintf("    maxColorAttachments: %u    (max. number of FBO color attachments)\n", props.limits.maxColorAttachments);
-	info += QString().asprintf("    maxPerStageDescriptorSampledImages: %u\n", props.limits.maxPerStageDescriptorSampledImages);
-	info += QString().asprintf("    maxPerStageResources: %u\n", props.limits.maxPerStageResources);
-	info += QString().asprintf("    maxDescriptorSetSampledImages: %u\n", props.limits.maxDescriptorSetSampledImages);
-
-    emit static_cast<VulkanWindow *>(m_window)->vulkanInfoReceived(info);
-}
-
-void VulkanRenderer::startNextFrame()
-{
-    //TriangleRenderer::startNextFrame();
-    //emit static_cast<VulkanWindow *>(m_window)->frameQueued(int(m_rotation) % 360);
-	
-	PlainVulkanRenderer::startNextFrame();
-}

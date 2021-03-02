@@ -56,7 +56,7 @@
 #include <QLibraryInfo>
 #include <QLoggingCategory>
 #include <QPointer>
-#include "hellovulkanwidget.h"
+#include "MainWindow.hpp"
 
 Q_LOGGING_CATEGORY(lcVk, "qt.vulkan")
 
