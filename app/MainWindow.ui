@@ -133,6 +133,8 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpenEncryptedVolume"/>
+    <addaction name="actionSaveEncryptedVolume"/>
     <addaction name="actionGrabFrame"/>
    </widget>
    <widget class="QMenu" name="menuRender">
@@ -167,6 +169,16 @@
   <action name="actionTestGpuBigInt">
    <property name="text">
     <string>Test GPU BigInt</string>
+   </property>
+  </action>
+  <action name="actionSaveEncryptedVolume">
+   <property name="text">
+    <string>Save Encrypted Volume ...</string>
+   </property>
+  </action>
+  <action name="actionOpenEncryptedVolume">
+   <property name="text">
+    <string>Open Encrypted Volume...</string>
    </property>
   </action>
  </widget>

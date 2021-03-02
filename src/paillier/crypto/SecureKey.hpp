@@ -21,8 +21,10 @@ namespace ppvr {
 				 */
 				static SecureKey create(uint modulusBitLength);
 
-			public:
+			private:
 				SecureKey(const PaillierInt& yP, const PaillierInt& yQ, const PublicKey& yPublicKey);
+			public:
+				SecureKey(const PaillierInt& yP, const PaillierInt& yQ);
 				~SecureKey();
 
 				/**

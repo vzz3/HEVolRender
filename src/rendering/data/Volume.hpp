@@ -59,9 +59,11 @@ namespace ppvr {
 				
 				void set(size_t x, size_t y, size_t z, const T& value);
 				const T& get(size_t x, size_t y, size_t z) const;
+				T& get(size_t x, size_t y, size_t z);
 				
 				void set(size_t index, const T& value);
 				const T& get(size_t index) const;
+				T& get(size_t index);
 				
 				//const T& operator[](size_t i) const;
 				SubProxyX operator[](size_t x) {

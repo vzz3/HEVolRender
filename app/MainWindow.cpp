@@ -70,6 +70,9 @@
 #include "VulkanWindow.hpp"
 #include "VulkanRenderer.hpp"
 
+#include <iostream>
+#include <fstream>
+
 using ppvr::rendering::Camera;
 using ppvr::rendering::EncryptedVulkanRenderer;
 using ppvr::rendering::test::BigIntTestCase;
@@ -125,6 +128,36 @@ MainWindow::MainWindow() {
 	connect(m_Ui->actionGrabFrame, &QAction::triggered, this, &MainWindow::onGrabRequested);
 	connect(m_Ui->actionRenderEncrypted, SIGNAL(triggered()), this, SLOT(renderEcrypted()));
 	connect(m_Ui->actionTestGpuBigInt, SIGNAL(triggered()), this, SLOT(testGpuBigInt()));
+	connect(m_Ui->actionOpenEncryptedVolume, SIGNAL(triggered()), this, SLOT(loadEncryptedVolume()));
+	connect(m_Ui->actionSaveEncryptedVolume, SIGNAL(triggered()), this, SLOT(saveEncryptedVolume()));
+	
+	
+	// set a not so secure private key for testing
+	if(PAILLIER_MODULUS_BIT_LENGTH == 64) {
+		m_secureKey = new ppvr::paillier::crypto::SecureKey(
+			  PaillierInt::fromString("C456074F", 16)
+			, PaillierInt::fromString("B2E819FB", 16)
+		);
+	} else if(PAILLIER_MODULUS_BIT_LENGTH == 128) {
+		m_secureKey = new ppvr::paillier::crypto::SecureKey(
+			  PaillierInt::fromString("D0D3F681BED1D223", 16)
+			, PaillierInt::fromString("CA8BF0DF0FF05797", 16)
+		);
+	} else if(PAILLIER_MODULUS_BIT_LENGTH == 256) {
+		m_secureKey = new ppvr::paillier::crypto::SecureKey(
+			  PaillierInt::fromString("CDA36BE3D68106CC5801466E597D0925", 16)
+			, PaillierInt::fromString("B2D541C69E76BE349840A867667C8F23", 16)
+		);
+	} else if(PAILLIER_MODULUS_BIT_LENGTH == 512) {
+		m_secureKey = new ppvr::paillier::crypto::SecureKey(
+			  PaillierInt::fromString("BD2EAAA4AB1501F2DC6D9DEC045A950D11DC8BFC30FAF210E100139289A8876B", 16)
+			, PaillierInt::fromString("EBBE8A4F5B80457CE08D201096D0CA9171FC073AB182F564AFC34F8D98E54AB9", 16)
+		);
+	}
+	else {
+		m_secureKey = new SecureKey{SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH)};
+	}
+
 }
 
 MainWindow::~MainWindow() {
@@ -264,6 +297,117 @@ void MainWindow::encryptVolume(const PublicKey &yPK) {
 	m_encryptedVolumeKey = new PublicKey{yPK};
 }
 
+std::string MainWindow::makeHeVolFileName(const size_t ySize) {
+	std::string fileName = "test_k1_v" + std::to_string(ySize) + "_b" + std::to_string(PAILLIER_MODULUS_BIT_LENGTH); // test_k1_v256_b64_mont.hevol
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		fileName += "_mont";
+	#endif
+    fileName += ".hevol";
+    
+    return fileName;
+}
+
+void MainWindow::saveEncryptedVolume() {
+	// create encrypted volume if it does not exist
+	if(m_encryptedVolume == nullptr) {
+		this->encryptVolume(m_secureKey->publicKey);
+	}
+
+	QFileDialog fd(this);
+    fd.setAcceptMode(QFileDialog::AcceptSave);
+    fd.setDefaultSuffix("hevol");
+    fd.selectFile(QString::fromStdString(makeHeVolFileName(this->m_encryptedVolume->width())));
+    if (fd.exec() == QDialog::Accepted) {
+        //img.save(fd.selectedFiles().first());
+		std::ofstream file(fd.selectedFiles().first().toStdString(), std::ios::out|std::ios::binary|std::ios::ate);
+		if (file.is_open()) {
+			constexpr size_t voxelSize = PAILLIER_INT_STORAGE_BIT_LENGTH / CHAR_BIT;
+			
+			uint16_t fileHeaderBuffer[5];// = {PAILLIER_INT_STORAGE_WORD_SIZE, this->m_encryptedVolume->width(), this->m_encryptedVolume->height(), this->m_encryptedVolume->depth()};
+			fileHeaderBuffer[0] = volumeType;
+			fileHeaderBuffer[1] = voxelSize;
+			fileHeaderBuffer[2] = this->m_encryptedVolume->width();
+			fileHeaderBuffer[3] = this->m_encryptedVolume->height();
+			fileHeaderBuffer[4] = this->m_encryptedVolume->depth();
+			
+			// write storage size of an encrypted value, and volume width, height, and depth
+			file.write(reinterpret_cast<const char*>(fileHeaderBuffer), sizeof(fileHeaderBuffer));
+			
+			// write the public key
+			file.write(reinterpret_cast<const char*>(m_encryptedVolumeKey->modulus.getData()), voxelSize);
+			
+			const size_t volumeSize = m_encryptedVolume->length();
+			for (size_t i=0; i < volumeSize; i++) {
+				file.write(reinterpret_cast<const char*>(m_encryptedVolume->get(i).getData()), voxelSize);
+			}
+			
+			file.close();
+			std::cout << "saved file to " << fd.selectedFiles().first().toStdString() << "." << std::endl;
+		}
+	}
+}
+
+void MainWindow::loadEncryptedVolume() {
+	QFileDialog fd(this);
+    fd.setAcceptMode(QFileDialog::AcceptOpen);
+    fd.setDefaultSuffix("hevol");
+    fd.selectFile(QString::fromStdString(makeHeVolFileName(256)));
+    if (fd.exec() == QDialog::Accepted) {
+        //img.save(fd.selectedFiles().first());
+		std::ifstream file(fd.selectedFiles().first().toStdString(), std::ios::in|std::ios::binary|std::ios::ate);
+		if (file.is_open()) {
+			const std::streampos size = file.tellg();
+			uint16_t fileHeaderBuffer[5];
+			file.seekg (0, std::ios::beg);
+			
+			// read header with size information
+			file.read(reinterpret_cast<char*>(fileHeaderBuffer), sizeof(uint16_t) * 5);
+			const uint16_t volumeTypeFromFile = fileHeaderBuffer[0];
+			const size_t voxelSize = fileHeaderBuffer[1];
+			const size_t width = fileHeaderBuffer[2];
+			const size_t height = fileHeaderBuffer[3];
+			const size_t depth = fileHeaderBuffer[4];
+			
+			if(volumeTypeFromFile != volumeType) {
+				std::cout << "Volume Type does not match the current configuration (see GPU_MONTGOMERY_REDUCTION)" << std::endl;
+			} else {
+				if(PAILLIER_INT_STORAGE_BIT_LENGTH != voxelSize * CHAR_BIT) {
+					std::cout << "Voxel storage size of file does not match PAILLIER_INT_STORAGE_BIT_LENGTH." << std::endl;
+				} else {
+					// read the public key
+					PaillierInt modulus{0};
+					file.read(reinterpret_cast<char*>(modulus.getDataUnsafe()), voxelSize);
+					modulus.fixSignumAfterUnsafeOperation(false);
+					if( modulus != m_secureKey->publicKey.modulus) {
+						std::cout << "The Public key of the HE Volume File does not match the current secure key." << std::endl;
+						// This is not an error. However, it is not posible to decrypt the rendered image with the current secury key.
+					}
+					if(m_encryptedVolumeKey != nullptr) {
+						delete m_encryptedVolumeKey;
+					}
+					m_encryptedVolumeKey = new PublicKey{modulus};
+					
+					// reat the volume data
+					if(m_encryptedVolume == nullptr) {
+						m_encryptedVolume = new Volume<PaillierInt>();
+					}
+					m_encryptedVolume->resize(width, height, depth);
+					const size_t volumeSize = m_encryptedVolume->length();
+					for (size_t i=0; i < volumeSize; i++) {
+						PaillierInt& voxel = m_encryptedVolume->get(i);
+						file.read(reinterpret_cast<char*>(voxel.getDataUnsafe()), voxelSize);
+						voxel.fixSignumAfterUnsafeOperation(false);
+					}
+					
+					std::cout << "The entire volume from " << fd.selectedFiles().first().toStdString() << " is in memory." << std::endl;;
+				}
+			}
+			
+			file.close();
+		}
+	}
+}
+
 void MainWindow::renderEcrypted() {
 	// rendering config
 	QSize imageSize{512, 512};
@@ -273,15 +417,16 @@ void MainWindow::renderEcrypted() {
 		m_secureKey = new SecureKey{SecureKey::create(PAILLIER_MODULUS_BIT_LENGTH)};
 	}
 	
+	SecureKey sk = *m_secureKey;
+	PublicKey pk = sk.publicKey;
+	std::cout << "Key: P=" << sk.p.toStringHex() << ", Q=" << sk.q.toStringHex() << ", M=" << pk.modulus.toStringHex() << ", M^2=" << pk.getModulusSquared().toStringHex() << std::endl;
+	
+	// create encrypted volume if it does not exist
 	if(m_encryptedVolume == nullptr) {
 		this->encryptVolume(m_secureKey->publicKey);
 	}
 	
 	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(m_encryptedVolume->depth()/2);
-	
-	SecureKey sk = *m_secureKey;
-	PublicKey pk = sk.publicKey;
-	std::cout << "Key: P=" << sk.p.toStringHex() << ", Q=" << sk.q.toStringHex() << ", M=" << pk.modulus.toStringHex() << ", M^2=" << pk.getModulusSquared().toStringHex() << std::endl;
 	
 	
 	Image<PaillierInt> encryptedImage;

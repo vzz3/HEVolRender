@@ -37,12 +37,23 @@ public slots:
     void onLogMessageReceived(const QString &text);
     void onFrameQueued(int colorValue);
     void onGrabRequested();
+    
+	void saveEncryptedVolume();
+	void loadEncryptedVolume();
 	
-	void encryptVolume(const PublicKey &yPK);
     void renderEcrypted();
     void testGpuBigInt();
 
 private:
+	void encryptVolume(const PublicKey &yPK);
+	std::string makeHeVolFileName(const size_t ySize);
+
+	#ifdef GPU_MONTGOMERY_REDUCTION
+		static constexpr uint16_t volumeType = 3;
+	#else
+		static constexpr uint16_t volumeType = 1;
+	#endif
+
 	Ui_MainWindow *m_Ui;
 	VulkanWindow *m_vulkanWindow = nullptr;
 	//QTabWidget *m_infoTab;

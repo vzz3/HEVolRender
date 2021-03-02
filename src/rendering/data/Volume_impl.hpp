@@ -62,6 +62,12 @@ const T& Volume<T>::get(size_t x, size_t y, size_t z) const {
 }
 
 template <typename T>
+T& Volume<T>::get(size_t x, size_t y, size_t z) {
+	size_t i = index(x, y, z);
+	return mValues[i];
+}
+
+template <typename T>
 void Volume<T>::set(size_t index, const T& value) {
 	assert(index < length());
 	
@@ -75,6 +81,12 @@ const T& Volume<T>::get(size_t index) const {
 	return mValues[index];
 }
 
+template <typename T>
+T& Volume<T>::get(size_t index) {
+	assert(index < length());
+	
+	return mValues[index];
+}
 
 
 

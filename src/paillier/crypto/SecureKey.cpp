@@ -40,6 +40,10 @@ SecureKey::SecureKey(const PaillierInt& yP, const PaillierInt& yQ, const PublicK
 	, _hq(hFunction(q, _qSquared, publicKey))
 {}
 
+SecureKey::SecureKey(const PaillierInt& yP, const PaillierInt& yQ): SecureKey{yP, yQ, PublicKey{yP * yQ}} {
+
+}
+
 SecureKey::~SecureKey() {}
 
 PaillierInt SecureKey::lFunction(const PaillierInt& x, const PaillierInt& p) {

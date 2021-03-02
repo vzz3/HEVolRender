@@ -61,7 +61,7 @@
  * ****************************************
  *
  */
-#define BIG_INT_FORCE_SCHOOL					1		// if disable the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
+//#define BIG_INT_FORCE_SCHOOL					1		// if disable the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
 #define GPU_MONTGOMERY_REDUCTION				1
 //#define BIG_INT_REDUCE_BRANCHING 				1
 //#define BIG_INT_64BIT_WORD_ADD					1		// if enabled the GLSL extension "GL_EXT_shader_explicit_arithmetic_types_int64" is required
