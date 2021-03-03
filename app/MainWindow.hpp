@@ -53,6 +53,7 @@ private:
 	#else
 		static constexpr uint16_t volumeType = 1;
 	#endif
+    static constexpr size_t testVolumeSize = 256;
 
 	Ui_MainWindow *m_Ui;
 	VulkanWindow *m_vulkanWindow = nullptr;

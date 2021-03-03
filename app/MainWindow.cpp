@@ -275,8 +275,6 @@ void MainWindow::onGrabRequested()
 }
 
 void MainWindow::encryptVolume(const PublicKey &yPK) {
-	size_t volumeSize = 256;
-
 	if(m_encryptedVolume != nullptr) {
 		delete m_encryptedVolume;
 		m_encryptedVolume = nullptr;
@@ -284,7 +282,7 @@ void MainWindow::encryptVolume(const PublicKey &yPK) {
 	
 	// create volume
 	Volume<uint16_t> plainVolume;
-	PRINT_DURATION( VolumeFactory::createVolume(plainVolume, volumeSize), "create volume");
+	PRINT_DURATION( VolumeFactory::createVolume(plainVolume, testVolumeSize), "create volume");
 	
 	// encrypt volume
 	m_encryptedVolume = new Volume<PaillierInt>{};
@@ -308,16 +306,16 @@ std::string MainWindow::makeHeVolFileName(const size_t ySize) {
 }
 
 void MainWindow::saveEncryptedVolume() {
-	// create encrypted volume if it does not exist
-	if(m_encryptedVolume == nullptr) {
-		this->encryptVolume(m_secureKey->publicKey);
-	}
-
 	QFileDialog fd(this);
     fd.setAcceptMode(QFileDialog::AcceptSave);
     fd.setDefaultSuffix("hevol");
-    fd.selectFile(QString::fromStdString(makeHeVolFileName(this->m_encryptedVolume->width())));
+    fd.selectFile(QString::fromStdString(makeHeVolFileName( ((m_encryptedVolume == nullptr) ? testVolumeSize : this->m_encryptedVolume->width()) )));
     if (fd.exec() == QDialog::Accepted) {
+		// create encrypted volume if it does not exist
+		if(m_encryptedVolume == nullptr) {
+			this->encryptVolume(m_secureKey->publicKey);
+		}
+		
         //img.save(fd.selectedFiles().first());
 		std::ofstream file(fd.selectedFiles().first().toStdString(), std::ios::out|std::ios::binary|std::ios::ate);
 		if (file.is_open()) {
@@ -351,7 +349,7 @@ void MainWindow::loadEncryptedVolume() {
 	QFileDialog fd(this);
     fd.setAcceptMode(QFileDialog::AcceptOpen);
     fd.setDefaultSuffix("hevol");
-    fd.selectFile(QString::fromStdString(makeHeVolFileName(256)));
+    fd.selectFile(QString::fromStdString(makeHeVolFileName(testVolumeSize)));
     if (fd.exec() == QDialog::Accepted) {
         //img.save(fd.selectedFiles().first());
 		std::ifstream file(fd.selectedFiles().first().toStdString(), std::ios::in|std::ios::binary|std::ios::ate);
@@ -440,7 +438,7 @@ void MainWindow::renderEcrypted() {
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
 	
-	for(size_t f = 0; f < 5; f++) {
+	for(size_t f = 0; f < 3; f++) {
 		// draw cube postions textures and render an encrypted image from the encrypted Volume
 		PRINT_DURATION(encRenderer->draw(0), "draw on GPU");
 		
@@ -499,4 +497,3 @@ void MainWindow::testGpuBigInt() {
 	delete encRenderer;
 	
 }
-
