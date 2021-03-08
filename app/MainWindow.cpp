@@ -406,6 +406,40 @@ void MainWindow::loadEncryptedVolume() {
 	}
 }
 
+VkPhysicalDevice MainWindow::getGpuForEncryptedRendering() {
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	if(false) {
+		// Use the GPU from onscreen rendering
+		physicalDevice = m_vulkanWindow->physicalDevice();
+	} else {
+		// try to find an other GPU
+		uint32_t deviceCount = 0;
+		qvInstance->functions()->vkEnumeratePhysicalDevices(qvInstance->vkInstance(), &deviceCount, nullptr);
+		if (deviceCount == 0) {
+			throw std::runtime_error("failed to find GPUs with Vulkan support!");
+		} else if (deviceCount == 1) {
+			std::cout << "Only one GPU with Vulkan support found. Use the GPU from QT window rendering for encrypted rendering" << std::endl;
+			physicalDevice = m_vulkanWindow->physicalDevice();
+		} else {
+			std::vector<VkPhysicalDevice> pDevices(deviceCount);
+			qvInstance->functions()->vkEnumeratePhysicalDevices(qvInstance->vkInstance(), &deviceCount, pDevices.data());
+			for (size_t i = 0; i < deviceCount; i++) {
+				if(pDevices[i] != m_vulkanWindow->physicalDevice()) {
+					physicalDevice = pDevices[i];
+					VkPhysicalDeviceProperties pDevProps;
+					qvInstance->functions()->vkGetPhysicalDeviceProperties(physicalDevice, &pDevProps);
+					std::cout << "Physical device for encrypted rendering, index: '" << i << "', name: '" << pDevProps.deviceName << "'"
+						<< " version "<<VK_VERSION_MAJOR(pDevProps.driverVersion)<<"."<<VK_VERSION_MINOR(pDevProps.driverVersion)<<"."<<VK_VERSION_PATCH(pDevProps.driverVersion)
+						<< " API version "<<VK_VERSION_MAJOR(pDevProps.apiVersion)<<"."<<VK_VERSION_MINOR(pDevProps.apiVersion)<<"."<<VK_VERSION_PATCH(pDevProps.apiVersion)
+						<< std::endl;
+					break;
+				}
+			}
+		}
+	}
+	return physicalDevice;
+}
+
 void MainWindow::renderEcrypted() {
 	// rendering config
 	QSize imageSize{512, 512};
@@ -426,14 +460,16 @@ void MainWindow::renderEcrypted() {
 	
 	PaillierInt rayNormalizationDivisor = PaillierInt::fromInt64(m_encryptedVolume->depth()/2);
 	
-	
 	Image<PaillierInt> encryptedImage;
 	Image<uint16_t> paintextImage;
+	
+	// pick Physical device
+	VkPhysicalDevice physicalDevice = this->getGpuForEncryptedRendering();
 	
 	// inizialize GPU rendering
 	Camera cameraCopy = m_vulkanWindow->m_vulkanRenderer->camera();
 	cameraCopy.setViewportSize(imageSize.width(), imageSize.height());
-	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_vulkanWindow->physicalDevice(), cameraCopy);
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, physicalDevice, cameraCopy);
 	encRenderer->setEncryptedVolume(&pk, m_encryptedVolume);
 	encRenderer->initGpuResources();
 	encRenderer->initSwapChainResources(imageSize, 1);
@@ -474,8 +510,9 @@ void MainWindow::testGpuBigInt() {
 		<< ", vulkanAttachmentCount=" << GPU_INT_ATTACHMENT_SIZE
 		<< std::endl;
 	
-	
-	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, m_vulkanWindow->physicalDevice(), m_vulkanWindow->m_vulkanRenderer->camera(), true);
+	// pick Physical device
+	VkPhysicalDevice physicalDevice = this->getGpuForEncryptedRendering();
+	EncryptedVulkanRenderer* encRenderer = new EncryptedVulkanRenderer(qvInstance, physicalDevice, m_vulkanWindow->m_vulkanRenderer->camera(), true);
 	
 	std::vector<BigIntTestCase> testCases = BigIntTestFactory::createAllTest();
 	for(BigIntTestCase& testCase : testCases) {
@@ -497,3 +534,4 @@ void MainWindow::testGpuBigInt() {
 	delete encRenderer;
 	
 }
+

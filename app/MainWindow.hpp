@@ -47,6 +47,7 @@ public slots:
 private:
 	void encryptVolume(const PublicKey &yPK);
 	std::string makeHeVolFileName(const size_t ySize);
+	VkPhysicalDevice getGpuForEncryptedRendering();
 
 	#ifdef GPU_MONTGOMERY_REDUCTION
 		static constexpr uint16_t volumeType = 3;
