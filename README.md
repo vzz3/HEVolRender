@@ -221,6 +221,60 @@ make
 ```
 
 
+# GPU Shader timeout
+## Linux
+### NVIDIA GPU Shader timeout
+Just add Option "Interactive" "0" to the device section of your GPU. [https://stackoverflow.com/questions/6906579/cuda-visual-profiler-interactive-x-config-option]
+In my Case the Device ins configured in `/usr/share/X11/xorg.conf.d/100-nvidia-rtx3090.conf`.
+Example:
+> ```
+Section "Device"
+    Identifier     "Device1"
+    Driver         "nvidia"
+    VendorName     "NVIDIA Corporation"
+    BoardName      "GeForce RTX 3090"
+    BusID          "PCI:23:0:0"
+	Option         "Interactive" "0"
+EndSection
+>```
+
+Than you need to restart the `/usr/lib/xorg/Xorg` process (I killed it `kill -9 PID_OF_XORG`.)
+
+If you do not have a X11 config for your GPU you can create one with `X`.
+Create X11 / Xorg Config options for GPU 1:
+```
+X :1 -configure
+```
+
+
+### AMD GPU  Shader Timeout
+From `/var/log/syslog`:
+> [  383.497475] [drm:amdgpu_job_timedout [amdgpu]] *ERROR* ring gfx timeout, but soft recovered
+
+https://01.org/linuxgraphics/gfx-docs/drm/gpu/amdgpu.html
+lockup_timeout
+
+To change the timeout to 60sec the kernel parameter `amdgpu.lockup_timeout=60000` need to be set.
+```
+nano /etc/default/grub
+```
+
+example content:
+> ```
+> # For full documentation of the options in this file, see:
+> #   info -f grub -n 'Simple configuration'
+>
+> GRUB_DEFAULT=0
+> GRUB_TIMEOUT_STYLE=hidden
+> GRUB_TIMEOUT=0
+> GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+> GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amdgpu.lockup_timeout=60000"
+> GRUB_CMDLINE_LINUX=""
+> ```
+
+Run `update-grub` afterwards to update.
+
+
 
 # TODO
 - summation for xray rendering should be possible already
