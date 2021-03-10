@@ -14,14 +14,29 @@ project(HEVolRender)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=westmere")
-# print supported instructions for march: $ echo | clang -E - -march=native -###
 
 IF(UNIX AND NOT APPLE)
 	set(LINUX TRUE)
+ENDIF()
+
+# specify the C++ standard
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+#set(CMAKE_CXX_EXTENSIONS NO)
+
+if(NOT WIN32)
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g")
+	#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+	#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=westmere")
+	# print supported instructions for march: $ echo | clang -E - -march=native -###
+
+	set(CMAKE_CXX_FLAGS  "-Werror=return-type ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
+if(APPLE)
+	# allow inline ASM
+	#set(CMAKE_CXX_FLAGS  "-DRUNTIME_IL2CPP=1")
 ENDIF()
 
 #if(APPLE)
@@ -62,17 +77,6 @@ macro(ADD_FRAMEWORK fwname appname)
     endif()
 endmacro(ADD_FRAMEWORK)
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-#set(CMAKE_CXX_EXTENSIONS NO)
-
-set(CMAKE_CXX_FLAGS  "-Werror=return-type ${GCC_COVERAGE_COMPILE_FLAGS}")
-
-if(APPLE)
-	# allow inline ASM
-	#set(CMAKE_CXX_FLAGS  "-DRUNTIME_IL2CPP=1")
-ENDIF()
 
 ##########################
 # copy required assets

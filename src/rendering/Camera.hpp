@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef _WIN32
+	#define _USE_MATH_DEFINES
+	#include <cmath>
+	#define M_PI 3.14159265359
+#endif
+
 #include <vulkan/vulkan.h>
 #include <QVulkanDeviceFunctions>
 
