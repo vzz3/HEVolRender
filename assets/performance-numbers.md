@@ -151,20 +151,20 @@ Thread 1 "HEVolRender" received signal SIGFPE, Arithmetic exception.
     #8  0x00007fffee82fa36 in ?? () from /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
     #9  0x00007fffeda10a5c in ?? () from /lib/x86_64-linux-gnu/libVkLayer_khronos_validation.so
     #10 0x00007fffed998ac8 in ?? () from /lib/x86_64-linux-gnu/libVkLayer_khronos_validation.so
-    #11 0x00007ffff749bda8 in QVulkanDeviceFunctions::vkCreateGraphicsPipelines (this=0x5555560e3650, 
-        device=0x5555561586d0, pipelineCache=0x0, createInfoCount=1, pCreateInfos=0x7fffffffb8d0, pAllocator=0x0, 
+    #11 0x00007ffff749bda8 in QVulkanDeviceFunctions::vkCreateGraphicsPipelines (this=0x5555560e3650,
+        device=0x5555561586d0, pipelineCache=0x0, createInfoCount=1, pCreateInfos=0x7fffffffb8d0, pAllocator=0x0,
         pPipelines=0x55555641aef0) at vulkan/qvulkanfunctions_p.cpp:448
     #12 0x00005555555b798a in ppvr::rendering::EncryptedXRay::createPipeline (this=0x55555641ae50, ySwapChain=...)
         at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedXRay.cpp:429
-    #13 0x00005555555b514c in ppvr::rendering::EncryptedXRay::initSwapChainResources (this=0x55555641ae50, 
-        ySwapChain=..., yPK=0x7fffffffbe90, yVolumeSet=0x55555616ef70, yCubeFront=0x10dc00000010dc, 
+    #13 0x00005555555b514c in ppvr::rendering::EncryptedXRay::initSwapChainResources (this=0x55555641ae50,
+        ySwapChain=..., yPK=0x7fffffffbe90, yVolumeSet=0x55555616ef70, yCubeFront=0x10dc00000010dc,
         yCubeBack=0x10e100000010e1) at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedXRay.cpp:35
-    #14 0x00005555555b0db4 in ppvr::rendering::EncryptedVulkanRenderer::initSwapChainResources (this=0x5555561289b0, 
+    #14 0x00005555555b0db4 in ppvr::rendering::EncryptedVulkanRenderer::initSwapChainResources (this=0x5555561289b0,
         yTargetSize=..., ySwapChainImageCount=1)
         at /home/sebastian/Desktop/HEVolRender-Cpp/src/rendering/EncryptedVulkanRenderer.cpp:199
     #15 0x000055555568c344 in MainWindow::renderEcrypted (this=0x555555749340)
         at /home/sebastian/Desktop/HEVolRender-Cpp/app/hellovulkanwidget.cpp:256
-    #16 0x0000555555563d93 in MainWindow::qt_static_metacall (_o=0x555555749340, _c=QMetaObject::InvokeMetaMethod, 
+    #16 0x0000555555563d93 in MainWindow::qt_static_metacall (_o=0x555555749340, _c=QMetaObject::InvokeMetaMethod,
         _id=4, _a=0x7fffffffc9a0)
         at /home/sebastian/Desktop/HEVolRender-Cpp/build/HEVolRender_autogen/VJIZ3MDCXP/moc_hellovulkanwidget.cpp:95
 ```
