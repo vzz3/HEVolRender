@@ -985,11 +985,14 @@ void UArbBigInt::mulSchool(const UArbBigInt& a, const UArbBigInt& b, UArbBigInt&
 		result.value[bSize] = (BIG_INT_WORD_TYPE)carry;
 		*/
 		// The last block is algorthmicaly equal to the following two lines. The loop is executed by the method BigIntUtil::mulAdd()
+		/*
 		BIG_INT_WORD_TYPE carry = BigIntUtil::mulAdd(result.value, 0, b.value, bStart, bSize, a.value[0]);
 		result.value[bSize] = carry;
-	
+		*/
+		BIG_INT_WORD_TYPE carry;
+		
 		// Add in subsequent words, storing the most significant word, which is new each time.
-		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+		for (BIG_INT_WORD_COUNT_TYPE i = aStart+0; i < aSize; i++) {
 			/*
 			carry = 0;
 			for (BIG_INT_WORD_COUNT_TYPE j=bStart, k=bStart+i; j < bSize; j++, k++) {
@@ -1857,10 +1860,10 @@ UArbBigInt UArbBigInt::gcdExtended_binaryIterative(const UArbBigInt& aIn, const 
 	//vOut = r;
 	
 	if( v.isZero() ) {
-		assert( u == UArbBigInt::gcd(aIn, bIn) );
+		assert( u == UArbBigInt::gcd(aIn, bIn) );	// gcd != 1 (a and b are not coprime) => uOut is invalide
 		return u;
 	} else {
-		assert( v == UArbBigInt::gcd(aIn, bIn) );
+		assert( v == UArbBigInt::gcd(aIn, bIn) );	// gcd == 1 (a and b are coprime) => uOut is valide
 		return v;
 	}
 }
@@ -1882,7 +1885,7 @@ UArbBigInt UArbBigInt::modInverse(const UArbBigInt & m) const {
 //	if(false) {
 		UArbBigInt gcd = gcdExtended_binaryIterative(*this, m, u/*, v*/);
 		if(!gcd.isOne()) {
-			std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+			std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " because the numbers are not relatively prime to!";
 			//std::cerr << msg << std::endl;
 			throw NoMultiplicativeInverse(msg);
 		}

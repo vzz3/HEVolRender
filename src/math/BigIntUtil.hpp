@@ -249,6 +249,8 @@ namespace ppvr {
 			 * table[2] = 5;
 			 *
 			 * of course if there was a carry from table[2] it would be returned
+			 *
+			 * addInt(word, 0, targetArray, targetWordCount) is like lbnAdd1_32(targetArray, targetWordCount, word) from Colin Plumb C library.
 			 */
 			static BIG_INT_WORD_TYPE addInt(const BIG_INT_WORD_TYPE word, const BIG_INT_WORD_COUNT_TYPE index, BIG_INT_WORD_TYPE* targetArray, BIG_INT_WORD_COUNT_TYPE targetWordCount);
 			
@@ -307,6 +309,8 @@ namespace ppvr {
 			 * Multiply an n-word input (in) by a 1-word (k) input and add the
 			 * low n words of the product to the destination (out).  *Returns the n+1st word
 			 * of the product.*
+			 *
+			 * Work like lbnMulAdd1_32() from Colin Plumb C library.
 			 */
 			static inline BIG_INT_WORD_TYPE mulAdd(BIG_INT_WORD_TYPE* out, BIG_INT_WORD_COUNT_TYPE indexOut, const BIG_INT_WORD_TYPE* in, BIG_INT_WORD_COUNT_TYPE indexIn, const BIG_INT_WORD_COUNT_TYPE len, const BIG_INT_WORD_TYPE k) {
 				/*
@@ -324,6 +328,8 @@ namespace ppvr {
 				 * start with.  It is by far the most commonly called function.
 				 *
 				 */
+				
+				assert( BIG_INT_BITS_PER_WORD <= 32 );
 				
 				assert(len > 0);
 				
@@ -379,6 +385,21 @@ namespace ppvr {
 			
 		// ----- multiplicative inverse -----
 		public:
+			
+			/**
+			 * Returns the multiplicative inverse of val mod 2^BIG_INT_BITS_PER_WORD.  Assumes val is odd.
+			 */
+			static BIG_INT_WORD_TYPE inverseMod(BIG_INT_WORD_TYPE val);
+			
+			/**
+			 * Returns the multiplicative inverse of val mod 2^8.  Assumes val is odd.
+			 */
+			static uint32_t inverseMod8(uint32_t val);
+			
+			/**
+			 * Returns the multiplicative inverse of val mod 2^16.  Assumes val is odd.
+			 */
+			static uint32_t inverseMod16(uint32_t val);
 			
 			/**
 			 * Returns the multiplicative inverse of val mod 2^32.  Assumes val is odd.

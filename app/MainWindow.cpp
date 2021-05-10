@@ -424,7 +424,7 @@ VkPhysicalDevice MainWindow::getGpuForEncryptedRendering() {
 			std::vector<VkPhysicalDevice> pDevices(deviceCount);
 			qvInstance->functions()->vkEnumeratePhysicalDevices(qvInstance->vkInstance(), &deviceCount, pDevices.data());
 			for (size_t i = 0; i < deviceCount; i++) {
-				if(pDevices[i] != m_vulkanWindow->physicalDevice()) {
+				//if(pDevices[i] != m_vulkanWindow->physicalDevice()) { // do not use the primary GPU for encrypted rendering
 					physicalDevice = pDevices[i];
 					VkPhysicalDeviceProperties pDevProps;
 					qvInstance->functions()->vkGetPhysicalDeviceProperties(physicalDevice, &pDevProps);
@@ -433,7 +433,7 @@ VkPhysicalDevice MainWindow::getGpuForEncryptedRendering() {
 						<< " API version "<<VK_VERSION_MAJOR(pDevProps.apiVersion)<<"."<<VK_VERSION_MINOR(pDevProps.apiVersion)<<"."<<VK_VERSION_PATCH(pDevProps.apiVersion)
 						<< std::endl;
 					break;
-				}
+				//}
 			}
 		}
 	}

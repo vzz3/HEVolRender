@@ -27,15 +27,19 @@ namespace ppvr {
 			
 			uint reducerBits; // (m+1 ... m+8)
 			
-			BigInt reducer,		// m+9 bit long (worst case)
-				modulus,		// m
-				mask,			// m+8 bit long (worst case)
-				reciprocal,		// m+9 bit long (worst case)
-				factor,			// m+18 bit long (worst case)
+			BigInt reducer,		// m+9 bit long (worst case);	R from paper
+				modulus,		// m;							N from paper
+				mask,			// m+8 bit long (worst case)	
+				reciprocal,		// m+9 bit long (worst case)	R^(-1) from Paper
+				factor,			// m+18 bit long (worst case);	N' from paper
 				convertedOne;	// m
 				
 			#ifndef BIG_INT_MONTGOMERY_FORCE_READABLE
 				BIG_INT_WORD_COUNT_TYPE reducerWords;
+			
+				#if defined(BIG_INT_MONTGOMERY_COLIN_PLUMB)
+					BIG_INT_WORD_TYPE inv;
+				#endif
 			#endif
 			
 		public:

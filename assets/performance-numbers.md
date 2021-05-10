@@ -311,3 +311,6 @@ modPow() Mont(8)Ary 2024bit  ... time required:    42ms, addTwoIntsCounter:     
 
 #### non readable montgomery reduction
 modPow() Mont(6)Ary 2024bit  ... time required:    35ms, addTwoIntsCounter:      16253
+
+#### Colin Plumbs montgomery reduction
+modPow() Mont(6)Ary 2024bit  ... time required:    21ms, addTwoIntsCounter:      16253

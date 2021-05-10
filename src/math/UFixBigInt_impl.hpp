@@ -881,7 +881,7 @@ void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UF
 			aSize = a.getWordSize();
 			bSize = b.getWordSize();
 			if( aSize==0 || bSize==0 ) {
-				return;
+				return; // getWordSize() does never return 0, therfore this cann never happen! FIXME
 			}
 			
 			if((aSize + bSize - 1) > S) {
@@ -898,6 +898,7 @@ void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UF
 		#endif
 		
 		// Multiply first word
+		/*
 		BIG_INT_WORD_TYPE carry = BigIntUtil::mulAdd(result.value, 0, b.value, bStart, bSize, a.value[0]);
 		#ifndef BIG_INT_REDUCE_BRANCHING
 			assert(bSize < S);
@@ -905,9 +906,10 @@ void UFixBigInt<S>::mulSchool(const UFixBigInt<S>& a, const UFixBigInt<S>& b, UF
 		#else
 			assert( carry == 0);
 		#endif
-		
+		*/
+		BIG_INT_WORD_TYPE carry;
 		// Add in subsequent words, storing the most significant word, which is new each time.
-		for (BIG_INT_WORD_COUNT_TYPE i = aStart+1; i < aSize; i++) {
+		for (BIG_INT_WORD_COUNT_TYPE i = aStart+0; i < aSize; i++) {
 			#ifndef BIG_INT_REDUCE_BRANCHING
 				assert( bSize-1+i < S);
 				carry = BigIntUtil::mulAdd(result.value, bStart+i, b.value, bStart, bSize, a.value[i]);
@@ -1651,10 +1653,10 @@ UFixBigInt<S> UFixBigInt<S>::gcdExtended_binaryIterative(const UFixBigInt<S>& aI
 	//vOut = r;
 	
 	if( v.isZero() ) {
-		assert( u == UFixBigInt<S>::gcd(aIn, bIn) );
+		assert( u == UFixBigInt<S>::gcd(aIn, bIn) );	// gcd != 1 (a and b are not coprime) => uOut is invalide
 		return u;
 	} else {
-		assert( v == UFixBigInt<S>::gcd(aIn, bIn) );
+		assert( v == UFixBigInt<S>::gcd(aIn, bIn) );	// gcd == 1 (a and b are coprime) => uOut is valide
 		return v;
 	}
 }
@@ -1676,7 +1678,7 @@ UFixBigInt<S> UFixBigInt<S>::modInverse(const UFixBigInt<S> & m) const {
 	
 	UFixBigInt<S> gcd = gcdExtended_binaryIterative(*this, m, u/*, v*/);
 	if(!gcd.isOne()) {
-		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+		std::string msg = "ERROR UArbBigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " because the numbers are not relatively prime to!";
 		//std::cerr << msg << std::endl;
 		throw NoMultiplicativeInverse(msg);
 	}
@@ -1765,7 +1767,7 @@ void UFixBigInt<S>::modPow_montgomeryEven(const UFixBigInt<S>& base, const UFixB
 template <BIG_INT_WORD_COUNT_TYPE S>
 void UFixBigInt<S>::modPow_montgomeryOdd(const UFixBigInt<S>& base, const UFixBigInt<S>& exponent, const UFixBigInt<S>& modulus, UFixBigInt<FBI_WC_Sm2>& result) {
 
-	assert( ((modulus.bitLength() / 8 + 1) * 8 + 1) < (FBI_WC_MM * BIG_INT_BITS_PER_WORD)); // minimal size required for calculating the reduction mask
+	//assert( ((modulus.bitLength() / 8 + 1) * 8 + 1) < (FBI_WC_MM * BIG_INT_BITS_PER_WORD)); // minimal size required for calculating the reduction mask
 
 //#if !defined(BIG_INT_NO_MONTGOMERY_WINDOW) && _BIG_INT_WORD_LENGTH_PRESET_ <= 32
 //	modPow_montgomeryOdd_window(base, exponent, modulus, result);

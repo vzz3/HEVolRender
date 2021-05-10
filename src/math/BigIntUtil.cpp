@@ -551,6 +551,58 @@ void BigIntUtil::divTwoWordsKnuth_multiplySubtract(BIG_INT_WORD_TYPE &u, BIG_INT
 
 // ----- multiplicative inverse -----
 
+BIG_INT_WORD_TYPE BigIntUtil::inverseMod(BIG_INT_WORD_TYPE val) {
+	/*
+	 * Find the negative multiplicative inverse of x (x must be odd!) modulo 2^32.
+	 *
+	 * This just performs Newton's iteration until it gets the
+	 * inverse.  The initial estimate is always correct to 3 bits, and
+	 * sometimes 4.  The number of valid bits doubles each iteration.
+	 * (To prove it, assume x * y == 1 (mod 2^n), and introduce a variable
+	 * for the error mod 2^2n.  x * y == 1 + k*2^n (mod 2^2n) and follow
+	 * the iteration through.)
+	 */
+	//while ((z = x*y) != 1)
+	//		y *= 2 - z;
+	//return -y;
+	
+	#if _BIG_INT_WORD_LENGTH_PRESET_ == 8
+		return inverseMod8(val);
+	#elif _BIG_INT_WORD_LENGTH_PRESET_ == 16
+		return inverseMod16(val);
+	#elif _BIG_INT_WORD_LENGTH_PRESET_ == 32
+		return inverseMod32(val);
+	#elif _BIG_INT_WORD_LENGTH_PRESET_ == 64
+		return inverseMod64(val);
+	#else
+		#error A BigInteger word length preset of #_BIG_INT_WORD_LENGTH_PRESET_ is not supported.
+	#endif
+	
+}
+
+uint32_t BigIntUtil::inverseMod8(uint32_t val) {
+	assert((val & 1) == 1);
+	
+	// Newton's iteration!
+	int t = val;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	assert(t * val == 1);
+	return t;
+}
+
+uint32_t BigIntUtil::inverseMod16(uint32_t val) {
+	assert((val & 1) == 1);
+	
+	// Newton's iteration!
+	int t = val;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	t *= 2 - val*t;
+	assert(t * val == 1);
+	return t;
+}
+
 uint32_t BigIntUtil::inverseMod32(uint32_t val) {
 	assert((val & 1) == 1);
 	

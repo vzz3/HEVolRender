@@ -119,6 +119,10 @@ namespace ppvr {
 			UArbBigInt& operator= (const UArbBigInt& other);
  		*/
 		private:
+			void reserveWordsAndInitUnused( const BIG_INT_WORD_COUNT_TYPE newCapacity, const BIG_INT_WORD_TYPE initValue = 0 ) {
+				assert( newCapacity <= S); // there is nothing else I can do in the Fixed length version of BigInt
+			}
+		
 			void initWords(const BIG_INT_WORD_TYPE initValue = 0);
 
 		// ----- value export - toString / toUint64 -----
@@ -242,9 +246,12 @@ namespace ppvr {
 			 * The param newMaxWordSize need to be <= this->wordCapacity
 			 *
 			 * @param newMaxWordSize new maximal word count
-			 * /
-			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize);
 			 */
+			void trimWordSize(const BIG_INT_WORD_COUNT_TYPE newMaxWordSize) {
+				assert( newMaxWordSize <= S);
+				clearHigherWords(newMaxWordSize);
+			}
+			
 			BIG_INT_WORD_TYPE getLeastSignificantWord() const {
 				return this->value[0];
 			}

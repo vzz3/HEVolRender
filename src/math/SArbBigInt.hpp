@@ -120,6 +120,7 @@ namespace ppvr {
 			 *
 			 * The following assumptions are made:
 			 * This BigInteger is a positive, odd number.
+			 *
 			 */
 			bool passesLucasLehmer();
 

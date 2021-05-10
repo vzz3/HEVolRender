@@ -296,6 +296,7 @@ bool SArbBigInt::primeToCertainty(const uint certainty, Random& rnd) {
 }
 
 bool SArbBigInt::passesLucasLehmer() {
+	// https://en.wikipedia.org/wiki/Lucas_pseudoprime
 	// Algorithm and comments adapted from Java java.math.BigInteger
 
 	SArbBigInt thisPlusOne= *this + UArbBigInt::ONE;
@@ -956,7 +957,7 @@ SArbBigInt SArbBigInt::modInverse(const SArbBigInt & m) const {
 	SArbBigInt u, v;
 	SArbBigInt gcd = this->gcdExtended(*this, m, u, v);
 	if(!gcd.isOne()) {
-		std::string msg = "ERROR BigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " becaus the numbers are not relatively prime to!";
+		std::string msg = "ERROR BigInt: " + this->toStringDec() + " does not have a multiplicative inverse mod " + m.toStringDec() + " because the numbers are not relatively prime to!";
 		//std::cerr << msg << std::endl;
 		throw NoMultiplicativeInverse(msg);
 	}
