@@ -1,22 +1,8 @@
-
-## Important QT links:
-- QT Download: http://download.qt.io/official_releases/qt/5.12/5.12.9/submodules/
-- List of examples: https://doc.qt.io/qt-5/qtexamples.html
-- Example I used as a base for this Project: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hellovulkanwidget
-
-## Important Vulkan links
-- Vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
-- Examples from KhronosGroup: https://github.com/KhronosGroup/Vulkan-Samples
-- Headless example: https://github.com/SaschaWillems/Vulkan/tree/master/examples/renderheadless
-- Vulkan Dos and Don’ts: https://developer.nvidia.com/blog/vulkan-dos-donts/
-- Uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
-- Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
-- C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
-- SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
-- Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debug_printf.html, https://vulkan.lunarg.com/issue/home?limit=10;q=;mine=false;org=false;khronos=false;lunarg=false;indie=false;status=new,open, https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md
+# HEVolRender
+This is a GPU implementation of the homomorphic-encrypted X-ray rendering approach that we presented at the [IEEE VIS 2020](https://doi.org/10.1109/TVCG.2020.3030436).
 
 
-
+# Build Project
 ## Build on mac OS
 Blog Post about Vulkan support in QT under mac OS: https://www.qt.io/blog/2018/05/30/vulkan-for-qt-on-macos
 (https://forum.qt.io/topic/104553/vulkan-on-macos)
@@ -151,11 +137,11 @@ cmake -G Xcode ../
 ```
 
 
-## Debugging on Mac OS
-### Use QT Framework Version with Debug Symbols
+### Debugging on Mac OS
+#### Use QT Framework Version with Debug Symbols
 Set the environment variable `DYLD_IMAGE_SUFFIX=_debug` (Xcode -> menu Product-> Scheme -> Run -> Arguments -> Environment Variables). This loads the _debug binaries from the framework folders (e.g.: `external/qtbase-everywhere-src-5.12.10/lib/QtCore.framework/QtCore_debug`). https://doc.qt.io/qt-5/debug.html
 
-### Enable MoltonVK Debug Outputs
+#### Enable MoltonVK Debug Outputs
 Set the environment variable `MVK_LOG_LEVEL_INFO`.
 
 
@@ -238,9 +224,9 @@ Section "Device"
 EndSection
 >```
 
-Than you need to restart the `/usr/lib/xorg/Xorg` process (I killed it `kill -9 PID_OF_XORG`.)
+Than you need to restart the `/usr/lib/xorg/Xorg` process (I killed it `kill -9 PID_OF_XORG`).
 
-If you do not have a X11 config for your GPU you can create one with `X`.
+If you do not have a X11 config for your GPU, you can create one with `X`.
 Create X11 / Xorg Config options for GPU 1:
 ```
 X :1 -configure
@@ -275,9 +261,51 @@ example content:
 Run `update-grub` afterwards to update.
 
 
+# Important Configurations
+#### Machine Word Length
+See pre compiler constant `_BIG_INT_WORD_LENGTH_PRESET_` in *src/math/BigInt_wordDef.h* and *res/shaders/math/bigInt_defs.h.glsl*. The value for the CPU (C++) und GPU (GLS) need to be equal.
+
+#### Configure multiplication Algorithm
+The configuration for the CPU is in file *src/math/BigInt_wordDef.h* and the configuration for the GPU is done in *res/shaders/math/bigInt_defs.h.glsl*.
+* `BIG_INT_FORCE_SCHOOL`: If defined the basic school algorithm will be used instead of the multiplication with the deferred carry propagation from Colin Plumb.
+* `BIG_INT_REDUCE_BRANCHING`: Disables the checks that prevents unnecessary multiplications with zero.
+
+#### Configure the Montgomery Reduction for Modular Exponentiation
+The configuration for the CPU is in file *src/math/BigInt_wordDef.h* and the configuration for the GPU is done in *res/shaders/math/bigInt_defs.h.glsl*.
+* `BIG_INT_NO_MONTGOMERY_REDUCTION`: If defined the classic division will be used for modulo reduction instead of the Montgomery reduction.
+* `BIG_INT_MONTGOMERY_FORCE_READABLE`: Uses a easily readable version of the Montgomery reduction. However, for long numbers this is not efficient.
+
+#### Configure the Usage  Montgomery Reduction on the GPU
+In order to enable the usage of Montgomery reduction for the encrypted X-Ray composition on the GPU the constant `GPU_MONTGOMERY_REDUCTION`  need to be defined. This is need to be done in the files *src/paillier/Paillier_typeDev.h* for the CPU and in the file  *res/shaders/math/bigInt_defs.h.glsl* for the GPU.
+It need to be defined or remove in both files equally since the rendering with Montgomery reduction on the GPU requires that the encrypted volume data set is uploaded in Montgomery form by the CPU.
+
+#### Public Key Length
+The length of the Public Key Modulus that should be used for the encryption is defined by the pre compiler constant `PAILLIER_MODULUS_BIT_LENGTH`. The value defines the length in bits. The value of the constant for the CPU need to equal to the value on the GPU side. See the C++ file *src/paillier/Paillier_typeDev.h* and the GLSL file  *res/shaders/math/bigInt_defs.h.glsl*.
+
+
+#### Other
+For calculations with Paillier encrypted values on the CPU not only the fixed length big integer classe can be used but also the arbitrary length version. This can be achieved by commenting out the pre compiler constant `USE_FIX_WIDTH_INTEGER` in *src/paillier/Paillier_typeDev.h*.
+
 
 # TODO
-- summation for xray rendering should be possible already
-- modPow() for unsigned fixed length big integers on C++ and GLSL (required for Paillier Multiplication)
+- modPow() for unsigned fixed length big-integers in C++ and GLSL (required for Paillier Multiplication)
 - floating point numbers on GPU. Where to write the exponent? Z-Buffer?
-- The PaillierMath.cpp unit test file pails out with an assertion error if build with g++ under ubuntu.
+- The PaillierMath.cpp unit test file bail out with an assertion error if build with g++ under ubuntu.
+
+
+# References
+## Important QT links:
+- QT Download: http://download.qt.io/official_releases/qt/5.12/5.12.9/submodules/
+- List of examples: https://doc.qt.io/qt-5/qtexamples.html
+- Example I used as a base for this Project: $HOME/Downloads/qtbase-everywhere-src-5.12.10/examples/vulkan/hellovulkanwidget
+
+## Important Vulkan links
+- Vulkan low level API explanation: https://software.intel.com/content/www/us/en/develop/articles/api-without-secrets-introduction-to-vulkan-part-1.html
+- Examples from KhronosGroup: https://github.com/KhronosGroup/Vulkan-Samples
+- Headless example: https://github.com/SaschaWillems/Vulkan/tree/master/examples/renderheadless
+- Vulkan Dos and Don’ts: https://developer.nvidia.com/blog/vulkan-dos-donts/
+- Uniforms: https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+- Image and buffer format support on different Systems: http://vulkan.gpuinfo.org/listformats.php?platform=macos
+- C++ to SIRV compiler: https://github.com/seanbaxter/shaders/blob/master/README.md
+- SPIRV Debugger: https://github.com/dfranx/ShaderDebugger, https://github.com/dfranx/SPIRV-VM
+- Vulkan Shader Debug Printf: https://vulkan.lunarg.com/doc/sdk/1.2.135.0/mac/debug_printf.html, https://vulkan.lunarg.com/issue/home?limit=10;q=;mine=false;org=false;khronos=false;lunarg=false;indie=false;status=new,open, https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md
